@@ -1,5 +1,5 @@
 //
-// $Id: framework.cpp 90 2006-08-02 17:31:09Z Gordon $
+// $Id$
 //
 // Copyright (c) 2008, The Periapsis Project. All rights reserved. 
 // 

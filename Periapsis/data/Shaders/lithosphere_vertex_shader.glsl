@@ -1,5 +1,5 @@
 //
-// $Id: lithosphere_vertex_shader.glsl 318 2008-03-01 20:40:29Z Gordon $
+// $Id$
 //
 // Copyright (c) 2008, The Periapsis Project. All rights reserved. 
 // 

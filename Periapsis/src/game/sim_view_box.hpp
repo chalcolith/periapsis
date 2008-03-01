@@ -2,7 +2,7 @@
 #define PERIAPSIS_SIM_VIEW_BOX_H
 
 //
-// $Id: sim_view_box.hpp 315 2008-03-01 16:33:59Z Gordon $
+// $Id$
 //
 // Copyright (c) 2008, The Periapsis Project. All rights reserved. 
 // 

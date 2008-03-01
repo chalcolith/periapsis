@@ -1,5 +1,5 @@
 //
-// $Id: font.cpp 319 2008-03-01 20:40:39Z Gordon $
+// $Id$
 //
 // Copyright (c) 2008, The Periapsis Project. All rights reserved. 
 // 

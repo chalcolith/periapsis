@@ -2,7 +2,7 @@
 #define PERIAPSIS_SPACE_H
 
 //
-// $Id: $
+// $Id$
 //
 // Copyright (c) 2008, The Periapsis Project. All rights reserved. 
 // 

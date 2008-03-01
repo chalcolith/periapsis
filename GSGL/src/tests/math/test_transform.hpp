@@ -2,7 +2,7 @@
 #define GSGL_TEST_MATH_TRANSFORM_H
 
 //
-// $Id: test_transform.hpp 317 2008-03-01 16:35:50Z Gordon $
+// $Id$
 //
 // Copyright (c) 2008, The Periapsis Project. All rights reserved. 
 // 

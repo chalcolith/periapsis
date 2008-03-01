@@ -2,7 +2,7 @@
 #define GSGL_PLATFORM_BUFFER_POOL_H
 
 //
-// $Id: buffer_pool.hpp 314 2008-03-01 16:33:47Z Gordon $
+// $Id$
 //
 // Copyright (c) 2008, The Periapsis Project. All rights reserved. 
 // 

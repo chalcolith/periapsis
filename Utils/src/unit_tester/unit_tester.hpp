@@ -2,7 +2,7 @@
 #define GSGL_UNIT_TESTER_H
 
 /*
- * $Id: unit_tester.hpp 316 2008-03-01 16:34:12Z Gordon $
+ * $Id$
 //
 // Copyright (c) 2008, The Periapsis Project. All rights reserved. 
 // 

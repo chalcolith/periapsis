@@ -2,7 +2,7 @@
 #define GSGL_PLATFORM_COLOR_H
 
 //
-// $Id: $
+// $Id$
 //
 // Copyright (c) 2008, The Periapsis Project. All rights reserved. 
 // 

@@ -1,6 +1,6 @@
 #! /usr/local/bin/perl -w
 ######################################################################
-# $Id: test_gen.pl 145 2006-11-17 01:35:20Z Gordon $
+# $Id$
 
 # Usage: gen_test [-Ifoo ...] [-Dbar ...] fname ...
 #

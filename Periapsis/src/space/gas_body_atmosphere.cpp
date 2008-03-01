@@ -1,5 +1,5 @@
 //
-// $Id: gas_body_atmosphere.cpp 315 2008-03-01 16:33:59Z Gordon $
+// $Id$
 //
 // Copyright (c) 2008, The Periapsis Project. All rights reserved. 
 // 

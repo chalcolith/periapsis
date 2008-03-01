@@ -2,7 +2,7 @@
 #define PERIAPSIS_SPACE_CARTO_BODY_H
 
 //
-// $Id: rotating_body.hpp 315 2008-03-01 16:33:59Z Gordon $
+// $Id$
 //
 // Copyright (c) 2008, The Periapsis Project. All rights reserved. 
 // 
