@@ -1,0 +1,3 @@
+<vehicle>
+  <module file="Ship1.vehicle_module" position="0 0 0" qrotation="0 0 0 0" />
+</vehicle>

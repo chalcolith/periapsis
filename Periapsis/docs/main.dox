@@ -1,0 +1,49 @@
+/*!
+
+\mainpage Source Code Documentation
+
+\par
+Reproduction or dissemination outside of Rocket & Motion is forbidden.  Copyright (C) 2005-2008 Rocket & Motion Software, Ltd.
+
+\par
+This is the internal documentation for the Rocket & Motion code base, including utilities, libraries and various application programs.
+
+\section what_is_periapsis What is Periapsis?
+
+The Periapsis program is a general-purpose spaceflight simulator.
+
+\section periapsis_modules Architectural Overview
+
+
+
+*/
+
+/*!
+\page PlatformDevelopment Platform Development
+
+\section start_windows Windows
+
+There are a number of Visual Studio 2005 solutions you can use to build various parts of the system:
+
+- \c Periapsis/build/vs8/Devel.sln contains everything needed to build and develop the Periapsis program.
+- \c Utils/build/vs8/HYGDBGen/HYGDBGen.sln builds the HYG stellar database generator.
+- \c GSGL/build/vs8/Test/UnitTests.sln contains all the unit tests for the system.
+
+Before you can begin development, however, you need to load \c Devel.sln, right-click on the ThirdParty project, and choose "Build Project".  This will unzip and copy the third-party libraries needed for development.
+
+\subsection windows_notes Notes on Windows Development
+
+- You should NOT add new files to Windows projects directly; create them first under the appropriate "src" directory, and then use "Add existing item" to add them to the project.
+
+ */
+
+/*!
+\page CodingConventions Coding Conventions
+
+The best way to become familiar with the coding conventions of the code is to examine the code itself, which is fairly consistent throughout.
+
+- Identifier names use STL-esque conventions: they are lower-case, using underscores to separate words.
+- Accessors (for both getting and setting values) use the form \c "T & get_X"; use \c const for read-only access.
+
+ */
+

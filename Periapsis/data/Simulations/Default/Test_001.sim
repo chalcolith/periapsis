@@ -1,0 +1,3 @@
+<simulation>
+	<viewpoint parent="Earth Barysystem" position="0 -50000000 0" />
+</simulation>

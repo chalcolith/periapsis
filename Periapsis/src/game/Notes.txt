@@ -1,0 +1,7 @@
+Notes
+-----
+
+- The simulation config file should only list date and vehicle location and viewpoint.
+- There should be package configs listing scenery files and dlls.
+- A programmatic record of which classes are active (if the user deselects some package).
+- A status text along the bottom of the main window, and a progress bar for re-loading scenery.

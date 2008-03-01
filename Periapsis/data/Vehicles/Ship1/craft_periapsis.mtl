@@ -1,0 +1,7 @@
+newmtl acmat_0
+Kd 0.752941 0.752941 0.752941
+Ka 0.2 0.2 0.2
+Ks 1 1 1
+Ns 226.563
+Tr 0
+map_Kd craft.bmp

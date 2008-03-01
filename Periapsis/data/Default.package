@@ -1,0 +1,16 @@
+<package name="Default">
+  <description>The default libraries, scenery, and vehicle configurations.</description>
+
+  <libraries>
+    <default_library basename="PeriapsisSpace" />
+  </libraries>
+
+  <sceneries>
+    <scenery filename="Scenery/Default/Milky Way.scn" />
+    <scenery filename="Scenery/Default/Sol System.scn" />
+  </sceneries>
+
+  <vehicles>
+  </vehicles>
+
+</package>

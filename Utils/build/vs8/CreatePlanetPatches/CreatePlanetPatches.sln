@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual C++ Express 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CreatePlanetPatches", "CreatePlanetPatches.vcproj", "{ABCD68C5-7E63-4765-A95D-9FCDB328E9D4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{659CC2FB-502C-473B-AF00-19E75AB62EED} = {659CC2FB-502C-473B-AF00-19E75AB62EED}
+		{98FC16C0-CFCE-40DC-A4E0-59B73E7B09BF} = {98FC16C0-CFCE-40DC-A4E0-59B73E7B09BF}
+		{FB6DBD4E-6ED5-4677-BF90-1C6B8DB38CB4} = {FB6DBD4E-6ED5-4677-BF90-1C6B8DB38CB4}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Data", "..\..\..\..\GSGL\build\vs8\Data\Data.vcproj", "{FB6DBD4E-6ED5-4677-BF90-1C6B8DB38CB4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B62AE820-BE4B-4B4B-ABC1-CA63618E41DE} = {B62AE820-BE4B-4B4B-ABC1-CA63618E41DE}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Platform", "..\..\..\..\GSGL\build\vs8\Platform\Platform.vcproj", "{659CC2FB-502C-473B-AF00-19E75AB62EED}"
+	ProjectSection(ProjectDependencies) = postProject
+		{98FC16C0-CFCE-40DC-A4E0-59B73E7B09BF} = {98FC16C0-CFCE-40DC-A4E0-59B73E7B09BF}
+		{FB6DBD4E-6ED5-4677-BF90-1C6B8DB38CB4} = {FB6DBD4E-6ED5-4677-BF90-1C6B8DB38CB4}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Math", "..\..\..\..\GSGL\build\vs8\Math\Math.vcproj", "{98FC16C0-CFCE-40DC-A4E0-59B73E7B09BF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FB6DBD4E-6ED5-4677-BF90-1C6B8DB38CB4} = {FB6DBD4E-6ED5-4677-BF90-1C6B8DB38CB4}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ThirdParty", "..\..\..\..\ThirdParty\build\vs8\ThirdParty.vcproj", "{B62AE820-BE4B-4B4B-ABC1-CA63618E41DE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ABCD68C5-7E63-4765-A95D-9FCDB328E9D4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{ABCD68C5-7E63-4765-A95D-9FCDB328E9D4}.Debug|Win32.Build.0 = Debug|Win32
+		{ABCD68C5-7E63-4765-A95D-9FCDB328E9D4}.Release|Win32.ActiveCfg = Release|Win32
+		{ABCD68C5-7E63-4765-A95D-9FCDB328E9D4}.Release|Win32.Build.0 = Release|Win32
+		{FB6DBD4E-6ED5-4677-BF90-1C6B8DB38CB4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FB6DBD4E-6ED5-4677-BF90-1C6B8DB38CB4}.Debug|Win32.Build.0 = Debug|Win32
+		{FB6DBD4E-6ED5-4677-BF90-1C6B8DB38CB4}.Release|Win32.ActiveCfg = Release|Win32
+		{FB6DBD4E-6ED5-4677-BF90-1C6B8DB38CB4}.Release|Win32.Build.0 = Release|Win32
+		{659CC2FB-502C-473B-AF00-19E75AB62EED}.Debug|Win32.ActiveCfg = Debug|Win32
+		{659CC2FB-502C-473B-AF00-19E75AB62EED}.Debug|Win32.Build.0 = Debug|Win32
+		{659CC2FB-502C-473B-AF00-19E75AB62EED}.Release|Win32.ActiveCfg = Release|Win32
+		{659CC2FB-502C-473B-AF00-19E75AB62EED}.Release|Win32.Build.0 = Release|Win32
+		{98FC16C0-CFCE-40DC-A4E0-59B73E7B09BF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{98FC16C0-CFCE-40DC-A4E0-59B73E7B09BF}.Debug|Win32.Build.0 = Debug|Win32
+		{98FC16C0-CFCE-40DC-A4E0-59B73E7B09BF}.Release|Win32.ActiveCfg = Release|Win32
+		{98FC16C0-CFCE-40DC-A4E0-59B73E7B09BF}.Release|Win32.Build.0 = Release|Win32
+		{B62AE820-BE4B-4B4B-ABC1-CA63618E41DE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B62AE820-BE4B-4B4B-ABC1-CA63618E41DE}.Release|Win32.ActiveCfg = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
