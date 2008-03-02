@@ -522,6 +522,8 @@ namespace gsgl
 
             void checkered_box::draw(gsgl::scenegraph::context *c)
             {
+                return;
+
                 glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                   CHECK_GL_ERRORS();
                 glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                      CHECK_GL_ERRORS();
 

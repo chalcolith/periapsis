@@ -144,7 +144,7 @@ namespace gsgl
         template <typename T, typename IBase>
         void iterable<T,IBase>::append(const iterable<T, IBase> & a)
         {
-			for (const_iterator i(*this); i.is_valid(); ++i)
+			for (const_iterator i(a); i.is_valid(); ++i)
                 append(*i);
         } // iterable<T,IBase>::append()
 

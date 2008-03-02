@@ -102,26 +102,30 @@ namespace gsgl
                     view->get_name() = L"Default View";
                     non_scenery_nodes.append(view);
 
+                    //////////////////////////////////////////////////////////////////////////////
                     //// uncomment this to get a box with a spaceship inside it
                     //string box_name(L"Checkered Box");
 
                     //utils::checkered_box *box = new utils::checkered_box(box_name, 0, 100);
                     //box->get_parent_name() = view->get_parent_name();
-                    //box->get_translation()[1] = -50000000.0f;
+                    //box->get_translation().get_y() = -50000000.0f;
                     //scenery->connect(box);
 
                     ////
-                    //string vc_fname = sys_config[L"sys_data_path"] + io::directory::SEPARATOR + L"Vehicles" + io::directory::SEPARATOR + L"Ship1" + io::directory::SEPARATOR + L"Ship1.vehicle_prefab";
+                    //string vc_fname = global_config::get_config().get_child(L"paths/sys_data").get_text() + io::directory::SEPARATOR + L"Vehicles" + io::directory::SEPARATOR + L"Ship1" + io::directory::SEPARATOR + L"Ship1.vehicle_prefab";
                     //data::config_record vc(vc_fname);
                     //node *ship = dynamic_cast<node *>(b->create_object(L"periapsis::space::spacecraft", vc));
                     //assert(ship);
 
                     //ship->get_name() = string::format(L"Default Ship: %ls", ship->get_name().w_string());
-                    //ship->get_parent_name() = box_name;
+                    //ship->get_parent_name() = box->get_parent_name();
+                    //ship->get_translation().get_y() = -50000000.0f;
                     //scenery->connect(ship);
 
                     ////
                     //view->get_parent_name() = box->get_name();
+                    ////
+                    //////////////////////////////////////////////////////////////////////////////
                 }
                 else if (param->get_name() == L"vehicle")
                 {

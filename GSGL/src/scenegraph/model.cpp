@@ -78,8 +78,8 @@ namespace gsgl
         material_impl::material_impl()
             : ambient(0.8f, 0.8f, 0.8f, 1),
               diffuse(0.8f, 0.8f, 0.8f, 1),
-              specular(0.8f, 0.8f, 0.8f, 1),
-              emissive(0.8f, 0.8f, 0.8f, 1),
+              specular(0.0f, 0.0f, 0.0f, 1),
+              emissive(0.0f, 0.0f, 0.0f, 1),
               shininess(128.0f),
               flat(false),
               tex(0)
@@ -207,7 +207,7 @@ namespace gsgl
                 else if (tokens[0] == L"map_Ka" || tokens[0] == L"map_Kd")
                 {
                     file f(fname);
-                    cur->tex = new platform::texture(f.get_dir_name() + tokens[1]);
+                    cur->tex = new platform::texture(f.get_dir_name() + tokens[1], TEXTURE_LOAD_NO_PARAMS);
                 }
                 else
                 {
@@ -277,7 +277,7 @@ namespace gsgl
 
             glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, impl->ambient.get_val());                                   CHECK_GL_ERRORS();
             glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, impl->diffuse.get_val());                                   CHECK_GL_ERRORS();
-            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, impl->specular.get_val());                                 CHECK_GL_ERRORS();
+            //glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, impl->specular.get_val());                                 CHECK_GL_ERRORS();
             glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, impl->emissive.get_val());                                 CHECK_GL_ERRORS();
             glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, impl->shininess);                                          CHECK_GL_ERRORS();
 
@@ -292,7 +292,10 @@ namespace gsgl
 
             if (impl->tex && !(render_flags & context::RENDER_UNTEXTURED))
             {
+                glEnable(GL_TEXTURE_2D);
+
                 impl->tex->bind();
+
                 glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);                                        CHECK_GL_ERRORS();
                
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);                                       CHECK_GL_ERRORS();
@@ -387,12 +390,14 @@ namespace gsgl
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);                                                            CHECK_GL_ERRORS();
 
             // lighting and material
-            glEnable(GL_LIGHTING);                                                                                  CHECK_GL_ERRORS();
+            if (!(render_flags & context::RENDER_UNLIT))
+            {
+                glEnable(GL_LIGHTING);                                                                          CHECK_GL_ERRORS();
 
-            glLightModelf(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);                                                    CHECK_GL_ERRORS();
-            glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);                                                       CHECK_GL_ERRORS();
-
-            glEnable(GL_TEXTURE_2D);                                                                                CHECK_GL_ERRORS();
+                glLightModelf(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);                                            CHECK_GL_ERRORS();
+                glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);                                               CHECK_GL_ERRORS();
+                //glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
+            }
 
             mat->bind(render_flags);
 

@@ -78,8 +78,8 @@ namespace gsgl
         } // freeview::~freeview()
         
         
-        static config_variable<gsgl::real_t> ROTATION_STEP(L"scenegraph/freeview/rotation_step", 1.0f);
-        static config_variable<gsgl::real_t> TRANSITION_TIME(L"scenegraph/freeview/transition_time", 0.5f);
+        static config_variable<gsgl::real_t> ROTATION_STEP(L"scenegraph/freeview/rotation_step", 10.0f);
+        static config_variable<gsgl::real_t> TRANSITION_TIME(L"scenegraph/freeview/transition_time", 0.25f);
 
 
         void freeview::reset(context *c)
