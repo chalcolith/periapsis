@@ -215,7 +215,7 @@ namespace gsgl
             gsgl::flags_t flags;
 
             const GLenum opengl_texture_unit;
-            GLuint opengl_id;
+            mutable GLuint opengl_id;
 
             rgba_buffer *buffer;
 
@@ -227,10 +227,10 @@ namespace gsgl
             const string & get_name() const { return name; }
             const int get_texture_unit() { return static_cast<int>(opengl_texture_unit); }
 
-            void bind();
-            void unbind();
-            void update();
-            void unload();
+            void bind() const;
+            void unbind() const;
+            void update() const;
+            void unload() const;
         }; // class texture_impl
 
 
@@ -264,7 +264,7 @@ namespace gsgl
         } // texture_impl::~texture_impl()
 
 
-        void texture_impl::bind()
+        void texture_impl::bind() const
         {
             GLint max_texture_units;
             glGetIntegerv(GL_MAX_TEXTURE_UNITS, &max_texture_units);
@@ -303,13 +303,13 @@ namespace gsgl
         } // texture_impl::bind()
 
 
-        void texture_impl::unbind()
+        void texture_impl::unbind() const
         {
             glBindTexture(GL_TEXTURE_2D, 0);                                                                        CHECK_GL_ERRORS();
         } // texture_impl::unbind()
 
 
-        void texture_impl::update()
+        void texture_impl::update() const
         {
             bind();
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, buffer->get_width(), buffer->get_height(), GL_RGBA, GL_UNSIGNED_BYTE, buffer->get_pointer());
@@ -317,7 +317,7 @@ namespace gsgl
         } // texture_impl::update()
 
 
-        void texture_impl::unload()
+        void texture_impl::unload() const
         {
             if (opengl_id)
             {
@@ -411,7 +411,7 @@ namespace gsgl
         } // texture::get_texture_unit()
         
 
-        void texture::bind(gsgl::flags_t render_flags)
+        void texture::bind(gsgl::flags_t render_flags) const
         {
             assert(impl);
             impl->bind();
@@ -435,21 +435,21 @@ namespace gsgl
         } // texture::bind()
 
 
-        void texture::unbind()
+        void texture::unbind() const
         {
             assert(impl);
             impl->unbind();
         } // texture::unbind()
 
 
-        void texture::update()
+        void texture::update() const
         {
             assert(impl);
             impl->update();
         } // texture::update()
 
 
-        void texture::unload()
+        void texture::unload() const
         {
             assert(impl);
             impl->unload();

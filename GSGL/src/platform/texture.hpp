@@ -134,10 +134,10 @@ namespace gsgl
             const int get_texture_unit() const;
 
             /// Bind the texture for use in OpenGL.
-            void bind(gsgl::flags_t render_flags = TEXTURE_NO_FLAGS);   ///< Bind the texture for use in OpenGL, if necessary loading it first.
-            void unbind(); ///< Unbind the texture for use in OpenGL.
-            void update(); ///< Update the texture on the card from the memory buffer.
-            void unload(); ///< Unload the texture from the video card.
+            void bind(gsgl::flags_t render_flags = TEXTURE_NO_FLAGS) const;   ///< Bind the texture for use in OpenGL, if necessary loading it first.
+            void unbind() const; ///< Unbind the texture for use in OpenGL.
+            void update() const; ///< Update the texture on the card from the memory buffer.
+            void unload() const; ///< Unload the texture from the video card.
 
             static gsgl::data_object *create_global_texture_cache();
 

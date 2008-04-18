@@ -77,7 +77,7 @@ namespace periapsis
             }
 
             if (!obj_config[L"simple_height"].is_empty())
-                simple_heightmap = new gsgl::platform::texture(obj_config.get_directory().get_full_path() + obj_config[L"simple_height"], TEXTURE_ENV_MODULATE, TEXTURE_HEIGHTMAP, 1);
+                simple_heightmap = new gsgl::platform::texture(obj_config.get_directory().get_full_path() + obj_config[L"simple_height"], TEXTURE_LOAD_NO_PARAMS | TEXTURE_LOAD_UNCOMPRESSED, TEXTURE_HEIGHTMAP, 1);
 
             if (simple_heightmap)
             {

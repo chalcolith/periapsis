@@ -123,6 +123,13 @@ namespace periapsis
         } // lithosphere_qt_node::~lithosphere_qt_node()
 
 
+        static const string TEXTURE_BOUNDS_UNIFORM_NAME(L"TextureBounds");
+        static const string USE_HEIGHTMAP_UNIFORM_NAME(L"UseHeightmap");
+        static const string HEIGHT_MAP_UNIFORM_NAME(L"Heightmap");
+        static const string HEIGHT_MAP_BOUNDS_UNIFORM_NAME(L"HeightmapBounds");
+        static const string HEIGHT_MAP_MAX_UNIFORM_NAME(L"HeightmapMax");
+
+
         void lithosphere_qt_node::draw(gsgl::scenegraph::context *c)
         {
             lithosphere_quadtree *lqt = dynamic_cast<lithosphere_quadtree *>(parent_quadtree);
@@ -131,26 +138,26 @@ namespace periapsis
             if (current_texture)
             {
                 current_texture->bind();
-                lqt->get_shader()->set_uniform("TextureBounds", texture_bounds);
+                lqt->get_shader()->set_uniform(TEXTURE_BOUNDS_UNIFORM_NAME, texture_bounds);
             }
 
-            //if (current_heightmap)
-            //{
-            //    lqt->get_shader()->set_uniform("UseHeightmap", true);
+            if (current_heightmap)
+            {
+                current_heightmap->bind();
 
-            //    current_heightmap->bind();
-            //    lqt->get_shader()->set_uniform("Heightmap", current_heightmap->get_texture_unit());
-            //    lqt->get_shader()->set_uniform("HeightmapBounds", heightmap_bounds);
+                lqt->get_shader()->set_uniform(USE_HEIGHTMAP_UNIFORM_NAME, true);
+                lqt->get_shader()->set_uniform(HEIGHT_MAP_UNIFORM_NAME, current_heightmap->get_texture_unit());
+                lqt->get_shader()->set_uniform(HEIGHT_MAP_BOUNDS_UNIFORM_NAME, heightmap_bounds);
 
-            //    lithosphere *ls = dynamic_cast<lithosphere *>(lqt->get_parent_sg_node());
-            //    const celestial_body *cb = ls->get_parent_body();
-            //    gsgl::real_t max = cb ? cb->get_simple_height_max() : 0;
-            //    lqt->get_shader()->set_uniform("HeightmapMax", max);
-            //}
-            //else
-            //{
-            //    lqt->get_shader()->set_uniform("UseHeightmap", false);
-            //}
+                lithosphere *ls = dynamic_cast<lithosphere *>(lqt->get_parent_sg_node());
+                const celestial_body *cb = ls->get_parent_body();
+                gsgl::real_t max = cb ? cb->get_simple_height_max() : 0;
+                lqt->get_shader()->set_uniform(HEIGHT_MAP_MAX_UNIFORM_NAME, max);
+            }
+            else
+            {
+                lqt->get_shader()->set_uniform(USE_HEIGHTMAP_UNIFORM_NAME, false);
+            }
 
             sph_qt_node::draw(c);
         } // lithosphere_qt_node::draw()
@@ -223,10 +230,13 @@ namespace periapsis
         } // lithosphere_quadtree::init()
 
 
+        static const string NUM_LIGHTS_UNIFORM_NAME(L"NumLights");
+
+
         void lithosphere_quadtree::draw(gsgl::scenegraph::context *c)
         {
             shader->bind();
-            shader->set_uniform("NumLights", c->num_lights);
+            shader->set_uniform(NUM_LIGHTS_UNIFORM_NAME, c->num_lights);
             spherical_quadtree::draw(c);
             shader->unbind();
         } // lithosphere_quadtree::draw()

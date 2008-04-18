@@ -7,7 +7,9 @@
 \htmlonly
 <table>
 <tr>
-<td width="80%"><a class="anchor">The Periapsis Project</b><br/>This is the internal documentation for the Periapsis code base, including utilities, libraries and various application programs.
+<td width="80%">
+<p>This is the internal documentation for the Periapsis code base, including utilities, libraries and various application programs.</p>
+<p>The Sourceforge project page is <a href="http://sourceforge.net/projects/periapsis/">here</a></p>.
 </td>
 <td><a href="http://sourceforge.net/donate/index.php?group_id=219633"><img src="http://images.sourceforge.net/images/project-support.jpg" width="88" height="32" border="0" alt="Support This Project" /> </a></td>
 <td><a href="http://sourceforge.net"><img src="http://sflogo.sourceforge.net/sflogo.php?group_id=219633&amp;type=2" width="125" height="37" border="0" alt="SourceForge.net Logo" /></a></td>
@@ -43,6 +45,8 @@ The code consists of several loosely-coupled modules:
 	- \ref periapsis contains the startup code for the game itself.
 
 Start with \ref periapsis::periapsis_app to see how the game is set up.  Follow that to \ref gsgl::framework::application, which contains the framework of the application.  \ref gsgl::scenegraph::simulation contains the main simulation loop.
+
+If you want to see a simple spaceship model, uncomment the section of code in gsgl::scenegraph::simulation::simulation() that mentions the spaceship.
 
 \section license License
 

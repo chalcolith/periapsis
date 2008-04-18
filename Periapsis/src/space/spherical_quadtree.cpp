@@ -348,7 +348,7 @@ namespace periapsis
         {
             // make sure to split before drawing the first time
             // we can't do this during init because the positions aren't necessarily set
-            if (c->frame == 1)
+            if (c->frame == 0)
             {
                 update(c, false);
             }

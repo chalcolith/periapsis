@@ -35,10 +35,10 @@ uniform int NumLights;
 
 uniform vec4 TextureBounds;
 
-//uniform bool UseHeightmap;
-//uniform sampler2D Heightmap;
-//uniform vec4 HeightmapBounds;
-//uniform float HeightmapMax;
+uniform bool UseHeightmap;
+uniform sampler2D Heightmap;
+uniform vec4 HeightmapBounds;
+uniform float HeightmapMax;
 
 void main(void)
 {
@@ -49,16 +49,17 @@ void main(void)
     // height map lookup
     vec4 pos = gl_Vertex;
 
-    //if (UseHeightmap)
-    //{
-    //    vec2 coords;
-    //    coords.s = (gl_MultiTexCoord0.s - HeightmapBounds.x) / (HeightmapBounds.z - HeightmapBounds.x);
-    //    coords.t = (gl_MultiTexCoord0.t - HeightmapBounds.y) / (HeightmapBounds.w - HeightmapBounds.y);
+    if (UseHeightmap)
+    {
+        vec2 coords;
+        coords.s = (gl_MultiTexCoord0.s - HeightmapBounds.x) / (HeightmapBounds.z - HeightmapBounds.x);
+        coords.t = (gl_MultiTexCoord0.t - HeightmapBounds.y) / (HeightmapBounds.w - HeightmapBounds.y);
 
-    //    float height = texture2D(Heightmap, coords).x;
-    //    vec3 normal_in_world_space = normalize(vec4(gl_Normal, 1.0));
-    //    pos.xyz = pos.xyz + normal_in_world_space * (height * HeightmapMax * 100.0);
-    //}
+        float height = texture2D(Heightmap, coords).x;
+
+        vec3 normal_in_world_space = normalize(vec4(gl_Normal, 1.0));
+        pos.xyz = pos.xyz + normal_in_world_space * (height * HeightmapMax * 100.0);
+    }
     
     gl_Position = gl_ModelViewProjectionMatrix * pos;
 

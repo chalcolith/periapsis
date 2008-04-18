@@ -37,6 +37,7 @@
 #include "platform/platform.hpp"
 #include "data/string.hpp"
 #include "data/list.hpp"
+#include "data/dictionary.hpp"
 
 namespace gsgl
 {
@@ -51,6 +52,8 @@ namespace gsgl
             int opengl_id;
 
             gsgl::data::list<shader_base *> shaders;
+            gsgl::data::dictionary<int, gsgl::string> uniforms;
+
         public:
             shader_program();
             ~shader_program();
@@ -70,15 +73,15 @@ namespace gsgl
             /// Tells OpenGL to used the default shaders.
             void unbind();
 
-            void set_uniform(const char *name, const int & i);
-            void set_uniform(const char *name, const float & f);
-            void set_uniform(const char *name, const float ff[4]);
-            void set_uniform(const char *name, const bool b);
+            void set_uniform(const gsgl::string & name, const int & i);
+            void set_uniform(const gsgl::string & name, const float & f);
+            void set_uniform(const gsgl::string & name, const float ff[4]);
+            void set_uniform(const gsgl::string & name, const bool b);
 
             int get_id() { return opengl_id; }
 
         private:
-            int get_uniform_loc(const char *name);
+            int get_uniform_loc(const gsgl::string & name);
         }; // class shader_program
 
     } // namespace platform
