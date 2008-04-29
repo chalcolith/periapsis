@@ -25,7 +25,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Generating Unit Tests..."
-				CommandLine="cd ..\..\..\..\src\tests\data&#x0D;&#x0A;perl.exe ..\..\..\..\Utils\src\unit_tester\test_gen.pl test_exception.hpp test_dictionary.hpp test_fd_stream.hpp &gt; test_data.cpp&#x0D;&#x0A;"
+				CommandLine="cd ..\..\..\..\src\tests\data&#x0D;&#x0A;perl.exe ..\..\..\..\Utils\src\unit_tester\test_gen.pl test_exception.hpp test_queue.hpp test_dictionary.hpp test_fd_stream.hpp &gt; test_data.cpp&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -126,7 +126,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Generating Unit Tests..."
-				CommandLine="cd ..\..\..\..\src\tests\data&#x0D;&#x0A;perl.exe ..\..\..\..\Utils\src\unit_tester\test_gen.pl test_exception.hpp test_dictionary.hpp test_fd_stream.hpp &gt; test_data.cpp&#x0D;&#x0A;"
+				CommandLine="cd ..\..\..\..\src\tests\data&#x0D;&#x0A;perl.exe ..\..\..\..\Utils\src\unit_tester\test_gen.pl test_exception.hpp test_queue.hpp test_dictionary.hpp test_fd_stream.hpp &gt; test_data.cpp&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -246,6 +246,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\src\tests\data\test_fd_stream.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\src\tests\data\test_queue.hpp"
 				>
 			</File>
 		</Filter>

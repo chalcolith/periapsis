@@ -66,13 +66,16 @@ namespace periapsis
         sph_qt_node::sph_qt_node(spherical_quadtree *parent_quadtree, sph_qt_node *parent_node)
             : parent_quadtree(parent_quadtree), 
               level(parent_node ? parent_node->level + 1 : 0), 
-              dirty(true), parent_node(parent_node),
+              dirty(true), delete_me(false), parent_node(parent_node),
               triangle_fan_indices(32),
               radius_in_world_space(0), radius_in_screen_space(0),
               last_radius_frame(static_cast<unsigned long>(-1)),
-              last_merge_frame(0), last_split_frame(0),
+              last_merge_frame(static_cast<unsigned long>(-1)), 
+              last_split_frame(static_cast<unsigned long>(-1))
+#if 0
               pos_in_leaf_node_array(-1),
               pos_in_merge_node_array(-1)
+#endif
         {
             for (int i = 0; i < 4; ++i)
                 children[i] = 0;
@@ -164,6 +167,20 @@ namespace periapsis
         {
             return !children[0] && !children[1] && !children[2] && !children[3];
         } // sph_qt_node::is_a_leaf()
+
+
+        bool sph_qt_node::is_a_quad() const
+        {
+            if (!is_a_leaf())
+            {
+                for (int i = 0; i < 4; ++i)
+                    if (children[i] && !children[i]->is_a_leaf())
+                        return false;
+                return true;
+            }
+
+            return false;
+        } // sph_qt_node::is_a_quad()
 
 
         void sph_qt_node::update_fan_indices()
@@ -294,8 +311,10 @@ namespace periapsis
 
         spherical_quadtree::spherical_quadtree(gsgl::scenegraph::node *parent_sg_node, const gsgl::real_t & polar_radius, const gsgl::real_t & equatorial_radius)
             : parent_sg_node(parent_sg_node), polar_radius(polar_radius), equatorial_radius(equatorial_radius), 
-              buffers(0),
+              buffers(0), leaf_nodes(1024), merge_nodes(1024)
+#if 0
               num_leaf_nodes(0), last_num_leaf_nodes(0), num_merge_nodes(0), last_num_merge_nodes(0)
+#endif
         {
             for (int i = 0; i < 6; ++i)
                 root_nodes[i] = 0;
@@ -307,6 +326,7 @@ namespace periapsis
             for (int i = 0; i < 6; ++i)
                 delete root_nodes[i];
 
+#if 0
             for (int i = 0; i < leaf_nodes.size(); ++i)
             {
                 node_level_rec *rec = leaf_nodes[i];
@@ -317,6 +337,7 @@ namespace periapsis
                     delete rec;
                 }
             }
+#endif
 
             // must be last!
             delete buffers;
@@ -375,7 +396,7 @@ namespace periapsis
         //////////////////////////////////////////
 
         static config_variable<gsgl::real_t> ANGLE_CUTOFF(L"space/spherical_quadtree/angle_cutoff", -0.5f); ///< Cosine cutoff of the quad's center normal.
-        static config_variable<gsgl::real_t> PIXEL_CUTOFF(L"space/spherical_quadtree/pixel_cutoff", 64);   ///< The pixel radius cutoff of a quad.
+        static config_variable<gsgl::real_t> PIXEL_CUTOFF(L"space/spherical_quadtree/pixel_cutoff", 64);    ///< The pixel radius cutoff of a quad.
 
 
         static string get_indent(int indent)
@@ -389,6 +410,9 @@ namespace periapsis
 
         void spherical_quadtree::add_leaf_node(sph_qt_node *qtn)
         {
+            leaf_nodes.push(qtn);
+
+#if 0
             assert(qtn);
             node_level_rec *record = leaf_nodes[qtn->level];
             if (!record)
@@ -408,11 +432,14 @@ namespace periapsis
             qtn->pos_in_leaf_node_array = new_pos;
             record->first->item(new_pos) = qtn;
             ++num_leaf_nodes;
+#endif
         } // spherical_quadtree::add_leaf_node()
 
 
         void spherical_quadtree::remove_leaf_node(sph_qt_node *qtn)
         {
+            // shouldn't do anything here, since is_leaf() will tell us if we're a leaf...
+#if 0
             assert(qtn);
             if (qtn->pos_in_leaf_node_array != -1)
             {
@@ -429,11 +456,15 @@ namespace periapsis
             {
                 throw internal_exception(__FILE__, __LINE__, L"Trying to remove a non-leaf node from the leaf node list.");
             }
+#endif
         } // spherical_quadtree::remove_leaf_node()
 
 
         void spherical_quadtree::add_merge_node(sph_qt_node *qtn)
         {
+            merge_nodes.push(qtn);
+
+#if 0
             assert(qtn);
             node_level_rec *record = merge_nodes[qtn->level];
             if (!record)
@@ -453,11 +484,14 @@ namespace periapsis
             qtn->pos_in_merge_node_array = new_pos;
             record->first->item(new_pos) = qtn;
             ++num_merge_nodes;
+#endif
         } // spherical_quadtree::add_merge_node()
 
 
         void spherical_quadtree::remove_merge_node(sph_qt_node *qtn)
         {
+            // shouldn't need this
+#if 0
             if (qtn && qtn->pos_in_merge_node_array != -1)
             {
                 node_level_rec *record = merge_nodes[qtn->level];
@@ -473,6 +507,7 @@ namespace periapsis
             {
                 // don't throw here, because we may need to do this multiple times for a given node, or even for a null parent
             }
+#endif
         } // spherical_quadtree::remove_merge_node()
 
 
@@ -488,16 +523,6 @@ namespace periapsis
             normal_in_eye_space.normalize();
 
             result = vector::Z_AXIS.dot(normal_in_eye_space);
-
-
-            //vector eye_to_frame_origin_in_eye_space = modelview * vector::ZERO;
-            //eye_to_frame_origin_in_eye_space.normalize();
-            //eye_to_frame_origin_in_eye_space *= -1.0f;
-
-            //vector center_dir_in_eye_space = modelview_rotation * get_vector(global_normals, qtn->vertex_indices[12]);
-            //center_dir_in_eye_space.normalize();
-
-            //result = center_dir_in_eye_space.dot(eye_to_frame_origin_in_eye_space);
 
             return result;
         } // spherical_quadtree::node_cos_angle()
@@ -742,7 +767,8 @@ namespace periapsis
                     {
                         if (qtn->children[i])
                             remove_leaf_node(qtn->children[i]);
-                        delete qtn->children[i];
+                        //delete qtn->children[i];
+                        qtn->children[i]->delete_me = true;
                         qtn->children[i] = 0;
 
                         if (qtn->adjacent_nodes[i])
@@ -755,8 +781,10 @@ namespace periapsis
                     add_leaf_node(qtn);
 
                     // check parent to see if it is a new merge node
-                    if (qtn->parent_node)
+                    if (qtn->parent_node && qtn->parent_node->is_a_quad())
                     {
+                        add_merge_node(qtn->parent_node);
+#if 0
                         if (qtn->parent_node->pos_in_merge_node_array == -1
                             && qtn->parent_node->children[0]->is_a_leaf()
                             && qtn->parent_node->children[1]->is_a_leaf()
@@ -765,6 +793,7 @@ namespace periapsis
                         {
                             add_merge_node(qtn->parent_node);
                         }
+#endif
                     }
 
                     return true;
@@ -1311,13 +1340,58 @@ namespace periapsis
 
         static const bool allow_merge = true;
         static const bool allow_split = true;
-
+        static const int NUM_TO_PROCESS = 128;
 
         void spherical_quadtree::update(gsgl::scenegraph::context *c, const bool not_visible)
         {
             // only update if the view has changed
             vector eye_pos = parent_sg_node->get_modelview().inverse() * vector::ZERO;
-            
+
+            // split nodes
+            for (int i = 0; i < NUM_TO_PROCESS && leaf_nodes.size(); ++i) 
+            {
+                sph_qt_node *qtn = leaf_nodes.front();
+                leaf_nodes.pop();
+
+                if (qtn->delete_me)
+                {
+                    delete_nodes.push(qtn);
+                }
+                else if (qtn->is_a_leaf())
+                {
+                    if (!split_node(qtn, parent_sg_node->get_modelview(), c, false, 0))
+                        leaf_nodes.push(qtn);
+                }
+            }
+
+            // merge nodes
+            for (int i = 0; i < NUM_TO_PROCESS && merge_nodes.size(); ++i)
+            {
+                sph_qt_node *qtn = merge_nodes.front();
+                merge_nodes.pop();
+
+                if (qtn->delete_me)
+                {
+                    delete_nodes.push(qtn);
+                }
+                else if (qtn->is_a_quad())
+                {
+                    if (!merge_node(qtn, parent_sg_node->get_modelview(), c))
+                        merge_nodes.push(qtn);
+                }
+            }
+
+            // delete nodes
+            while (delete_nodes.size())
+            {
+                delete delete_nodes.front();
+                delete_nodes.pop();
+            }
+
+            // save eye position
+            eye_pos_in_object_space = eye_pos;
+
+#if 0
             if (c->frame < 10 
                 || num_leaf_nodes != last_num_leaf_nodes 
                 || num_merge_nodes != last_num_merge_nodes
@@ -1394,6 +1468,7 @@ namespace periapsis
 
                 eye_pos_in_object_space = eye_pos;
             }
+#endif
         } // spherical_quadtree::update()
 
 

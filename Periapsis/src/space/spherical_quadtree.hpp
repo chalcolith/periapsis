@@ -38,6 +38,7 @@
 #include "space/scenery_patch_set.hpp"
 
 #include "data/stack.hpp"
+#include "data/queue.hpp"
 #include "platform/vbuffer.hpp"
 #include "platform/buffer_pool.hpp"
 #include "platform/shader.hpp"
@@ -67,7 +68,7 @@ namespace periapsis
             spherical_quadtree *parent_quadtree;
             
             int level; ///< The level of detail of this node.
-            bool dirty;
+            bool dirty, delete_me;
 
             sph_qt_node *parent_node;
             sph_qt_node *children[4];
@@ -85,8 +86,10 @@ namespace periapsis
             unsigned long last_merge_frame;      ///< The frame at which we last merged the node.
             unsigned long last_split_frame;      ///< The frame at which we last split the node.
 
+#if 0
             gsgl::index_t pos_in_leaf_node_array;
             gsgl::index_t pos_in_merge_node_array;
+#endif
 
 #ifdef DEBUG
             gsgl::string path;
@@ -98,7 +101,8 @@ namespace periapsis
 
             virtual void draw(gsgl::scenegraph::context *c);
 
-            bool is_a_leaf() const;
+            bool is_a_leaf() const; ///< Returns true if the node is a splittable leaf.
+            bool is_a_quad() const; ///< Returns true if the node is a mergeable quad.
 
         private:
             void update_fan_indices();
@@ -134,6 +138,12 @@ namespace periapsis
             gsgl::math::transform last_frame_modelview_projection;
 
             gsgl::math::vector eye_pos_in_object_space;
+
+            gsgl::data::simple_queue<sph_qt_node *> leaf_nodes;
+            gsgl::data::simple_queue<sph_qt_node *> merge_nodes;
+            gsgl::data::simple_queue<sph_qt_node *> delete_nodes;
+
+#if 0
             typedef gsgl::data::pair<gsgl::data::simple_array<sph_qt_node *> *, gsgl::data::simple_stack<gsgl::index_t> *> node_level_rec; ///< The array of leaf nodes, plus an stack of free positions.
             
             gsgl::data::simple_array<node_level_rec *> leaf_nodes;  ///< An array of leaf nodes at each level.
@@ -141,6 +151,7 @@ namespace periapsis
 
             gsgl::data::simple_array<node_level_rec *> merge_nodes; ///< An array of nodes that can be merged.
             gsgl::index_t num_merge_nodes, last_num_merge_nodes;
+#endif
 
         public:
             spherical_quadtree(gsgl::scenegraph::node *parent_sg_node, const gsgl::real_t & polar_radius, const gsgl::real_t & equatorial_radius);

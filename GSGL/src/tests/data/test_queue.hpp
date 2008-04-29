@@ -49,8 +49,9 @@ namespace test
             gsgl::data::simple_queue<int> sq;
 
         public:
+            simple_queue_basic() {}
 
-            void test_001
+            void test_001()
             {
                 for (int i = 0; i < 10; ++i)
                     sq.push(i);

@@ -34,8 +34,9 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/data.h"
-#include "data/list.h"
+#include "data/data.hpp"
+#include "data/list.hpp"
+#include "data/array.hpp"
 
 namespace gsgl
 {
@@ -46,7 +47,7 @@ namespace gsgl
         /// A queue is a FIFO structure.
         template <typename T>
         class queue
-            : public list<T>
+            : protected list<T>
         {
         public:
             queue();
@@ -56,9 +57,6 @@ namespace gsgl
             
             /// Returns the item at the head of the queue.
             const T & front() const;
-            
-            /// Returns the item at the head of the queue.
-            T & front();
             
             /// Adds an item on the back of the queue.
             void push(const T & a);
@@ -91,12 +89,7 @@ namespace gsgl
         {
             return head->item;
         } // queue<T>::front()
-        
-        template <typename T> T & queue<T>::front()
-        {
-            return head->item;
-        } // queue<T>::front()
-        
+                
         template <typename T> void queue<T>::push(const T & item)
         {
             add(item);
@@ -112,8 +105,135 @@ namespace gsgl
             }
         } // queue<T>::pop()
         
+
+        /////////////////////////////////////////////////////////////////////
+
+        /// A queue that stores simple data types (it may reallocate, copy and/or move items around in memory, so don't rely on addresses of items in the queue.
+        /// It uses protected inheritance in order to force you to use the queue functions instead of array functions.
+        template <typename T>
+        class simple_queue 
+            : protected data::simple_array<T>
+        {
+            gsgl::index_t front_pos;  ///< The position of the front element of the queue.
+            gsgl::index_t insert_pos; ///< The position at which to insert items into the queue.
+            gsgl::index_t queue_size; ///< The number of items actually in the queue.
+
+        public:
+            simple_queue(const gsgl::index_t & initial_capacity = 0);
+            simple_queue(const simple_queue &);
+            simple_queue & operator= (const simple_queue &);
+            virtual ~simple_queue();
+
+            /// Returns the item at the head of the queue.
+            const T & front() const;
+
+            /// Adds an item to the back of the queue.
+            void push(const T & a);
+
+            /// Removes the front item from the queue.
+            void pop();
+
+			/// \name Countable Implementation
+			/// \{
+			virtual gsgl::index_t size() const { return queue_size; }
+			virtual void clear();
+			/// \}
+        }; // class simple_queue
+
+
+        template <typename T>
+        simple_queue<T>::simple_queue(const gsgl::index_t & initial_capacity)
+            : simple_array(initial_capacity), front_pos(0), insert_pos(0), queue_size(0)
+        {
+        } // simple_queue<T>::simple_queue()
+
+
+        template <typename T>
+        simple_queue<T>::simple_queue(const simple_queue & sq)
+            : simple_array(dynamic_cast<const simple_array<T> &>(sq)), 
+              front_pos(sq.front_pos), insert_pos(sq.insert_pos), queue_size(sq.queue_size)
+        {
+        } // simple_queue<T>::simple_queue()
+
+
+        template <typename T>
+        simple_queue<T> & simple_queue<T>::operator= (const simple_queue & sq)
+        {
+            dynamic_cast<simple_array<T> &>(*this) = dynamic_cast<const simple_array<T> &>(sq);
+            front_pos = sq.front_pos;
+            insert_pos = sq.insert_pos;
+            queue_size = sq.queue_size;
+            return *this;
+        } // simple_queue<T>::operator= ()
+
+
+        template <typename T>
+        simple_queue<T>::~simple_queue()
+        {
+        } // simple_queue<T>::~simple_queue()
+
+
+        template <typename T>
+        const T & simple_queue<T>::front() const
+        {
+            if (queue_size)
+            {
+                return simple_array<T>::item(front_pos);
+            }
+            else
+            {
+                throw gsgl::memory_exception(__FILE__, __LINE__, L"You cannot obtain the front element of an empty queue.");
+            }
+        } // simple_queue<T>::front()
+
+
+        template <typename T>
+        void simple_queue<T>::push(const T & a)
+        {
+            if (queue_size == simple_array<T>::size())
+            {
+                if (front_pos > insert_pos)
+                    ++front_pos;
+
+                simple_array<T>::insert(a, insert_pos);
+                ++insert_pos;
+            }
+            else
+            {
+                simple_array<T>::item(insert_pos) = a;
+                insert_pos = (insert_pos+1) % simple_array<T>::size();
+            }
+
+            ++queue_size;
+        } // simple_queue<T>::push()
+
+
+        template <typename T>
+        void simple_queue<T>::pop()
+        {
+            if (queue_size)
+            {
+                front_pos = (front_pos+1) % simple_array<T>::size();
+                --queue_size;
+            }
+            else
+            {
+                throw gsgl::memory_exception(__FILE__, __LINE__, L"You cannot pop the front element of an empty queue.");
+            }
+        } // simple_queue<T>::pop()
+
+
+        template <typename T>
+        void simple_queue<T>::clear()
+        {
+            front_pos  = 0;
+            insert_pos = 0;
+            queue_size = 0;
+        } // simple_queue<T>::clear()
+
+
     } // namespace data
     
-} // namespace data
+} // namespace gsgl
 
 #endif
