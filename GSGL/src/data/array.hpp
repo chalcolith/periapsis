@@ -120,8 +120,8 @@ namespace gsgl
 			inline const T *ptr() const { return data; }
 			inline T * ptr() { return data; }
 
-			void insert(const T & item, const typename index_t & index);
-			void remove(const typename index_t & index);
+			void insert(const T & item, const gsgl::index_t & index);
+			void remove(const gsgl::index_t & index);
 			/// \}
 
 		protected:
@@ -313,6 +313,275 @@ namespace gsgl
                 return *this;
 			}
 		}; // class simple_array_iterator
+
+
+
+		/////////////////////////////////////////////////////////////////////
+
+		template <typename T>
+		class object_array_iterator;
+
+
+		/// An array of objects.  Pointers to these objects will remain valid as long as the objects remain in the array.
+		/// You may also use placement new to allocate directly in the array, avoiding a copy.
+		/// Note that insert and remove operations will be expensive, as they will copy large numbers of objects around.
+		
+		template <typename T>
+		class object_array
+			: public array_base,
+			  public iterable<T, object_array_iterator<T> >,
+			  public indexable<T, gsgl::index_t>
+		{
+			friend class object_array_iterator<T>;
+
+			gsgl::index_t num_elements;
+			simple_array<T *> buckets;
+
+			const gsgl::index_t bucket_size;
+
+		public:
+			object_array(const gsgl::index_t & initial_capacity = 0, const gsgl::index_t & bucket_size = 32);
+			object_array(const object_array & oa);
+			object_array & operator= (const object_array & oa);
+			virtual ~object_array();
+
+			/// \name Countable Implementation
+			/// \{
+			virtual gsgl::index_t size() const { return num_elements; }
+			virtual void clear();
+			/// \}
+
+
+			/// \name Iterable Implementation
+			/// \{
+			using iterable::append;
+			virtual void append(const T &);
+			virtual void insert(const iterator & i, const T & item);
+			virtual void remove(const iterator & i);
+			/// \}
+
+
+			/// \name Indexable Implementation
+			/// \{
+			virtual const T & item(const gsgl::index_t & index) const;
+			virtual T & item(const gsgl::index_t & index);
+			virtual bool contains_index(const gsgl::index_t & index) const { return index < num_elements; }
+			/// \}
+
+			/// \name Array Functionality
+			/// \{
+			void insert(const T & item, const gsgl::index_t & index);
+			void remove(const gsgl::index_t & index);
+			/// \}
+		}; // class object_array
+
+
+		template <typename T>
+		object_array<T>::object_array(const gsgl::index_t & initial_capacity, const gsgl::index_t & bucket_size)
+			: array_base(),
+			  iterable<T, object_array_iterator<T> >(),
+			  indexable<T, gsgl::index_t>(),
+			  num_elements(0), buckets(initial_capacity/bucket_size + 1),
+			  bucket_size(bucket_size)
+		{
+			for (int i = 0; i < (initial_capacity/bucket_size + 1); ++i)
+			{
+				buckets[i] = static_cast<T *>(allocate(sizeof(T) * bucket_size));
+			}
+		} // object_array<T>::object_array()
+
+
+		template <typename T>
+		object_array<T>::object_array(const object_array<T> & oa)
+			: array_base(),
+			  iterable<T, object_array_iterator<T> >(),
+			  indexable<T, gsgl::index_t>(),
+			  num_elements(oa.num_elements), buckets(oa.buckets.size()),
+			  bucket_size(oa.bucket_size)
+		{
+			for (int i = 0; i < oa.num_elements; ++i)
+			{
+				item(i) = oa.item(i);
+			}
+		} // object_array<T>::object_array()
+
+
+		template <typename T>
+		object_array<T> & object_array<T>::operator= (const object_array<T> & oa)
+		{
+			clear();
+
+			for (int i = 0; i < oa.num_elements; ++i)
+			{
+				item(i) = oa.item(i);
+			}
+
+			// we keep our bucket size the same as before, so as not to reallocate everything
+			num_elements = oa.num_elements;
+		} // object_array<T>::operator= ()
+
+
+		template <typename T>
+		object_array<T>::~object_array()
+		{
+			clear();
+
+			for (int i = 0; i < buckets.size(); ++i)
+			{
+				deallocate(buckets[i]);
+			}
+		} // object_array<T>::~object_array()
+
+
+		/////////////////////////////
+
+		template <typename T>
+		void object_array<T>::clear()
+		{
+			// clean up all objects
+			for (int i = 0; i < size(); ++i)
+			{
+				T *obj = &item(i);
+				obj->~T();
+			}
+
+			num_elements = 0;
+		} // object_array<T>::clear()
+
+
+		template <typename T>
+		void object_array<T>::append(const T & item)
+		{
+			insert(item, size());
+		} // object_array<T>::append()
+
+
+		template <typename T>
+		void object_array<T>::insert(const iterator & iter, const T & item_to_insert)
+		{
+			object_array_iterator<T> & oi = dynamic_cast<object_array_iterator<T> &>(iter);
+			insert(item, oi.position);
+		} // object_array<T>::insert()
+
+
+		template <typename T>
+		void object_array<T>::remove(const iterator & iter)
+		{
+			object_array_iterator<T> & oi = dynamic_cast<object_array_iterator<T> &>(iter);
+			remove(oi.position);
+		} // object_array<T>::remove()
+
+
+		template <typename T>
+		const T & object_array<T>::item(const gsgl::index_t & index) const
+		{
+			if (index < num_elements)
+			{
+				assert(buckets[index / bucket_size]);
+				return buckets[index / bucket_size][index % bucket_size];
+			}
+			else
+			{
+				throw memory_exception(__FILE__, __LINE__, L"Index out of range in object array access.");
+			}
+		} // object_array<T>::item()
+
+
+		template <typename T>
+		T & object_array<T>::item(const gsgl::index_t & index)
+		{
+			// add new elements if necessary
+			if (index >= num_elements)
+			{
+				// create new bucket(s)
+				int target_bucket = index / bucket_size;
+				for (int i = buckets.size(); i <= target_bucket; ++i)
+				{
+					buckets[i] = allocate(sizeof(T) * bucket_size);
+				}
+
+				// initialize intermediate elements
+				for (int i = num_elements; i < index+1; ++i)
+				{
+					(&buckets[i / bucket_size][i % bucket_size])->T();
+				}
+
+				num_elements = index+1;
+			}
+
+			assert(buckets[index/bucket_size]);
+			return buckets[index/bucket_size][index % bucket_size];
+		} // object_array<T>::item()
+
+
+		template <typename T>
+		void object_array<T>::insert(const T & item_to_insert, const gsgl::index_t & index)
+		{
+			for (int i = num_elements; i > index; --i)
+			{
+				item(i) = item(i-1); // this will adjust num_elements
+			}
+
+			item(index) = item_to_insert;
+		} // object_array<T>::insert()
+
+
+		template <typename T>
+		void object_array<T>::remove(const gsgl::index_t & index)
+		{
+			(&item(index))->~T();
+			(&item(index))->T();
+
+			for (int i = index; i < num_elements-1; ++i)
+			{
+				item(i) = item(i+1);
+			}
+
+			(&item(--num_elements))->~T();
+		} // object_array<T>::remove()
+
+
+
+		/////////////////////////////
+
+		template <typename T>
+		class object_array_iterator
+		{
+			friend class object_array<T>;
+			const object_array<T> & parent;
+			gsgl::index_t position;
+		protected:
+			object_array_iterator(const iterable<T, object_array_iterator<T> > & parent_iterable)
+				: parent(dynamic_cast<const object_array<T> &>(parent_iterable)), position(0) {}
+
+			object_array_iterator(const object_array_iterator & i)
+				: parent(i.parent), position(i.position) {}
+
+			object_array_iterator & operator= (const object_array_iterator & i)
+			{
+				parent = i.parent;
+				position = i.position;
+				return *this;
+			}
+
+			inline bool is_valid() const { return position < parent.num_elements; }
+
+			inline const T & operator*() const
+			{
+				if (position < parent.num_elements)
+					return const_cast<T &>(parent.item(position));
+				else
+					throw memory_exception(__FILE__, __LINE__, L"Array iterator overflow in dereference operator.");
+			}
+
+			inline object_array_iterator & operator++ ()
+			{
+				if (position < parent.num_elements)
+					++position;
+				else
+					throw memory_exception(__FILE__, __LINE__, L"Array iterator overflow in preincrement operator.");
+			}
+		}; // class object_array_iterator
 
 
     } // namespace data
