@@ -68,7 +68,7 @@ namespace periapsis
             spherical_quadtree *parent_quadtree;
             
             int level; ///< The level of detail of this node.
-            bool dirty, delete_me;
+            bool dirty, dequeue_me, delete_me;
 
             sph_qt_node *parent_node;
             sph_qt_node *children[4];
@@ -139,9 +139,9 @@ namespace periapsis
 
             gsgl::math::vector eye_pos_in_object_space;
 
-            gsgl::data::simple_queue<sph_qt_node *> leaf_nodes;
-            gsgl::data::simple_queue<sph_qt_node *> merge_nodes;
-            gsgl::data::simple_queue<sph_qt_node *> delete_nodes;
+            gsgl::data::queue<sph_qt_node *> leaf_nodes;
+            gsgl::data::queue<sph_qt_node *> merge_nodes;
+            gsgl::data::queue<sph_qt_node *> delete_nodes;
 
 #if 0
             typedef gsgl::data::pair<gsgl::data::simple_array<sph_qt_node *> *, gsgl::data::simple_stack<gsgl::index_t> *> node_level_rec; ///< The array of leaf nodes, plus an stack of free positions.

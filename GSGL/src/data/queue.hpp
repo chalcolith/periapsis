@@ -55,6 +55,8 @@ namespace gsgl
             queue & operator= (const queue & q);
             virtual ~queue();
             
+            virtual gsgl::index_t size() const { return list<T>::size(); }
+
             /// Returns the item at the head of the queue.
             const T & front() const;
             
@@ -70,14 +72,15 @@ namespace gsgl
         template <typename T> queue<T>::queue() : list<T>()
         {} // queue<T>::queue()
         
-        template <typename T> queue<T>::queue(const queue & q) : lisT<T>(q)
+        template <typename T> queue<T>::queue(const queue & q) : list<T>(q)
         {} // queue<T>::queue()
         
         template <typename T> queue<T> & queue<T>::operator= (const queue & q)
         {
             clear();
             for (list_node *l = q.head; l; l = l->next)
-                add(l->item);
+                push(l->item);
+            return *this;
         } // queue<T>::operator= ()
         
         template <typename T> 
@@ -87,21 +90,40 @@ namespace gsgl
     
         template <typename T> const T & queue<T>::front() const
         {
-            return head->item;
+            if (head)
+                return head->item;
+            else
+                throw memory_exception(__FILE__, __LINE__, L"Queue underflow in front().");
         } // queue<T>::front()
                 
         template <typename T> void queue<T>::push(const T & item)
         {
-            add(item);
+            append(item);
         } // queue<T>::push()
         
         template <typename T> void queue<T>::pop()
         {
             if (head)
             {
-                list_node *temp = head;
+                list_node *cur = head;
                 head = head->next;
-                delete temp;
+                if (cur == tail)
+                    tail = cur->prev;
+
+                if (cur->prev)
+                    cur->prev->next = cur->next;
+                if (cur->next)
+                    cur->next->prev = cur->prev;
+
+                cur->prev = 0;
+                cur->next = 0;
+
+                delete cur;
+                --count;
+            }
+            else
+            {
+                throw memory_exception(__FILE__, __LINE__, L"Queue underflow in pop().");
             }
         } // queue<T>::pop()
         

@@ -71,15 +71,19 @@ namespace gsgl
         budget_record::budget_record(const string & category)
             : parent(budget::global_instance()), category(category)
         {
+#ifdef DEBUG
             assert(parent);
             start_tick = SDL_GetTicks();
+#endif
         } // budget_record::budget_record()
 
 
         budget_record::~budget_record()
         {
+#ifdef DEBUG
             unsigned int end_tick = SDL_GetTicks();
             parent->get_data()[category] += end_tick - start_tick;
+#endif
         } // budget_record::~budget_record()
 
 

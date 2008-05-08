@@ -311,7 +311,7 @@ namespace periapsis
 
         spherical_quadtree::spherical_quadtree(gsgl::scenegraph::node *parent_sg_node, const gsgl::real_t & polar_radius, const gsgl::real_t & equatorial_radius)
             : parent_sg_node(parent_sg_node), polar_radius(polar_radius), equatorial_radius(equatorial_radius), 
-              buffers(0), leaf_nodes(1024), merge_nodes(1024)
+              buffers(0), leaf_nodes(), merge_nodes(), delete_nodes()
 #if 0
               num_leaf_nodes(0), last_num_leaf_nodes(0), num_merge_nodes(0), last_num_merge_nodes(0)
 #endif
@@ -410,6 +410,9 @@ namespace periapsis
 
         void spherical_quadtree::add_leaf_node(sph_qt_node *qtn)
         {
+            assert(qtn);
+            qtn->dequeue_me = false;
+            qtn->delete_me = false;
             leaf_nodes.push(qtn);
 
 #if 0
@@ -438,7 +441,9 @@ namespace periapsis
 
         void spherical_quadtree::remove_leaf_node(sph_qt_node *qtn)
         {
-            // shouldn't do anything here, since is_leaf() will tell us if we're a leaf...
+            assert(qtn);
+            qtn->dequeue_me = true;
+
 #if 0
             assert(qtn);
             if (qtn->pos_in_leaf_node_array != -1)
@@ -462,6 +467,9 @@ namespace periapsis
 
         void spherical_quadtree::add_merge_node(sph_qt_node *qtn)
         {
+            assert(qtn);
+            qtn->dequeue_me = false;
+            qtn->delete_me = false;
             merge_nodes.push(qtn);
 
 #if 0
@@ -490,7 +498,9 @@ namespace periapsis
 
         void spherical_quadtree::remove_merge_node(sph_qt_node *qtn)
         {
-            // shouldn't need this
+            assert(qtn);
+            qtn->dequeue_me = true;
+
 #if 0
             if (qtn && qtn->pos_in_merge_node_array != -1)
             {
@@ -1301,7 +1311,7 @@ namespace periapsis
                 throw internal_exception(__FILE__, __LINE__, L"Trying to split a non-leaf node!");
 
             // try to split
-            if (no_visual_check || (/*(node_cos_angle(qtn, modelview) > ANGLE_CUTOFF) && */ (node_radius(qtn, c) > PIXEL_CUTOFF)))
+            if (no_visual_check || ((node_cos_angle(qtn, modelview) > ANGLE_CUTOFF) && (node_radius(qtn, c) > PIXEL_CUTOFF)))
             {
 #ifdef DEBUG_SPLITS_AND_MERGES
                 gsgl::log(string(L"\n") + get_indent(force_level) + L"SPLIT {" + qtn->path.w_string() + L"}");
@@ -1328,7 +1338,8 @@ namespace periapsis
                     split_node_aux(qtn, force_level);
                     qtn->last_split_frame = c->frame;
 
-                    remove_merge_node(qtn->parent_node);
+                    if (qtn->parent_node)
+                        remove_merge_node(qtn->parent_node);
                     add_merge_node(qtn);
                     return true;
                 }
@@ -1357,7 +1368,7 @@ namespace periapsis
                 {
                     delete_nodes.push(qtn);
                 }
-                else if (qtn->is_a_leaf())
+                else if (!qtn->dequeue_me && qtn->is_a_leaf())
                 {
                     if (!split_node(qtn, parent_sg_node->get_modelview(), c, false, 0))
                         leaf_nodes.push(qtn);
@@ -1374,7 +1385,7 @@ namespace periapsis
                 {
                     delete_nodes.push(qtn);
                 }
-                else if (qtn->is_a_quad())
+                else if (!qtn->dequeue_me && qtn->is_a_quad())
                 {
                     if (!merge_node(qtn, parent_sg_node->get_modelview(), c))
                         merge_nodes.push(qtn);
@@ -1384,8 +1395,9 @@ namespace periapsis
             // delete nodes
             while (delete_nodes.size())
             {
-                delete delete_nodes.front();
+                sph_qt_node *qtn = delete_nodes.front();
                 delete_nodes.pop();
+                delete qtn;
             }
 
             // save eye position
