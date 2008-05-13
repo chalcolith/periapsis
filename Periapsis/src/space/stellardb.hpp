@@ -57,6 +57,7 @@ namespace periapsis
 
             gsgl::platform::vertex_buffer vertices;
             gsgl::platform::shader_program star_shader;
+            gsgl::platform::shader_uniform<float> *uniform_farthest_distance;
 
             gsgl::data::simple_array<gsgl::real_t> star_name_vertices;
             gsgl::data::simple_array<gsgl::string *> star_names;

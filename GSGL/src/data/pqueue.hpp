@@ -86,8 +86,7 @@ namespace gsgl
 
             /// \name Priority Queue Functionality
             /// \{
-            const T & get_head() const;
-            T & get_head();
+            const T & front() const;
 
             void push(const T &, const I &);
             void pop();
@@ -192,7 +191,7 @@ namespace gsgl
 
 
         template <typename T, typename I>
-        const T & pqueue<T,I>::get_head() const
+        const T & pqueue<T,I>::front() const
         {
             try
             {
@@ -202,21 +201,7 @@ namespace gsgl
             {
                 throw memory_exception(__FILE__, __LINE__, L"Priority queue underflow.");
             }
-        } // pqueue<T,I>::get_head()
-
-
-        template <typename T, typename I>
-        T & pqueue<T,I>::get_head()
-        {
-            try
-            {
-                return values[0];
-            }
-            catch (runtime_exception &)
-            {
-                throw memory_exception(__FILE__, __LINE__, L"Priority queue underflow.");
-            }
-        } // pqueue<T,I>::get_head()
+        } // pqueue<T,I>::front()
 
 
         template <typename T, typename I>

@@ -56,15 +56,22 @@ namespace periapsis
         class lithosphere_quadtree
             : public spherical_quadtree
         {
+            friend class lithosphere_qt_node;
+
             /// Multiple instances of this class will share the first instance's shader.
             /// This ensures that when the last instance of the class is deleted, the shader will be also.
             gsgl::data::shared_pointer<gsgl::platform::shader_program> shader;
 
+            gsgl::platform::shader_uniform<int>      *uniform_num_lights;
+            gsgl::platform::shader_uniform<float[4]> *uniform_texture_bounds;
+            gsgl::platform::shader_uniform<bool>     *uniform_use_heightmap;
+            gsgl::platform::shader_uniform<int>      *uniform_height_map;
+            gsgl::platform::shader_uniform<float[4]> *uniform_heightmap_bounds;
+            gsgl::platform::shader_uniform<float>    *uniform_heightmap_max;
+
         public:
             lithosphere_quadtree(large_lithosphere *parent_sg_node, const gsgl::real_t & polar_radius, const gsgl::real_t & equatorial_radius);
             virtual ~lithosphere_quadtree();
-
-            shader_program *get_shader() { return shader; }
 
             virtual void init(gsgl::scenegraph::context *c);
             virtual void draw(gsgl::scenegraph::context *c);
@@ -123,40 +130,34 @@ namespace periapsis
         } // lithosphere_qt_node::~lithosphere_qt_node()
 
 
-        static const string TEXTURE_BOUNDS_UNIFORM_NAME(L"TextureBounds");
-        static const string USE_HEIGHTMAP_UNIFORM_NAME(L"UseHeightmap");
-        static const string HEIGHT_MAP_UNIFORM_NAME(L"Heightmap");
-        static const string HEIGHT_MAP_BOUNDS_UNIFORM_NAME(L"HeightmapBounds");
-        static const string HEIGHT_MAP_MAX_UNIFORM_NAME(L"HeightmapMax");
-
-
         void lithosphere_qt_node::draw(gsgl::scenegraph::context *c)
         {
             lithosphere_quadtree *lqt = dynamic_cast<lithosphere_quadtree *>(parent_quadtree);
-            assert(lqt->get_shader());
+            assert(lqt->shader);
 
             if (current_texture)
             {
                 current_texture->bind();
-                lqt->get_shader()->set_uniform(TEXTURE_BOUNDS_UNIFORM_NAME, texture_bounds);
+                lqt->uniform_texture_bounds->set(texture_bounds);
             }
 
             if (current_heightmap)
             {
                 current_heightmap->bind();
 
-                lqt->get_shader()->set_uniform(USE_HEIGHTMAP_UNIFORM_NAME, true);
-                lqt->get_shader()->set_uniform(HEIGHT_MAP_UNIFORM_NAME, current_heightmap->get_texture_unit());
-                lqt->get_shader()->set_uniform(HEIGHT_MAP_BOUNDS_UNIFORM_NAME, heightmap_bounds);
+                lqt->uniform_use_heightmap->set(true);
+                lqt->uniform_height_map->set(current_heightmap->get_texture_unit());
+                lqt->uniform_heightmap_bounds->set(heightmap_bounds);
 
                 lithosphere *ls = dynamic_cast<lithosphere *>(lqt->get_parent_sg_node());
                 const celestial_body *cb = ls->get_parent_body();
                 gsgl::real_t max = cb ? cb->get_simple_height_max() : 0;
-                lqt->get_shader()->set_uniform(HEIGHT_MAP_MAX_UNIFORM_NAME, max);
+
+                lqt->uniform_heightmap_max->set(max);
             }
             else
             {
-                lqt->get_shader()->set_uniform(USE_HEIGHTMAP_UNIFORM_NAME, false);
+                lqt->uniform_use_heightmap->set(false);
             }
 
             sph_qt_node::draw(c);
@@ -188,6 +189,14 @@ namespace periapsis
         void lithosphere_quadtree::init(gsgl::scenegraph::context *c)
         {
             shader->load(); // redundant, but it won't try to load unnecessarily
+
+            // these will not leak; they will be cleaned up by the shader
+            uniform_num_lights       = shader->get_uniform<int>     (L"NumLights");
+            uniform_texture_bounds   = shader->get_uniform<float[4]>(L"TextureBounds");
+            uniform_use_heightmap    = shader->get_uniform<bool>    (L"UseHeightmap");
+            uniform_height_map       = shader->get_uniform<int>     (L"Heightmap");
+            uniform_heightmap_bounds = shader->get_uniform<float[4]>(L"HeightmapBounds");
+            uniform_heightmap_max    = shader->get_uniform<float>   (L"HeightmapMax");
 
             spherical_quadtree::init(c);
 
@@ -230,13 +239,10 @@ namespace periapsis
         } // lithosphere_quadtree::init()
 
 
-        static const string NUM_LIGHTS_UNIFORM_NAME(L"NumLights");
-
-
         void lithosphere_quadtree::draw(gsgl::scenegraph::context *c)
         {
             shader->bind();
-            shader->set_uniform(NUM_LIGHTS_UNIFORM_NAME, c->num_lights);
+            uniform_num_lights->set(c->num_lights);
             spherical_quadtree::draw(c);
             shader->unbind();
         } // lithosphere_quadtree::draw()

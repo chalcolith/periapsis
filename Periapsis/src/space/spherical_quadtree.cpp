@@ -72,10 +72,6 @@ namespace periapsis
               last_radius_frame(static_cast<unsigned long>(-1)),
               last_merge_frame(static_cast<unsigned long>(-1)), 
               last_split_frame(static_cast<unsigned long>(-1))
-#if 0
-              pos_in_leaf_node_array(-1),
-              pos_in_merge_node_array(-1)
-#endif
         {
             for (int i = 0; i < 4; ++i)
                 children[i] = 0;
@@ -312,9 +308,6 @@ namespace periapsis
         spherical_quadtree::spherical_quadtree(gsgl::scenegraph::node *parent_sg_node, const gsgl::real_t & polar_radius, const gsgl::real_t & equatorial_radius)
             : parent_sg_node(parent_sg_node), polar_radius(polar_radius), equatorial_radius(equatorial_radius), 
               buffers(0), leaf_nodes(), merge_nodes(), delete_nodes()
-#if 0
-              num_leaf_nodes(0), last_num_leaf_nodes(0), num_merge_nodes(0), last_num_merge_nodes(0)
-#endif
         {
             for (int i = 0; i < 6; ++i)
                 root_nodes[i] = 0;
@@ -325,19 +318,6 @@ namespace periapsis
         {
             for (int i = 0; i < 6; ++i)
                 delete root_nodes[i];
-
-#if 0
-            for (int i = 0; i < leaf_nodes.size(); ++i)
-            {
-                node_level_rec *rec = leaf_nodes[i];
-                if (rec)
-                {
-                    delete leaf_nodes[i]->first;
-                    delete leaf_nodes[i]->second;
-                    delete rec;
-                }
-            }
-#endif
 
             // must be last!
             delete buffers;
@@ -396,7 +376,7 @@ namespace periapsis
         //////////////////////////////////////////
 
         static config_variable<gsgl::real_t> ANGLE_CUTOFF(L"space/spherical_quadtree/angle_cutoff", -0.5f); ///< Cosine cutoff of the quad's center normal.
-        static config_variable<gsgl::real_t> PIXEL_CUTOFF(L"space/spherical_quadtree/pixel_cutoff", 64);    ///< The pixel radius cutoff of a quad.
+        static config_variable<gsgl::real_t> PIXEL_CUTOFF(L"space/spherical_quadtree/pixel_cutoff", 128);    ///< The pixel radius cutoff of a quad.
 
 
         static string get_indent(int indent)
@@ -414,28 +394,6 @@ namespace periapsis
             qtn->dequeue_me = false;
             qtn->delete_me = false;
             leaf_nodes.push(qtn);
-
-#if 0
-            assert(qtn);
-            node_level_rec *record = leaf_nodes[qtn->level];
-            if (!record)
-                record = leaf_nodes[qtn->level] = new node_level_rec(new simple_array<sph_qt_node *>(), new simple_stack<gsgl::index_t>());
-
-            gsgl::index_t new_pos;
-            if (record->second->size())
-            {
-                new_pos = record->second->top();
-                record->second->pop();
-            }
-            else
-            {
-                new_pos = record->first->size();
-            }
-
-            qtn->pos_in_leaf_node_array = new_pos;
-            record->first->item(new_pos) = qtn;
-            ++num_leaf_nodes;
-#endif
         } // spherical_quadtree::add_leaf_node()
 
 
@@ -443,25 +401,6 @@ namespace periapsis
         {
             assert(qtn);
             qtn->dequeue_me = true;
-
-#if 0
-            assert(qtn);
-            if (qtn->pos_in_leaf_node_array != -1)
-            {
-                node_level_rec *record = leaf_nodes[qtn->level];
-                if (!record)
-                    throw internal_exception(__FILE__, __LINE__, L"Problem with leaf node array.");
-
-                record->second->push(qtn->pos_in_leaf_node_array);
-                record->first->item(qtn->pos_in_leaf_node_array) = 0;
-                qtn->pos_in_leaf_node_array = -1;
-                --num_leaf_nodes;
-            }
-            else
-            {
-                throw internal_exception(__FILE__, __LINE__, L"Trying to remove a non-leaf node from the leaf node list.");
-            }
-#endif
         } // spherical_quadtree::remove_leaf_node()
 
 
@@ -471,28 +410,6 @@ namespace periapsis
             qtn->dequeue_me = false;
             qtn->delete_me = false;
             merge_nodes.push(qtn);
-
-#if 0
-            assert(qtn);
-            node_level_rec *record = merge_nodes[qtn->level];
-            if (!record)
-                record = merge_nodes[qtn->level] = new node_level_rec(new simple_array<sph_qt_node *>(), new simple_stack<gsgl::index_t>());
-
-            gsgl::index_t new_pos;
-            if (record->second->size())
-            {
-                new_pos = record->second->top();
-                record->second->pop();
-            }
-            else
-            {
-                new_pos = record->first->size();
-            }
-
-            qtn->pos_in_merge_node_array = new_pos;
-            record->first->item(new_pos) = qtn;
-            ++num_merge_nodes;
-#endif
         } // spherical_quadtree::add_merge_node()
 
 
@@ -500,24 +417,6 @@ namespace periapsis
         {
             assert(qtn);
             qtn->dequeue_me = true;
-
-#if 0
-            if (qtn && qtn->pos_in_merge_node_array != -1)
-            {
-                node_level_rec *record = merge_nodes[qtn->level];
-                if (!record)
-                    throw internal_exception(__FILE__, __LINE__, L"Problem with merge node array.");
-
-                record->second->push(qtn->pos_in_merge_node_array);
-                record->first->item(qtn->pos_in_merge_node_array) = 0;
-                qtn->pos_in_merge_node_array = -1;
-                --num_merge_nodes;
-            }
-            else
-            {
-                // don't throw here, because we may need to do this multiple times for a given node, or even for a null parent
-            }
-#endif
         } // spherical_quadtree::remove_merge_node()
 
 
@@ -794,16 +693,6 @@ namespace periapsis
                     if (qtn->parent_node && qtn->parent_node->is_a_quad())
                     {
                         add_merge_node(qtn->parent_node);
-#if 0
-                        if (qtn->parent_node->pos_in_merge_node_array == -1
-                            && qtn->parent_node->children[0]->is_a_leaf()
-                            && qtn->parent_node->children[1]->is_a_leaf()
-                            && qtn->parent_node->children[2]->is_a_leaf()
-                            && qtn->parent_node->children[3]->is_a_leaf())
-                        {
-                            add_merge_node(qtn->parent_node);
-                        }
-#endif
                     }
 
                     return true;
@@ -1366,7 +1255,12 @@ namespace periapsis
 
                 if (qtn->delete_me)
                 {
-                    delete_nodes.push(qtn);
+#ifdef DEBUG
+                    if (delete_nodes.find_value(qtn).is_valid())
+                        throw internal_exception(__FILE__, __LINE__, L"Duplicate deletion splitting nodes in spherical quadtree.");
+#endif
+
+                    delete_nodes.append(qtn);
                 }
                 else if (!qtn->dequeue_me && qtn->is_a_leaf())
                 {
@@ -1383,7 +1277,12 @@ namespace periapsis
 
                 if (qtn->delete_me)
                 {
-                    delete_nodes.push(qtn);
+#ifdef DEBUG
+                    if (delete_nodes.find_value(qtn).is_valid())
+                        throw internal_exception(__FILE__, __LINE__, L"Duplicate deletion merging nodes in spherical quadtree.");
+#endif
+
+                    delete_nodes.append(qtn);
                 }
                 else if (!qtn->dequeue_me && qtn->is_a_quad())
                 {
@@ -1393,94 +1292,16 @@ namespace periapsis
             }
 
             // delete nodes
-            while (delete_nodes.size())
+            for (int i = 0; i < delete_nodes.size(); ++i)
             {
-                sph_qt_node *qtn = delete_nodes.front();
-                delete_nodes.pop();
+                sph_qt_node *qtn = delete_nodes[i];
                 delete qtn;
             }
 
+            delete_nodes.clear();
+
             // save eye position
             eye_pos_in_object_space = eye_pos;
-
-#if 0
-            if (c->frame < 10 
-                || num_leaf_nodes != last_num_leaf_nodes 
-                || num_merge_nodes != last_num_merge_nodes
-                || (eye_pos.get_x() != eye_pos_in_object_space.get_x())
-                || (eye_pos.get_y() != eye_pos_in_object_space.get_y())
-                || (eye_pos.get_z() != eye_pos_in_object_space.get_z()))
-            {
-                last_num_leaf_nodes = num_leaf_nodes;
-                last_num_merge_nodes = num_merge_nodes;
-
-                // split leaf nodes (in breadth-first order)
-                if (allow_split && !not_visible)
-                {
-                    int level, num_levels = leaf_nodes.size();
-                    for (level = 0; level < num_levels; ++level)
-                    {
-                        node_level_rec *rec = leaf_nodes[level];
-                        if (rec)
-                        {
-                            int i, count = 0, len = rec->first->size();
-                            for (i = 0; i < len; ++i)
-                            {
-                                sph_qt_node *leaf = rec->first->item(i);
-                                if (leaf)
-                                {
-                                    if (leaf->last_merge_frame < c->frame)
-                                    {
-                                        split_node(leaf, parent_sg_node->get_modelview(), c, false, 0);
-                                    }
-                                    ++count;
-                                }
-                            }
-
-                            // resize array of we're not drawing anything at that level
-                            if (len && !count)
-                            {
-                                rec->first->clear();
-                            }
-                        }
-                    }
-                }
-
-                // merge nodes (in breadth-first order, from the highest level to the lowest)
-                if (allow_merge)
-                {
-                    int level, num_levels = merge_nodes.size();
-                    for (level = num_levels; level > 0; --level)
-                    {
-                        node_level_rec *rec = merge_nodes[level-1];
-                        if (rec)
-                        {
-                            int i, count = 0, len = rec->first->size();
-                            for (i = 0; i < len; ++i)
-                            {
-                                sph_qt_node *mrg = rec->first->item(i);
-                                if (mrg)
-                                {
-                                    if (mrg->last_split_frame < c->frame && (c->frame - mrg->last_split_frame) > 10)
-                                    {
-                                        merge_node(mrg, parent_sg_node->get_modelview(), c);
-                                    }
-                                    ++count;
-                                }
-                            }
-
-                            // resize array if we're not drawing anything at that level...
-                            if (len && !count)
-                            {
-                                rec->first->clear();
-                            }
-                        }
-                    }
-                }
-
-                eye_pos_in_object_space = eye_pos;
-            }
-#endif
         } // spherical_quadtree::update()
 
 

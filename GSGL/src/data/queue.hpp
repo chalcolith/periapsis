@@ -214,6 +214,9 @@ namespace gsgl
         {
 			if (queue_size < simple_array<T>::size())
 			{
+                if (insert_pos >= simple_array<T>::size())
+                    insert_pos = 0;
+
                 simple_array<T>::item(insert_pos) = a;
 			}
             else if (queue_size == simple_array<T>::size())
@@ -228,7 +231,7 @@ namespace gsgl
 				throw gsgl::memory_exception(__FILE__, __LINE__, L"Error inserting into simple queue.");
             }
 
-            insert_pos = (insert_pos+1) % simple_array<T>::size();
+            ++insert_pos; // may be one past the end of the array
             ++queue_size;
         } // simple_queue<T>::push()
 

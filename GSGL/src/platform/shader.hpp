@@ -45,6 +45,48 @@ namespace gsgl
     namespace platform
     {
 
+        class PLATFORM_API shader_uniform_base
+        {
+        protected:
+            friend class shader_program;
+
+            shader_program & parent_program;
+            const gsgl::string name;
+            int opengl_loc;
+
+        public:
+            shader_uniform_base(shader_program & parent_program, const gsgl::string & name);
+            virtual ~shader_uniform_base();
+
+        protected:
+            void set(const int & i);
+            void set(const float & f);
+            void set(const float ff[4]);
+            void set(const bool & b);
+
+        private:
+            bool bind();
+        }; // class shader_uniform_base
+
+
+        template <typename T>
+        class shader_uniform
+            : public shader_uniform_base
+        {
+        public:
+            shader_uniform(shader_program & parent_program, const gsgl::string & name)
+                : shader_uniform_base(parent_program, name) {}
+            virtual ~shader_uniform() {}
+
+            void set(const T & val)
+            {
+                shader_uniform_base::set(val);
+            }
+        }; // shader_uniform
+
+
+        //////////////////////////////////////////////////////////////
+
         class shader_base;
 
         class PLATFORM_API shader_program
@@ -52,7 +94,9 @@ namespace gsgl
             int opengl_id;
 
             gsgl::data::list<shader_base *> shaders;
-            gsgl::data::dictionary<int, gsgl::string> uniforms;
+
+            friend class shader_uniform_base;
+            gsgl::data::dictionary<shader_uniform_base *, gsgl::string> uniforms;
 
         public:
             shader_program();
@@ -73,15 +117,26 @@ namespace gsgl
             /// Tells OpenGL to used the default shaders.
             void unbind();
 
-            void set_uniform(const gsgl::string & name, const int & i);
-            void set_uniform(const gsgl::string & name, const float & f);
-            void set_uniform(const gsgl::string & name, const float ff[4]);
-            void set_uniform(const gsgl::string & name, const bool b);
+            /// Returns a uniform that represents the given type.
+            template <typename T>
+            shader_uniform<T> *get_uniform(const gsgl::string & name)
+            {
+                shader_uniform<T> *u = 0;
 
-            int get_id() { return opengl_id; }
+                if (uniforms.contains_index(name))
+                {
+                    u = dynamic_cast<shader_uniform<T> *>(uniforms[name]);
+                    if (!u)
+                        throw internal_exception(__FILE__, __LINE__, L"Duplicate shader name '%ls'", name.w_string());
+                }
+                else
+                {
+                    u = new shader_uniform<T>(*this, name);
+                    uniforms[name] = u;
+                }
 
-        private:
-            int get_uniform_loc(const gsgl::string & name);
+                return u;
+            } // get_uniform()
         }; // class shader_program
 
     } // namespace platform

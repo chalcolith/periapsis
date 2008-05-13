@@ -508,25 +508,26 @@ namespace gsgl
     } // string::compare()
 
 
-    int string::compare(const wchar_t *str) const
-    {
-        const wchar_t *a = w_string();
-        const wchar_t *b = str;
-        
-        while (a && b && *a && *b)
-        {
-            if (*a != *b)
-                return (static_cast<int>(*a)) - (static_cast<int>(*b));
-            a++; b++;
-        }
-        
-        if (a && *a)
-            return 1;
-        else if (b && *b)
-            return -1;
-        else
-            return 0;
-    } // string::compare()
+    // inlined
+    //int string::compare(const wchar_t *str) const
+    //{
+    //    const wchar_t *a = w_string();
+    //    const wchar_t *b = str;
+    //    
+    //    while (a && b && *a && *b)
+    //    {
+    //        if (*a != *b)
+    //            return (static_cast<int>(*a)) - (static_cast<int>(*b));
+    //        a++; b++;
+    //    }
+    //    
+    //    if (a && *a)
+    //        return 1;
+    //    else if (b && *b)
+    //        return -1;
+    //    else
+    //        return 0;
+    //} // string::compare()
 
 
     ////////////////////////////////////

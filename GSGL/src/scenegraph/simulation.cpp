@@ -65,7 +65,7 @@ namespace gsgl
     namespace scenegraph
     {
 
-        static config_variable<int> NUM_FRAME_DELTAS(L"scenegraph/simulation/num_frame_deltas", 10);
+        static config_variable<int> NUM_FRAME_DELTAS(L"scenegraph/simulation/num_frame_deltas", 100);
 
         //
 

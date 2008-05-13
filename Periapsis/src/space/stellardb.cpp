@@ -66,7 +66,8 @@ namespace periapsis
         //
 
         stellar_db::stellar_db(const config_record & conf)
-            : node(conf), nearest_distance(FLT_MAX), farthest_distance(0), vertices(vbuffer::STATIC)
+            : node(conf), nearest_distance(FLT_MAX), farthest_distance(0), 
+              vertices(vbuffer::STATIC), uniform_farthest_distance(0)
         {
             get_draw_flags() |= node::NODE_NO_FRUSTUM_CHECK;
 
@@ -240,13 +241,15 @@ namespace periapsis
         void stellar_db::init(context *c)
         {
             star_shader.load();
-            star_shader.bind();
+            uniform_farthest_distance = star_shader.get_uniform<float>(L"FarthestStarDistance");
 
-            int fd_loc = glGetUniformLocation(star_shader.get_id(), "FarthestStarDistance");                        CHECK_GL_ERRORS();
-            if (fd_loc != GL_INVALID_VALUE)
-                glUniform1f(fd_loc, farthest_distance * get_scale());
+            //star_shader.bind();
 
-            star_shader.unbind();
+            //int fd_loc = glGetUniformLocation(star_shader.get_id(), "FarthestStarDistance");                        CHECK_GL_ERRORS();
+            //if (fd_loc != GL_INVALID_VALUE)
+            //    glUniform1f(fd_loc, farthest_distance * get_scale());
+
+            //star_shader.unbind();
         } // stellar_db::init()
 
 
@@ -292,6 +295,7 @@ namespace periapsis
 
             glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);                                                                 CHECK_GL_ERRORS();
             star_shader.bind();
+            uniform_farthest_distance->set(farthest_distance * get_scale());
 
             // scale & draw
             glMatrixMode(GL_MODELVIEW); // modelview is already initialized by scene graph

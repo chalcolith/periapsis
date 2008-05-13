@@ -49,6 +49,64 @@ namespace gsgl
     namespace platform
     {
 
+        shader_uniform_base::shader_uniform_base(shader_program & parent_program, const string & name)
+            : parent_program(parent_program), name(name), opengl_loc(-1)
+        {
+        } // shader_uniform_base::shader_uniform_base()
+
+
+        shader_uniform_base::~shader_uniform_base()
+        {
+        } // shader_uniform_base::~shader_uniform_base()
+
+
+        void shader_uniform_base::set(const int & i)
+        {
+            if (opengl_loc != -1 || bind())
+                glUniform1i(opengl_loc, i);
+        } // shader_uniform_base::set()
+
+
+        void shader_uniform_base::set(const float & f)
+        {
+            if (opengl_loc != -1 || bind())
+                glUniform1f(opengl_loc, f);
+        } // shader_uniform_base::set()
+
+
+        void shader_uniform_base::set(const float ff[4])
+        {
+            if (opengl_loc != -1 || bind())
+                glUniform4fv(opengl_loc, 1, ff);
+        } // shader_uniform_base::set()
+
+
+        void shader_uniform_base::set(const bool & b)
+        {
+            if (opengl_loc != -1 || bind())
+                glUniform1i(opengl_loc, b);
+        } // shader_uniform_base::set()
+
+
+        bool shader_uniform_base::bind()
+        {
+            if (opengl_loc == -1)
+            {
+                if (parent_program.opengl_id == 0)
+                    throw runtime_exception(L"Cannot set uniform value '%hs' when the shader is not bound.", name.c_string());
+
+                opengl_loc = glGetUniformLocation(parent_program.opengl_id, name.c_string());
+                if (opengl_loc == -1)
+                    throw runtime_exception(L"Unable to set uniform value '%hs' in shader program!", name.c_string());
+            }
+
+            return true;
+        } // shader_uniform_base::bind()
+
+
+        //////////////////////////////////////////////////////////////
+
+
         static const int INFO_BUF_SIZE = 4096;
 
         //
@@ -232,8 +290,13 @@ namespace gsgl
         {
             unload();
 
+            for (gsgl::data::dictionary<shader_uniform_base *, string>::iterator i = uniforms.iter(); i.is_valid(); ++i)
+                delete *i;
+            uniforms.clear();
+
             for (gsgl::data::list<shader_base *>::iterator i = shaders.iter(); i.is_valid(); ++i)
                 delete *i;
+            shaders.clear();
         } // shader_program::~shader_program()
 
 
@@ -300,13 +363,14 @@ namespace gsgl
         {
             if (opengl_id)
             {
+                for (dictionary<shader_uniform_base *, string>::iterator i = uniforms.iter(); i.is_valid(); ++i)
+                    (*i)->opengl_loc = -1;
+
                 for (list<shader_base *>::iterator i = shaders.iter(); i.is_valid(); ++i)
                     (*i)->unload();
 
                 glDeleteProgram(opengl_id);                                                                         CHECK_GL_ERRORS();
                 opengl_id = 0;
-
-                uniforms.clear();
             }
         } // shader_program::unload()
 
@@ -327,54 +391,12 @@ namespace gsgl
 
         void shader_program::unbind()
         {
+            for (dictionary<shader_uniform_base *, string>::iterator i = uniforms.iter(); i.is_valid(); ++i)
+                (*i)->opengl_loc = -1;
+
             glUseProgram(0);                                                                                        CHECK_GL_ERRORS();
         } // shader_program::unbind()
 
-
-        //
-
-        void shader_program::set_uniform(const gsgl::string & name, const int & i)
-        {
-            glUniform1i(get_uniform_loc(name), i);                                                                  CHECK_GL_ERRORS();
-        } // shader_program::set_uniform()
-
-
-        void shader_program::set_uniform(const gsgl::string & name, const float & f)
-        {
-            glUniform1f(get_uniform_loc(name), f);                                                                  CHECK_GL_ERRORS();
-        } // shader_program::set_uniform()
-
-
-        void shader_program::set_uniform(const gsgl::string & name, const float ff[4])
-        {
-            glUniform4fv(get_uniform_loc(name), 1, ff);                                                             CHECK_GL_ERRORS();
-        } // shader_program::set_uniform()
-
-
-        void shader_program::set_uniform(const gsgl::string & name, const bool b)
-        {
-            glUniform1i(get_uniform_loc(name), b);
-        } // shader_program::set_uniform()
-
-
-        int shader_program::get_uniform_loc(const gsgl::string & name)
-        {
-            assert(opengl_id);
-
-            int loc = uniforms[name];
-
-            if (loc == 0) {
-                loc = glGetUniformLocation(opengl_id, name.c_string());
-                if (loc == -1)
-                    throw runtime_exception(L"Unable to set uniform value '%hs' in shader program!", name.c_string());
-
-                uniforms[name] = loc+1;
-            } else {
-                --loc;
-            }
-
-            return loc;
-        } // shader_program::get_uniform_loc()
 
     } // namespace platform
 

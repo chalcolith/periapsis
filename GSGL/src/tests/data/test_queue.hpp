@@ -78,6 +78,25 @@ namespace test
                 TEST_ASSERT(sq.size() == 0);
             } // test_001()
 
+
+            void test_002()
+            {
+                for (int i = 0; i < 50; ++i)
+                    sq.push(i);
+
+                for (int i = 0; i < 25; ++i)
+                    sq.pop();
+
+                for (int i = 0; i < 75; ++i)
+                    sq.push(i);
+
+                while (sq.size())
+                {
+                    int n = sq.front();
+                    sq.pop();
+                }
+            } // test_001()
+
         }; // class simple_queue_basic
 
     } // namespace data

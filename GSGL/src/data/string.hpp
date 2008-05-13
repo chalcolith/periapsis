@@ -132,8 +132,29 @@ namespace gsgl
 
         /// \name Comparable Implementation Etc.
         /// @{
+        inline int compare(const string & s) const { return compare(s.w_string()); }
+        
+        inline int compare(const wchar_t *str) const
+        {
+            const wchar_t *a = w_string();
+            const wchar_t *b = str;
+
+            while (a && b && *a && *b)
+            {
+                if (*a != *b)
+                    return (static_cast<int>(*a)) - (static_cast<int>(*b));
+                a++; b++;
+            }
+
+            if (a && *a)
+                return 1;
+            else if (b && *b)
+                return -1;
+            else
+                return 0;
+        } // compare()
+
         virtual int compare(const data::comparable &) const;
-        int compare(const wchar_t *) const;
         
         inline bool operator== (const wchar_t *s) const { return compare(s) == 0; }
         inline bool operator!= (const wchar_t *s) const { return compare(s) != 0; }
