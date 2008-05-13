@@ -212,20 +212,23 @@ namespace gsgl
         template <typename T>
         void simple_queue<T>::push(const T & a)
         {
-            if (queue_size == simple_array<T>::size())
+			if (queue_size < simple_array<T>::size())
+			{
+                simple_array<T>::item(insert_pos) = a;
+			}
+            else if (queue_size == simple_array<T>::size())
             {
                 if (front_pos > insert_pos)
                     ++front_pos;
 
                 simple_array<T>::insert(a, insert_pos);
-                ++insert_pos;
             }
             else
             {
-                simple_array<T>::item(insert_pos) = a;
-                insert_pos = (insert_pos+1) % simple_array<T>::size();
+				throw gsgl::memory_exception(__FILE__, __LINE__, L"Error inserting into simple queue.");
             }
 
+            insert_pos = (insert_pos+1) % simple_array<T>::size();
             ++queue_size;
         } // simple_queue<T>::push()
 
