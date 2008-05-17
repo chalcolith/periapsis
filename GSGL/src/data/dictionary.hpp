@@ -38,8 +38,7 @@
 #include "data/exception.hpp"
 #include "data/comparable.hpp"
 #include "data/indexable.hpp"
-#include "data/pointer.hpp"
-#include "data/tuple.hpp"
+#include "data/pool.hpp"
 #include "data/list.hpp"
 #include "data/stack.hpp"
 #include "data/string.hpp"
@@ -78,14 +77,21 @@ namespace gsgl
                 dict_node *left;
                 dict_node *right;
                 
+				dict_node();
                 dict_node(const T & item, const I & index, dict_node *left = 0, dict_node *right = 0);
-                ~dict_node();
+				dict_node(const dict_node &);
+				dict_node & operator= (const dict_node &);
+                virtual ~dict_node();
+
+				bool operator== (const dict_node &) const;
                 
-                dict_node *copy() const;
+                dict_node *copy(pool<dict_node> &) const;
             }; // struct dict_node
             
             mutable dict_node *root;
             gsgl::index_t count;
+
+			pool<dict_node> node_pool;
             
         public:
             dictionary();
@@ -129,30 +135,61 @@ namespace gsgl
 
             dict_node *find_node(const I & index, dict_node ***link);
             void remove_node(dict_node *cur, dict_node **link);            
+
+			void deallocate_nodes(dict_node *cur);
         }; // class dict
         
 
 		//////////////////////////////////////////
         
+		template <typename T, typename I>
+		dictionary<T,I>::dict_node::dict_node()
+			: left(0), right(0)
+		{
+			throw internal_exception(__FILE__, __LINE__, L"Internal dictionary nodes should never use the default constructor.");
+		} // dictionary<T,I>::dict_node::dict_node()
+
+
         template <typename T, typename I>
         dictionary<T,I>::dict_node::dict_node(const T & item, const I & index, dict_node *left, dict_node *right)
             : item(item), index(index), left(left), right(right)
         {
-        } // dictionary<T,I>::dict_node::~dict_node()
+        } // dictionary<T,I>::dict_node::dict_node()
+
+
+		template <typename T, typename I>
+		dictionary<T,I>::dict_node::dict_node(const dict_node & dn)
+			: item(dn.item), index(dn.index), left(dn.left), right(dn.right)
+		{
+			throw internal_exception(__FILE__, __LINE__, L"Internal dictionary nodes should never be copy constructed.");
+		} // dictionary<T,I>::dict_node::dict_node()
+
+
+		template <typename T, typename I>
+		typename dictionary<T,I>::dict_node & dictionary<T,I>::dict_node::operator= (const dict_node & dn)
+		{
+			throw internal_exception(__FILE__, __LINE__, L"Internal dictionary nodes should never be copied.");
+		} // dictionary<T,I>::dict_node::operator= ()
 
 
         template <typename T, typename I>
         dictionary<T,I>::dict_node::~dict_node()
         {
-            delete left;
-            delete right;
+			// the dictionary needs to delete the tree!
         } // dictionary<T,I>::dict_node::~dict_node()
-        
+
+
+		template <typename T, typename I>
+		bool dictionary<T,I>::dict_node::operator== (const dict_node &) const
+		{
+			throw internal_exception(__FILE__, __LINE__, L"Internal dictionary nodes should never be compared.");
+		} // dictionary<T,I>::dict_node::operator== ()
+
 
         template <typename T, typename I>
-        typename dictionary<T,I>::dict_node *dictionary<T,I>::dict_node::copy() const
+        typename dictionary<T,I>::dict_node *dictionary<T,I>::dict_node::copy(pool<dict_node> & p) const
         {
-            return new dict_node(item, index, left ? left->copy() : 0, right ? right->copy() : 0);
+            return new (p.allocate_inplace()) dict_node(item, index, left ? left->copy() : 0, right ? right->copy() : 0);
         } // dictionary<T,I>::dict_node::copy()
         
 
@@ -215,7 +252,8 @@ namespace gsgl
         template <typename T, typename I> 
         void dictionary<T,I>::clear()
         {
-            delete root;
+			if (root)
+				deallocate_nodes(root);
             root = 0;
             count = 0;
         } // dictionary<T,I>::clear()
@@ -303,7 +341,7 @@ namespace gsgl
             {
                 if (create_new)
                 {
-                    *link = cur = new dict_node(T(), index);
+                    *link = cur = new (node_pool.allocate_inplace()) dict_node(T(), index);
                     ++count;
                 }
                 else
@@ -383,11 +421,26 @@ namespace gsgl
                 }
 
                 cur->left = cur->right = 0;
-                delete cur;
+				node_pool.deallocate(cur);
+                //delete cur;
 
                 --count;
             }
         } // dictionary<T,I>::remove_node()
+
+
+		template <typename T, typename I>
+		void dictionary<T,I>::deallocate_nodes(dict_node *cur)
+		{
+			assert(cur);
+
+			if (cur->left)
+				deallocate_nodes(cur->left);
+			if (cur->right)
+				deallocate_nodes(cur->right);
+
+			node_pool.deallocate(cur);
+		} // dictionary<T,I>::deallocate_nodes()
 
 
 		//////////////////////////////////////////

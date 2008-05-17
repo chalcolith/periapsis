@@ -35,8 +35,6 @@
 //
 
 #include "data/data.hpp"
-#include "data/iterable.hpp"
-#include "data/indexable.hpp"
 #include "data/array.hpp"
 #include "data/stack.hpp"
 
@@ -46,127 +44,103 @@ namespace gsgl
     namespace data
     {
     
-#if 0
-        /// Provides a memory pool of objects.
-        /// \note Iterating over this collection will hit deallocated objects!
-        template <typename T>
-        class pool
-            : public data_object, public iterable<T>, public indexable<T, gsgl::index_t>
-        {
-            array<T> data;
-            stack<gsgl::index_t> free_indices;
-        public:
-            pool(const gsgl::index_t cap = 0);
-            ~pool();
-            
-            const T *get_data() const
-            {
-                return data.ptr();
-            }
-            T *get_data()
-            {
-                return data.ptr();
-            }
-            
-            /// Returns the index of the allocated item.
-            gsgl::index_t allocate();
-            void release(const gsgl::index_t);
-            
-            // iterable
-            virtual iterator<T> iter() const;
-            
-            // indexable
-            virtual const T & item(const gsgl::index_t &) const;
-            virtual T & item(const gsgl::index_t &);
-            
-            // countable
-            virtual gsgl::index_t size() const;
-            virtual void clear();
-            
-            /// Reimplemented for performance -- does not check bounds.
-            inline const T & operator[] (const gsgl::index_t index) const
-            {
-                return data.at(index);
-            }
-            
-            inline T & operator[] (const gsgl::index_t index)
-            {
-                return data.at(index);
-            }
-        }; // class pool
-        
-        //
-        
-        template <typename T> 
-        gsgl::index_t pool<T>::allocate()
-        {
-            gsgl::index_t index;
-            
-            if (free_indices.size())
-            {
-                index = free_indices.top();
-                free_indices.pop();
-            }
-            else
-            {
-                index = data.size();
-                data[index];
-            }
-            
-            return index;
-        } // pool<T>::allocate()
-        
-        template <typename T> 
-        void pool<T>::release(const gsgl::index_t index)
-        {
-            free_indices.push(index);
-        } // pool<T>::release()
-        
-        //
-        
-        template <typename T> 
-        pool<T>::pool(const gsgl::index_t cap) 
-            : data_object(), indexable<T, gsgl::index_t>(), data(cap), free_indices()
-        {} // pool<T>::pool()
-        
-        template <typename T> 
-        pool<T>::~pool()
-        {} // pool<T>::~pool()
-        
-        template <typename T> 
-        iterator<T> pool<T>::iter() const
-        {
-            return data.iter();
-        } // pool<T>::iter()
-        
-        template <typename T> 
-        gsgl::index_t pool<T>::size() const
-        {
-            return data.size() - free_indices.size();
-        } // pool<T>::size()
-        
-        template <typename T> 
-        void pool<T>::clear()
-        {
-            data.clear();
-            free_indices.clear();
-        } // pool<T>::clear()
-        
-        //
-        
-        template <typename T> 
-        const T & pool<T>::item(const gsgl::index_t & index) const
-        {
-            return data.item(index);
-        } // pool<T>::item()
-        
-        template <typename T> 
-        T & pool<T>::item(const gsgl::index_t & index)
-        {
-            return data.item(index);
-        } // pool<T>::item()
-        
-#endif
+		/// A pool of objects.
+		template <typename T>
+		class pool
+			: public data_object
+		{
+			object_array<T> data;
+			simple_stack<T *> deleted;
+			gsgl::index_t count;
+
+		public:
+			pool(const gsgl::index_t & initial_capacity = 32, const gsgl::index_t & bucket_size = 32);
+			pool(const pool &);
+			pool & operator= (const pool &);
+			virtual ~pool();
+
+			T *allocate();
+			void *allocate_inplace();
+			void deallocate(T *);
+
+			gsgl::index_t size() const { return count; }
+		}; // class pool
+
+
+		template <typename T>
+		pool<T>::pool(const gsgl::index_t & initial_capacity, const gsgl::index_t & bucket_size)
+			: data_object(), data(initial_capacity, bucket_size, true), count(0)
+		{
+		} // pool<T>::pool()
+
+
+		template <typename T>
+		pool<T>::pool(const pool &)
+			: data_object(), data(0, 32), count(0)
+		{
+			throw internal_exception(__FILE__, __LINE__, L"Copying a pool object is illegal.");
+		} // pool<T>::pool()
+
+
+		template <typename T>
+		pool<T> & pool<T>::operator= (const pool &)
+		{
+			throw internal_exception(__FILE__, __LINE__, L"Copying a pool object is illegal.");
+		} // pool<T>::operator= ()
+
+
+		template <typename T>
+		pool<T>::~pool()
+		{
+			// since the array's no_init flag is set, we have to delete the objects ourselves
+			for (int i = 0; i < data.size(); ++i)
+			{
+				T *ptr = &data[i];
+
+				if (!deleted.find_value(ptr).is_valid())
+					ptr->~T();
+			}
+		} // pool<T>::~pool()
+
+
+		/// Returns a pointer to a fully-initialized object of type T.
+		template <typename T>
+		T *pool<T>::allocate()
+		{
+			T *result = allocate_inplace();
+			new (result) T();
+			return result;
+		} // pool<T>::allocate()
+
+
+		template <typename T>
+		void *pool<T>::allocate_inplace()
+		{
+			T *result = 0;
+
+			if (deleted.size())
+			{
+				result = deleted.top();
+				deleted.pop();
+			}
+			else
+			{
+				result = &data[data.size()];
+			}
+
+			++count;
+			return result;
+		} // operator new()
+
+
+		template <typename T>
+		void pool<T>::deallocate(T *ptr)
+		{
+			deleted.push(ptr);
+			ptr->~T();
+			--count;
+		} // pool<T>::deallocate()
+
 
     } // namespace data
     

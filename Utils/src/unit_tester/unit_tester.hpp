@@ -44,7 +44,7 @@
     try \
     { \
         if (!(test)) \
-            throw std::exception(__FILE__ "(" TEST_STRINGIFY(__LINE__) ") : error: unit test (" #test ") FAILED in " __FUNCTION__); \
+			throw std::exception(__FILE__ "(" TEST_STRINGIFY(__LINE__) ") : error: unit test (" #test ") FAILED in " __FUNCTION__); \
     } \
     catch (...) \
     { \

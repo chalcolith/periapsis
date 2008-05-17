@@ -325,6 +325,8 @@ namespace gsgl
 		/// An array of objects.  Pointers to these objects will remain valid as long as the objects remain in the array.
 		/// You may also use placement new to allocate directly in the array, avoiding a copy.
 		/// Note that insert and remove operations will be expensive, as they will copy large numbers of objects around.
+		///
+		/// Arrays created with the no_init flag, however, will not do any construction or destruction.  This could be very dangerous.
 		
 		template <typename T>
 		class object_array
@@ -338,9 +340,10 @@ namespace gsgl
 			simple_array<T *> buckets;
 
 			const gsgl::index_t bucket_size;
+			const bool no_init;
 
 		public:
-			object_array(const gsgl::index_t & initial_capacity = 0, const gsgl::index_t & bucket_size = 32);
+			object_array(const gsgl::index_t & initial_capacity = 0, const gsgl::index_t & bucket_size = 32, const bool & no_init = false);
 			object_array(const object_array & oa);
 			object_array & operator= (const object_array & oa);
 			virtual ~object_array();
@@ -377,12 +380,12 @@ namespace gsgl
 
 
 		template <typename T>
-		object_array<T>::object_array(const gsgl::index_t & initial_capacity, const gsgl::index_t & bucket_size)
+		object_array<T>::object_array(const gsgl::index_t & initial_capacity, const gsgl::index_t & bucket_size, const bool & no_init = false)
 			: array_base(),
 			  iterable<T, object_array_iterator<T> >(),
 			  indexable<T, gsgl::index_t>(),
 			  num_elements(0), buckets(initial_capacity/bucket_size + 1),
-			  bucket_size(bucket_size)
+			  bucket_size(bucket_size), no_init(no_init)
 		{
 			for (int i = 0; i < (initial_capacity/bucket_size + 1); ++i)
 			{
@@ -397,7 +400,7 @@ namespace gsgl
 			  iterable<T, object_array_iterator<T> >(),
 			  indexable<T, gsgl::index_t>(),
 			  num_elements(oa.num_elements), buckets(oa.buckets.size()),
-			  bucket_size(oa.bucket_size)
+			  bucket_size(oa.bucket_size), no_init(oa.no_init)
 		{
 			for (int i = 0; i < oa.num_elements; ++i)
 			{
@@ -409,6 +412,9 @@ namespace gsgl
 		template <typename T>
 		object_array<T> & object_array<T>::operator= (const object_array<T> & oa)
 		{
+			if (no_init != oa.no_init)
+				throw internal_exception(__FILE__, __LINE__, L"You cannot assign object arrays whose initialization flags differ.");
+
 			clear();
 
 			for (int i = 0; i < oa.num_elements; ++i)
@@ -439,10 +445,13 @@ namespace gsgl
 		void object_array<T>::clear()
 		{
 			// clean up all objects
-			for (int i = 0; i < size(); ++i)
+			if (!no_init)
 			{
-				T *obj = &item(i);
-				obj->~T();
+				for (int i = 0; i < size(); ++i)
+				{
+					T *obj = &item(i);
+					obj->~T();
+				}
 			}
 
 			num_elements = 0;
@@ -457,18 +466,16 @@ namespace gsgl
 
 
 		template <typename T>
-		void object_array<T>::insert(const iterator & iter, const T & item_to_insert)
+		void object_array<T>::insert(const iterator & i, const T & item)
 		{
-			object_array_iterator<T> & oi = dynamic_cast<object_array_iterator<T> &>(iter);
-			insert(item, oi.position);
+			insert(item, i.position);
 		} // object_array<T>::insert()
 
 
 		template <typename T>
-		void object_array<T>::remove(const iterator & iter)
+		void object_array<T>::remove(const iterator & i)
 		{
-			object_array_iterator<T> & oi = dynamic_cast<object_array_iterator<T> &>(iter);
-			remove(oi.position);
+			remove(i.position);
 		} // object_array<T>::remove()
 
 
@@ -497,13 +504,16 @@ namespace gsgl
 				int target_bucket = index / bucket_size;
 				for (int i = buckets.size(); i <= target_bucket; ++i)
 				{
-					buckets[i] = allocate(sizeof(T) * bucket_size);
+					buckets[i] = static_cast<T *>(allocate(sizeof(T) * bucket_size));
 				}
 
 				// initialize intermediate elements
-				for (int i = num_elements; i < index+1; ++i)
+				if (!no_init)
 				{
-					(&buckets[i / bucket_size][i % bucket_size])->T();
+					for (int i = num_elements; i < index+1; ++i)
+					{
+						new (&buckets[i / bucket_size][i % bucket_size]) T();
+					}
 				}
 
 				num_elements = index+1;
@@ -529,15 +539,23 @@ namespace gsgl
 		template <typename T>
 		void object_array<T>::remove(const gsgl::index_t & index)
 		{
-			(&item(index))->~T();
-			(&item(index))->T();
+			if (!no_init)
+			{
+				(&item(index))->~T();
+				new (&item(index)) T();
+			}
 
 			for (int i = index; i < num_elements-1; ++i)
 			{
 				item(i) = item(i+1);
 			}
 
-			(&item(--num_elements))->~T();
+			if (!no_init)
+			{
+				(&item(num_elements-1))->~T();
+			}
+
+			--num_elements;
 		} // object_array<T>::remove()
 
 
@@ -580,6 +598,8 @@ namespace gsgl
 					++position;
 				else
 					throw memory_exception(__FILE__, __LINE__, L"Array iterator overflow in preincrement operator.");
+
+				return *this;
 			}
 		}; // class object_array_iterator
 

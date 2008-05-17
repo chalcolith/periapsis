@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual C++ Express 2005
+# Visual Studio 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Periapsis", "Periapsis\Periapsis.vcproj", "{DDAF6C74-976F-4EF7-8BF4-C3C6294501EB}"
 	ProjectSection(ProjectDependencies) = postProject
 		{659CC2FB-502C-473B-AF00-19E75AB62EED} = {659CC2FB-502C-473B-AF00-19E75AB62EED}
@@ -59,10 +59,12 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestData", "..\..\..\GSGL\build\vs8\Test\TestData\TestData.vcproj", "{CB48E601-B7D4-4689-A69D-A5F608E6A13A}"
 	ProjectSection(ProjectDependencies) = postProject
 		{AE415EEE-7AE1-495F-9301-2F324E94ECCB} = {AE415EEE-7AE1-495F-9301-2F324E94ECCB}
+		{FB6DBD4E-6ED5-4677-BF90-1C6B8DB38CB4} = {FB6DBD4E-6ED5-4677-BF90-1C6B8DB38CB4}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestMath", "..\..\..\GSGL\build\vs8\Test\TestMath\TestMath.vcproj", "{E1AF2A3E-0F44-4288-B8C1-4CEF1910DE37}"
 	ProjectSection(ProjectDependencies) = postProject
+		{98FC16C0-CFCE-40DC-A4E0-59B73E7B09BF} = {98FC16C0-CFCE-40DC-A4E0-59B73E7B09BF}
 		{AE415EEE-7AE1-495F-9301-2F324E94ECCB} = {AE415EEE-7AE1-495F-9301-2F324E94ECCB}
 	EndProjectSection
 EndProject

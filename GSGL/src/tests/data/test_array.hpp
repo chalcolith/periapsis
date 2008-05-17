@@ -105,7 +105,8 @@ namespace test
 				for (int i = 0; i < 5; ++i)
 					++iter;
 
-
+				for (int i = 5; i < 10; ++i, ++iter) 
+					TEST_ASSERT(*iter == i);
 			}
 
 
@@ -117,6 +118,104 @@ namespace test
 
 
 		}; // class array_simple
+
+
+
+		class array_object
+		{
+		public:
+
+			template <typename T>
+			class temp_data
+			{
+			public:
+				T val;
+
+				temp_data() : val(T()) {}
+				temp_data(const T & val) : val(val) {}
+				temp_data(const temp_data & td) : val(td.val) {}
+				temp_data & operator= (const temp_data & td) { val = td.val; return *this; }
+				virtual ~temp_data() {}
+
+				bool operator== (const temp_data & td) const { return val == td.val; }
+				bool operator!= (const temp_data & td) const { return val != td.val; }
+				bool operator<  (const temp_data & td) const { return val < td.val; }
+				bool operator>  (const temp_data & td) const { return val > td.val; }
+			}; // class temp_data
+
+
+			array_object() {}
+
+
+			void test_insert()
+			{
+				const int NUM = 500;
+
+				gsgl::data::object_array< temp_data<int> > aa;
+
+				for (int i = 0; i < NUM; ++i)
+					aa[i].val = i*2;
+
+				for (int i = 0; i < NUM; ++i)
+					aa.insert(i*2+1, i*2+1);
+
+				int aaa[NUM*2];
+				for (int i = 0; i < NUM*2; ++i)
+					aaa[i] = aa[i].val;
+
+				for (int i = 0; i < NUM*2; ++i)
+					TEST_ASSERT(aa[i].val == i && aaa[i] == i);
+			}
+
+
+			void test_remove()
+			{
+				const int NUM = 500;
+
+				gsgl::data::object_array< temp_data<int> > aa;
+
+				for (int i = 0; i < NUM*2; ++i)
+					aa[i].val = i;
+
+				for (int i = 0; i < NUM*2; ++i)
+					TEST_ASSERT(aa[i].val == i);
+
+				int pos = 1;
+				for (int i = 0; i < NUM*2; ++i)
+				{
+					if (i % 2 == 1)
+						aa.remove(pos++);
+				}
+
+				for (int i = 0; i < NUM; ++i)
+					TEST_ASSERT(aa[i].val == i*2);
+			}
+
+
+			void test_iter_traverse()
+			{
+				const int NUM = 500;
+
+				gsgl::data::object_array< temp_data<int> > aa;
+
+				for (int i = 0; i < NUM*2; ++i)
+					aa[i].val = i;
+
+				int num = 0;
+				for (gsgl::data::object_array< temp_data<int> >::iterator i = aa.iter(); i.is_valid(); ++i, ++num)
+					TEST_ASSERT(i->val == num);
+
+				gsgl::data::object_array< temp_data<int> >::iterator iter = aa.iter();
+				for (int i = 0; i < 5; ++i)
+					++iter;
+
+				for (int i = 5; i < NUM*2; ++i, ++iter)
+					TEST_ASSERT(iter->val == i);
+			}
+
+
+		}; // class array_object
+
 
 	} // namespace data
 

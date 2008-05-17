@@ -69,7 +69,7 @@ namespace gsgl
         ::vswprintf(buf, BUF_SIZE, format, args); \
         va_end(args); \
         message = ::wcsdup(buf); \
-        ::swprintf(buf, BUF_SIZE, L"%hs: %d: %ls \n(%ls).", fname, line, message, L"Please contact the developer"); \
+        ::swprintf(buf, BUF_SIZE, L"%hs (%d): %ls \n(%ls).", fname, line, message, L"Please contact the developer"); \
         ::free(message); \
         message = ::wcsdup(buf); \
     }

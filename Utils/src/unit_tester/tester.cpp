@@ -170,10 +170,10 @@ int main(int argc, char **argv) {
                 ++num_succeeded;
             } catch (std::exception & e) {
                 ++num_failed;
-                wcerr << test->first.c_str() << " FAILED: " << e.what() << endl;
+                wcerr << e.what() << endl;
             } catch (gsgl::exception & e) {
                 ++num_failed;
-                wcerr << test->first.c_str() << " FAILED: " << e.get_message() << endl;
+                wcerr << e.get_message() << endl;
             } catch (...) {
                 ++num_failed;
                 wcerr << test->first.c_str() << " FAILED: " << "UNKNOWN EXCEPTION" << endl;
