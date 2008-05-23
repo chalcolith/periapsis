@@ -48,7 +48,6 @@
 #define DATA_API 
 #endif
 
-
 namespace gsgl
 {
 

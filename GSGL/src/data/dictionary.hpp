@@ -189,7 +189,7 @@ namespace gsgl
         template <typename T, typename I>
         typename dictionary<T,I>::dict_node *dictionary<T,I>::dict_node::copy(pool<dict_node> & p) const
         {
-            return new (p.allocate_inplace()) dict_node(item, index, left ? left->copy() : 0, right ? right->copy() : 0);
+            return new (p.allocate_inplace()) dict_node(item, index, left ? left->copy(p) : 0, right ? right->copy(p) : 0);
         } // dictionary<T,I>::dict_node::copy()
         
 
@@ -209,7 +209,7 @@ namespace gsgl
 			  root(0), count(d.count)
         {
             if (d.root)
-                root = d.root->copy();
+                root = d.root->copy(node_pool);
         } // dictionary<T,I>::dictionary()
         
 
@@ -218,7 +218,7 @@ namespace gsgl
         {
             this->clear();
             if (d.root)
-                root = d.root->copy();
+                root = d.root->copy(node_pool);
             count = d.count;
             return *this;
         } // dict<T,I>::operator= ()

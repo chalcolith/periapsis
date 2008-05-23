@@ -38,6 +38,8 @@
 #include "data/indexable.hpp"
 #include "data/exception.hpp"
 
+#include <new>
+
 namespace gsgl
 {
 

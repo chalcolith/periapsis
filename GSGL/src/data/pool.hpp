@@ -130,7 +130,7 @@ namespace gsgl
 
 			++count;
 			return result;
-		} // operator new()
+		} // pool<T>::allocate_inplace()
 
 
 		template <typename T>

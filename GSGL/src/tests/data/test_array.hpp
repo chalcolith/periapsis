@@ -36,6 +36,8 @@
 
 
 #include "data/array.hpp"
+#include "data/pool.hpp"
+
 #include "unit_tester.hpp"
 
 namespace test
