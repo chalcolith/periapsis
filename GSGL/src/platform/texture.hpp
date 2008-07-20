@@ -125,9 +125,6 @@ namespace gsgl
             gsgl::flags_t flags;
             int gl_env, gl_wrap, gl_filter;
 
-            typedef data::dictionary<data::shared_pointer<texture_impl>, gsgl::string> texture_cache;
-            static data::dictionary<texture_cache, gsgl::string> texture_impls; ///< Category -> cache
-
         public:
             enum texture_flags
             {

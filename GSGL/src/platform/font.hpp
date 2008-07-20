@@ -98,8 +98,6 @@ namespace gsgl
             : public platform_object
         {
             data::shared_pointer<font_impl> impl;
-
-            static data::dictionary<data::shared_pointer<font_impl>, gsgl::string> font_impls;
             
         public:
             font(const gsgl::string & face, int size, const color & fg);

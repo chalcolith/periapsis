@@ -314,7 +314,7 @@ namespace gsgl
 
         //////////////////////////////////////////////////////////////
 
-        dictionary<shared_pointer<font_impl>, string> font::font_impls;
+        static dictionary<shared_pointer<font_impl>, string> fonts;
 
 
         //
@@ -324,18 +324,18 @@ namespace gsgl
         {
             string cache_name = string::format(L"%s %d %f %f %f %f", face.w_string(), size, fg[color::COMPONENT_RED], fg[color::COMPONENT_GREEN], fg[color::COMPONENT_BLUE], fg[color::COMPONENT_ALPHA]);
 
-            if (font_impls.contains_index(cache_name))
+            if (fonts.contains_index(cache_name))
             {
                 gsgl::log(string::format(L"font: loading font '%ls'", cache_name.w_string()));
 
-                impl = font_impls[cache_name];
+                impl = fonts[cache_name];
             }
             else
             {
                 gsgl::log(string::format(L"font: creating font '%ls'", cache_name.w_string()));
 
                 impl = new font_impl(face, size, fg);
-                font_impls[cache_name] = impl;
+                fonts[cache_name] = impl;
             }
         } // font::font()
         
@@ -384,13 +384,13 @@ namespace gsgl
 
         void font::clear_cache()
         {
-            for (dictionary<shared_pointer<font_impl>, string>::iterator i = font_impls.iter(); i.is_valid(); ++i)
+            for (dictionary<shared_pointer<font_impl>, string>::iterator i = fonts.iter(); i.is_valid(); ++i)
             {
                 if (i->get_ref_count() > 1)
                     throw runtime_exception(L"Dangling font reference: '%s'!", i.get_index());
             }
 
-            font_impls.clear();
+            fonts.clear();
         } // font::clear_cache()
 
 

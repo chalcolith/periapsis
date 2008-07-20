@@ -737,9 +737,9 @@ namespace gsgl
                         }
                     }
                 }
-            }
 
-            mesh_files.clear();
+                category->clear();
+            }
         } // model::clear_cache()
 
 

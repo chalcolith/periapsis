@@ -183,6 +183,8 @@ namespace gsgl
         static dictionary<material_cache, string>      non_file_materials;
         static dictionary<material_file_cache, string> material_files;
 
+        //
+
         static color HOT_PINK(0xff69b4ff);
         static color GREEN(0x32cd32ff);
 

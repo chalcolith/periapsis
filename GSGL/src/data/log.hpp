@@ -63,9 +63,8 @@ namespace gsgl
 
             data::list<log_target *> log_targets;
 
-			logger();
-
         public:
+			logger();
 			virtual ~logger();
 
 

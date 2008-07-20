@@ -66,7 +66,8 @@ namespace gsgl
 
         //
 
-        broker *broker::instance;
+        broker *broker::instance = 0;
+        static broker global_broker;
 
 
 		broker::broker()
@@ -123,7 +124,7 @@ namespace gsgl
         } // broker::create_object()
 
 
-        //
+        //////////////////////////////////////////
 
         broker_creator::broker_creator(const string & type_name, creator_ft create_func)
             : type_name(type_name), create_func(create_func)

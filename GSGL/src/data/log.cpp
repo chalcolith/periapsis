@@ -52,7 +52,9 @@ namespace gsgl
 
         logger *logger::instance = 0;
         int logger::global_log_level = logger::LOG_LEVEL_BASIC;
-	
+
+        static logger global_logger;
+
 		//
 
 		logger::logger()

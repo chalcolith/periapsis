@@ -315,7 +315,8 @@ namespace gsgl
 
         //////////////////////////////////////////////////////////////
 
-        dictionary<texture::texture_cache, string> texture::texture_impls;
+        typedef data::dictionary<data::shared_pointer<texture_impl>, gsgl::string> texture_cache;
+        static dictionary<texture_cache, string> textures;
 
 
         //
@@ -336,16 +337,16 @@ namespace gsgl
             string full_path = io::file::get_full_path(fname);
             string full_name = string::format(L"%ls::%ls: %08d; %d", category.w_string(), full_path.w_string(), flags, texture_unit);
 
-            if (texture_impls[category].contains_index(full_name))
+            if (textures[category].contains_index(full_name))
             {
                 gsgl::log(string::format(L"texture: loading texture '%ls'", full_name.w_string()));
-                impl = texture_impls[category][full_name];
+                impl = textures[category][full_name];
             }
             else
             {
                 gsgl::log(string::format(L"texture: creating font   '%ls'", full_name.w_string()));
                 impl = new texture_impl(full_path, format, static_cast<GLenum>(texture_unit), !(flags & TEXTURE_LOAD_UNCOMPRESSED));
-                texture_impls[category][full_name] = impl; // assign this after in case the creator throws
+                textures[category][full_name] = impl; // assign this after in case the creator throws
             }
 
             impl->attach();
@@ -368,17 +369,17 @@ namespace gsgl
             // make sure they're different every time (the surface may have changed)
             string ptr_name = string::format(L"%ls::%ls: %08p %08d %08d; %d", category.w_string(), identifier.w_string(), surface, ++TEX_COUNT, flags, texture_unit);
             
-            if (texture_impls[category].contains_index(ptr_name))
+            if (textures[category].contains_index(ptr_name))
             {
                 gsgl::log(string::format(L"texture: loading texture '%ls'", ptr_name.w_string()));
-                impl = texture_impls[category][ptr_name];
+                impl = textures[category][ptr_name];
             }
             else
             {
                 gsgl::log(string::format(L"texture: creating font   '%ls'", ptr_name.w_string()));
                 impl = new texture_impl(surface, ptr_name, format, static_cast<GLenum>(texture_unit), !(flags & TEXTURE_LOAD_UNCOMPRESSED));
 
-                texture_impls[category][ptr_name] = impl;
+                textures[category][ptr_name] = impl;
             }
         } // texture::texture()
         
@@ -475,7 +476,7 @@ namespace gsgl
 
         void texture::clear_cache(const gsgl::string & category)
         {
-            for (dictionary<texture_cache, string>::iterator cat = texture_impls.iter(); cat.is_valid(); ++cat)
+            for (dictionary<texture_cache, string>::iterator cat = textures.iter(); cat.is_valid(); ++cat)
             {
                 if (category == L"__ALL__" || cat.get_index() == category)
                 {

@@ -167,6 +167,8 @@ namespace gsgl
             delete global_console; global_console = 0;
             delete global_mapper;  global_mapper = 0;
 
+            delete global_budget;     global_budget = 0;
+
             // clean up SDL (also destroys the OpenGL context)
             TTF_Quit();
             SDL_Quit();
@@ -261,8 +263,6 @@ namespace gsgl
             }
 
             // clean up
-            delete global_budget;     global_budget = 0;
-
             delete global_simulation; global_simulation = 0;
             delete global_context;    global_context = 0;
             delete global_scenery;    global_scenery = 0;

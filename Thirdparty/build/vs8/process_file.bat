@@ -23,10 +23,10 @@ goto nocommand
 
 :clean
 echo clean > process_file.tmp
-if exist "..\..\%origdir%" echo Deleting "..\..\%origdir%" ...
-if exist "..\..\%origdir%" rmdir /q /s "..\..\%origdir%" >> process_file.tmp
 if exist "..\..\%rendir%" echo Deleting "..\..\%rendir%" ...
 if exist "..\..\%rendir%" rmdir /q /s "..\..\%rendir%" >> process_file.tmp
+if exist "..\..\%origdir%" echo Deleting "..\..\%origdir%" ...
+if exist "..\..\%origdir%" rmdir /q /s "..\..\%origdir%" >> process_file.tmp
 
 :cleanfile
 set desireddir=%1
