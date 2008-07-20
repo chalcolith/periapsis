@@ -136,16 +136,10 @@ namespace gsgl
                 throw runtime_exception(L"Unable to initialize SDL: %hs", SDL_GetError());
             }
 
-            // OpenGL context is now valid; create global caches; make sure textures are in the cache last
-            global_caches.append(model::create_global_model_cache());
-            global_caches.append(material::create_global_material_cache());
-            global_caches.append(font::create_global_font_cache());
-            global_caches.append(texture::create_global_texture_cache());
-
             // load splash screen if present
             string splashscreen_path = SYS_DATA_PATH + L"splashscreen.png";
             if (io::file::exists(splashscreen_path))
-                splash_screen = new texture(splashscreen_path, TEXTURE_ENV_REPLACE);
+                splash_screen = new texture(L"splashscreen", splashscreen_path, texture::TEXTURE_ENV_REPLACE);
 
             // load default package
             string pkg_path = SYS_DATA_PATH + L"Default.package";
@@ -170,30 +164,8 @@ namespace gsgl
 
         application::~application()
         {
-            delete global_budget;
-
-            delete global_simulation; global_simulation = 0;
-            delete global_context;    global_context = 0;
-            delete global_scenery;    global_scenery = 0;
-
-            delete splash_screen;  splash_screen = 0;
-
-            // delete all widgets
-            while (widgets.size())
-            {
-                delete widgets.top();
-                widgets.pop();
-            }
-
-            focus_widget = 0;
-
             delete global_console; global_console = 0;
             delete global_mapper;  global_mapper = 0;
-
-            // clean up global caches
-            for (list<gsgl::data_object *>::iterator i = global_caches.iter(); i.is_valid(); ++i)
-                delete *i;
-            global_caches.clear();
 
             // clean up SDL (also destroys the OpenGL context)
             TTF_Quit();
@@ -280,6 +252,29 @@ namespace gsgl
 
             state = APP_QUITTING;
             cleanup();
+
+            // delete all widgets
+            while (widgets.size())
+            {
+                delete widgets.top();
+                widgets.pop();
+            }
+
+            // clean up
+            delete global_budget;     global_budget = 0;
+
+            delete global_simulation; global_simulation = 0;
+            delete global_context;    global_context = 0;
+            delete global_scenery;    global_scenery = 0;
+
+            delete splash_screen;     splash_screen = 0;
+
+            // clear global caches
+            // this stuff is here rather than in the destructor because these might throw
+            model::clear_cache(L"__ALL__");
+            material::clear_cache(L"__ALL__");
+            font::clear_cache();
+            texture::clear_cache(L"__ALL__");
         } // application::quit_application()
 
 
@@ -415,12 +410,12 @@ namespace gsgl
                             else if (e.key.keysym.sym == SDLK_t && (e.key.keysym.mod & (KMOD_CTRL | KMOD_ALT)))
                             {
                                 if (global_simulation)
-                                    global_simulation->get_context()->render_flags ^= scenegraph::context::RENDER_UNTEXTURED;
+                                    global_simulation->get_context()->render_flags ^= scenegraph::context::RENDER_NO_TEXTURES;
                             }
                             else if (e.key.keysym.sym == SDLK_l && (e.key.keysym.mod & (KMOD_CTRL | KMOD_ALT)))
                             {
                                 if (global_simulation)
-                                    global_simulation->get_context()->render_flags ^= scenegraph::context::RENDER_UNLIT;
+                                    global_simulation->get_context()->render_flags ^= scenegraph::context::RENDER_NO_LIGHTING;
                             }
 
                             // fall through
@@ -521,7 +516,7 @@ namespace gsgl
                 global_console->draw_2d_text(static_cast<float>(widest), static_cast<float>(y), budget_font, string::format(BUDGET_FORMAT, *i));
                
                 int w = static_cast<int>(BUDGET_BAR_WIDTH * static_cast<double>(*i)/static_cast<double>(highest));
-                BUDGET_COLOR.set();
+                BUDGET_COLOR.bind();
                 glMatrixMode(GL_MODELVIEW);
                 glLoadIdentity();
 
@@ -539,7 +534,7 @@ namespace gsgl
             global_console->draw_2d_text(static_cast<float>(widest), 0, budget_font, string::format(BUDGET_FORMAT, ticks - sum));
 
             int w = static_cast<int>(BUDGET_BAR_WIDTH * static_cast<double>(ticks - sum)/static_cast<double>(highest));
-            BUDGET_COLOR.set();
+            BUDGET_COLOR.bind();
             glMatrixMode(GL_MODELVIEW);
             glLoadIdentity();
 

@@ -63,7 +63,7 @@ namespace periapsis
             // load textures
             if (!obj_config[L"corona"].is_empty())
             {
-                corona = new texture(obj_config.get_directory().get_full_path() + obj_config[L"corona"], TEXTURE_ENV_REPLACE);
+                corona = new texture(L"scene graph", obj_config.get_directory().get_full_path() + obj_config[L"corona"], texture::TEXTURE_ENV_REPLACE);
             }
 
             // create light
@@ -128,11 +128,11 @@ namespace periapsis
                 glEnable(GL_BLEND);                                                                         CHECK_GL_ERRORS();
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);                                          CHECK_GL_ERRORS();
 
-                color::WHITE.set();
+                color::WHITE.bind();
 
                 glEnable(GL_CULL_FACE);                                                                         CHECK_GL_ERRORS();
 
-                if (c->render_flags & (context::RENDER_WIREFRAME | context::RENDER_UNTEXTURED))
+                if (c->render_flags & (context::RENDER_WIREFRAME | context::RENDER_NO_TEXTURES))
                 {
                     glPolygonMode(GL_FRONT, GL_LINE);
                 }

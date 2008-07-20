@@ -35,28 +35,75 @@
 //
 
 #include "platform/platform.hpp"
+#include "data/pointer.hpp"
+#include "data/dictionary.hpp"
+
 #include "platform/color.hpp"
+#include "platform/texture.hpp"
+
 
 namespace gsgl
 {
 
-    class data_object;
     class string;
 
     namespace platform
     {
+
+        class PLATFORM_API font_impl
+        {
+            const string face;
+            const int size;
+
+            int font_height;
+            int font_ascent;
+            int texture_height; // this will be the nearest power of 2 greater than max_height
+
+            mutable data::dictionary<float, wchar_t> glyph_pct_x, glyph_pct_y;
+            mutable data::dictionary<float, wchar_t> glyph_widths;
+
+            void *ttf_font_ptr;
+            color fg;
+
+            mutable data::dictionary<data::shared_pointer<texture>, wchar_t> glyph_textures;
+
+            static const gsgl::string FONT_TEXTURE_CATEGORY;
+            static const gsgl::string FONT_DIR;
+
+        protected:
+            font_impl(const string &, int size, const color & fg);
+            friend class font;
+
+        public:
+            ~font_impl();
+
+            const string & get_face() const { return face; }
+            const int get_size() const { return size; }
+            const color & get_fg() const { return fg; }
+
+            float calc_height(const string &) const;
+            float calc_width(const string &) const;
+
+            void draw(const string &) const;
+
+        private:
+            texture *get_glyph(const wchar_t) const;
+
+            void get_font_dir();
+        }; // class font_impl
     
-        class font_impl;
         
         /// Encapsulates a font for use in OpenGL.
         class PLATFORM_API font
             : public platform_object
         {
-            font_impl *impl;
+            data::shared_pointer<font_impl> impl;
+
+            static data::dictionary<data::shared_pointer<font_impl>, gsgl::string> font_impls;
             
         public:
             font(const gsgl::string & face, int size, const color & fg);
-            ~font();
+            virtual ~font();
 
             //
             const gsgl::string & get_face() const;
@@ -69,8 +116,8 @@ namespace gsgl
             /// Draws a string.
             void draw(const gsgl::string &) const;
 
-            //
-            static gsgl::data_object *create_global_font_cache();
+            /// Clears the cache of all fonts.
+            static void clear_cache();
         }; // class font
 
         

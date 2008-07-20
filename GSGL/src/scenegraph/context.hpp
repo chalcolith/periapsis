@@ -88,13 +88,15 @@ namespace gsgl
             //
             enum
             {
-                NO_RENDER_FLAGS      = 0,
+                RENDER_NO_FLAGS      = 0,
                 RENDER_LABELS        = 1 << 0,
                 RENDER_COORD_SYSTEMS = 1 << 1,
                 RENDER_WIREFRAME     = 1 << 2,
-                RENDER_UNTEXTURED    = 1 << 3,
-                RENDER_ANISOTROPIC   = 1 << 4,
-                RENDER_UNLIT         = 1 << 5
+                RENDER_NO_ANISO      = 1 << 3,
+                RENDER_NO_LIGHTING   = 1 << 4,
+                RENDER_NO_TEXTURES   = 1 << 5,
+                RENDER_NO_NORMALMAP  = 1 << 6,
+                RENDER_NO_HEIGHTMAP  = 1 << 7
             };
 
             gsgl::flags_t render_flags;

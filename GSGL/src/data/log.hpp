@@ -35,8 +35,9 @@
 //
 
 #include "data/data.hpp"
-#include "data/global.hpp"
+#include "data/singleton.hpp"
 #include "data/string.hpp"
+#include "data/list.hpp"
 
 namespace gsgl
 {
@@ -50,28 +51,24 @@ namespace gsgl
     namespace data
     {
 
-        /// Base class for log targets.
-        class DATA_API log_target
-        {
-        public:
-            log_target();
-            virtual ~log_target();
-
-            virtual void print_line(const gsgl::string &) = 0;
-        }; // class log_target
+        class log_target;
 
 
         /// Global logger that sends log lines to the various log targets.
         /// The global logger object will be created on the first call to \c global_logger(), and will destroy itself when the last log target goes out of scope.
         class DATA_API logger
-            : public global_register<log_target>
+            : public data::singleton<logger>
         {
             static int global_log_level;
 
+            data::list<log_target *> log_targets;
+
 			logger();
-			virtual ~logger();
 
         public:
+			virtual ~logger();
+
+
             enum
             {
                 LOG_LEVEL_NONE   = 0,
@@ -81,13 +78,23 @@ namespace gsgl
                 LOG_LEVEL_ULTRA  = 100
             };
 
-            void print_line(int log_level, const gsgl::string &);
-
+            static void print_line(int log_level, const gsgl::string &);
             static void set_global_log_level(int new_log_level);
 
-            /// Reimplemented to enable auto-creation.
-            static logger *global_instance();
+            friend class log_target;
         }; // class logger
+
+
+        /// Base class for log targets.
+        class DATA_API log_target
+            : public data_object
+        {
+        public:
+            log_target();
+            virtual ~log_target();
+
+            virtual void print_line(const gsgl::string &) = 0;
+        }; // class log_target
 
 
         /// A log target that prints to a file.
@@ -121,17 +128,13 @@ namespace gsgl
 
     DATA_API inline void log(int log_level, const gsgl::string & s)
     {
-        gsgl::data::logger *lgr = gsgl::data::logger::global_instance();
-        if (lgr)
-            lgr->print_line(log_level, s);
+        gsgl::data::logger::print_line(log_level, s);
     } // log()
 
 
     DATA_API inline void log(const gsgl::string & s)
     {
-        gsgl::data::logger *lgr = gsgl::data::logger::global_instance();
-        if (lgr)
-            lgr->print_line(gsgl::data::logger::LOG_LEVEL_BASIC, s);
+        gsgl::data::logger::print_line(gsgl::data::logger::LOG_LEVEL_BASIC, s);
     } // log()
 
 

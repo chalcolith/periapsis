@@ -66,8 +66,11 @@ namespace gsgl
 
         //
 
+        broker *broker::instance;
+
+
 		broker::broker()
-			: global_register<broker_creator, gsgl::data::dictionary<broker_creator *, gsgl::string> >()
+			: singleton<broker>()
 		{
             gsgl::log(L"broker: creating global broker");
 		} // broker::broker()
@@ -81,39 +84,43 @@ namespace gsgl
 
         bool broker::has_object(const string & type_name)
         {
-            return registered_resources.contains_index(type_name);
+            if (instance)
+            {
+                return instance->creators.contains_index(type_name);
+            }
+            else
+            {
+                throw internal_exception(__FILE__, __LINE__, L"You must declare an instance of the global broker object!");
+            }
         } // broker::has_object()
         
 
         brokered_object *broker::create_object(const string & type_name, const config_record & obj_conf)
         {
-            gsgl::log(string(L"broker: creating object of type ") + type_name);
-
-            broker_creator *bc = registered_resources[type_name];
-
-            if (bc)
+            if (instance)
             {
-                broker_creator::creator_ft ccc = bc->get_create_func(); assert(ccc);
-                brokered_object *result = ccc(obj_conf);
-                if (result)
-                    result->type_name = type_name;
-                return result;
+                gsgl::log(string(L"broker: creating object of type ") + type_name);
+
+                broker_creator::creator_ft ccc = instance->creators[type_name];
+
+                if (ccc)
+                {
+                    brokered_object *result = ccc(obj_conf);
+                    if (result)
+                        result->type_name = type_name;
+                    return result;
+                }
+                else
+                {
+                    gsgl::log(string(L"broker: UNABLE TO CREATE OBJECT OF TYPE ") + type_name);
+                    throw runtime_exception(L"%ls: unknown object type!", type_name.w_string());
+                }
             }
             else
             {
-                gsgl::log(string(L"broker: UNABLE TO CREATE OBJECT OF TYPE ") + type_name);
-                throw runtime_exception(L"%ls: unknown object type", type_name.w_string());
+                throw internal_exception(__FILE__, __LINE__, L"You must declare an instance of the global broker object!");
             }
         } // broker::create_object()
-
-
-        broker *broker::global_instance()
-        {
-            broker *temp = dynamic_cast<broker *>(singleton<global_register<broker_creator, gsgl::data::dictionary<broker_creator *, gsgl::string> > >::global_instance());
-            if (!temp)
-                temp = new broker();
-            return temp;
-        } // broker::global_instance()
 
 
         //
@@ -121,22 +128,29 @@ namespace gsgl
         broker_creator::broker_creator(const string & type_name, creator_ft create_func)
             : type_name(type_name), create_func(create_func)
         {
-            assert(!type_name.is_empty());
-            assert(create_func);
-            broker::global_instance()->register_resource(this);
+            if (type_name.is_empty())
+                throw internal_exception(__FILE__, __LINE__, L"You cannot declare a brokered object creator with a blank type name!");
+
+            if (!create_func)
+                throw internal_exception(__FILE__, __LINE__, L"You cannot declare a brokered object creator with a null creator function!");
+
+            if (!broker::instance)
+                throw internal_exception(__FILE__, __LINE__, L"You must declare an instance of the global broker object!");
+
+            if (broker::instance->creators.contains_index(type_name))
+                throw internal_exception(__FILE__, __LINE__, L"You cannot declare more than one creator for type '%ls'.", type_name.w_string());
+
+            broker::instance->creators[type_name] = create_func;
         } // broker_creator::broker_creator()
 
 
         broker_creator::~broker_creator()
         {
-            broker::global_instance()->unregister_resource(this);
+            if (broker::instance)
+                broker::instance->creators.remove(type_name);
         } // broker_creator::~broker_creator()
 
 
-        // global broker instance
-        global_register<broker_creator, gsgl::data::dictionary<broker_creator *, gsgl::string> > *data::broker::instance = 0;
-
     } // namespace data
-
 
 } // namespace gsgl

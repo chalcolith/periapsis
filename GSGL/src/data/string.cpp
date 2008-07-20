@@ -34,7 +34,6 @@
 #include "data/string.hpp"
 
 #include "data/pointer.hpp"
-#include "data/shared.hpp"
 #include "data/array.hpp"
 #include "data/list.hpp"
 #include "data/stream.hpp"
@@ -124,6 +123,7 @@ namespace gsgl
     } // string_impl::get_w_string()
 
 
+    /// \todo Implement UFT-8 output.
     const char *string_impl::get_c_string() const
     {
         if (modified_flags & STRING_IMPL_OLD_CDATA)
@@ -140,6 +140,7 @@ namespace gsgl
     } // string_impl::get_c_string()
 
 
+    /// \todo Implement UTF-8 output.
     const unsigned char *string_impl::get_p_string() const
     {
         if (modified_flags & STRING_IMPL_OLD_PDATA)
@@ -899,9 +900,8 @@ namespace gsgl
     
     string string::format(const string & format, ...)
     {
-        const gsgl::index_t len = (format.size() + 64) * 4;
-
-		data::smart_pointer<wchar_t, true> buf(new wchar_t[len+1]);
+        const gsgl::index_t len = 1024;
+        wchar_t buf[len];
         
         va_list ap;
         va_start(ap, format);
@@ -914,9 +914,8 @@ namespace gsgl
 
     string string::format(const wchar_t *format, ...)
     {
-        const gsgl::index_t len = (static_cast<gsgl::index_t>(::wcslen(format)) + 64) * 4;
-
-		data::smart_pointer<wchar_t, true> buf(new wchar_t[len+1]);
+        const gsgl::index_t len = 1024;
+        wchar_t buf[len];
         
         va_list ap;
         va_start(ap, format);

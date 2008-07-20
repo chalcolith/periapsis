@@ -414,7 +414,7 @@ namespace gsgl
                 glDisable(GL_LIGHT0 + i); // light::bind() will call glEnable on valid lights...
             c->num_lights = 0;
 
-            if (!(c->render_flags & context::RENDER_UNLIT))
+            if (!(c->render_flags & context::RENDER_NO_LIGHTING))
             {
                 len = rec.light_queue.size();
                 for (i = 0; i < len && i < max_lights; ++i)

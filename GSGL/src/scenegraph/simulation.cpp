@@ -207,9 +207,6 @@ namespace gsgl
             sim_context->julian_start = jdn.get_jdn();
             sim_context->julian_cur = sim_context->julian_start;
             sim_context->julian_dt = 0;
-
-            //
-            sim_context->render_flags |= context::RENDER_ANISOTROPIC;
         } // simulation::init_context()
 
 

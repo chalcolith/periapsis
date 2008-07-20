@@ -213,8 +213,8 @@ namespace gsgl
                 if (priority >= priorities[i])
                     break;
             }
-            values.insert(item, i);
-            priorities.insert(priority, i);
+            values.insert(i, item);
+            priorities.insert(i, priority);
         } // pqueue<T,I>::push()
 
 

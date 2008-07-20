@@ -110,7 +110,7 @@ namespace periapsis
                 // check to see if we're out of range
                 gsgl::real_t screen_width = utils::pixel_size(dist, radius, c->cam->get_field_of_view(), c->screen->get_height());
 
-                color::WHITE.set();
+                color::WHITE.bind();
 
                 if (screen_width < MIN_PIXEL_WIDTH)
                 {
@@ -127,7 +127,7 @@ namespace periapsis
                     glPolygonMode(GL_FRONT_AND_BACK, (c->render_flags & context::RENDER_WIREFRAME) ? GL_LINE : GL_FILL);     CHECK_GL_ERRORS();
 
                     // set up lighting
-                    if (!(c->render_flags & context::RENDER_UNLIT) && !(get_draw_flags() & NODE_DRAW_UNLIT))
+                    if (!(c->render_flags & context::RENDER_NO_LIGHTING) && !(get_draw_flags() & NODE_DRAW_UNLIT))
                     {
                         glEnable(GL_LIGHTING);                                                                          CHECK_GL_ERRORS();
 
@@ -142,7 +142,7 @@ namespace periapsis
                     }
 
                     // set up texturing
-                    if (!(c->render_flags & context::RENDER_UNTEXTURED))
+                    if (!(c->render_flags & context::RENDER_NO_TEXTURES))
                     {
                         glEnable(GL_TEXTURE_2D);
                     }

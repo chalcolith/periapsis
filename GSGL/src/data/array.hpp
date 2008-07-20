@@ -122,7 +122,7 @@ namespace gsgl
 			inline const T *ptr() const { return data; }
 			inline T * ptr() { return data; }
 
-			void insert(const T & item, const gsgl::index_t & index);
+			void insert(const gsgl::index_t & index, const T & item);
 			void remove(const gsgl::index_t & index);
 			/// \}
 
@@ -202,7 +202,7 @@ namespace gsgl
         template <typename T>
         void simple_array<T>::insert(const iterator & i, const T & item)
         {
-            insert(item, i.position);
+            insert(i.position, item);
         } // simple_array<T>::insert()
 
 
@@ -233,7 +233,7 @@ namespace gsgl
 
 
 		template <typename T>
-		void simple_array<T>::insert(const T & item, const gsgl::index_t & index)
+		void simple_array<T>::insert(const gsgl::index_t & index, const T & item)
 		{
 			const index_t old_num_elements = num_elements;
 
@@ -375,7 +375,7 @@ namespace gsgl
 
 			/// \name Array Functionality
 			/// \{
-			void insert(const T & item, const gsgl::index_t & index);
+			void insert(const gsgl::index_t & index, const T & item);
 			void remove(const gsgl::index_t & index);
 			/// \}
 		}; // class object_array
@@ -426,6 +426,8 @@ namespace gsgl
 
 			// we keep our bucket size the same as before, so as not to reallocate everything
 			num_elements = oa.num_elements;
+
+            return *this;
 		} // object_array<T>::operator= ()
 
 
@@ -463,21 +465,23 @@ namespace gsgl
 		template <typename T>
 		void object_array<T>::append(const T & item)
 		{
-			insert(item, size());
+			insert(size(), item);
 		} // object_array<T>::append()
 
 
 		template <typename T>
-		void object_array<T>::insert(const iterator & i, const T & item)
+		void object_array<T>::insert(const iterator & i, const T & item_to_insert)
 		{
-			insert(item, i.position);
+			const object_array_iterator<T> & oi = dynamic_cast<const object_array_iterator<T> &>(i);
+			insert(oi.position, item_to_insert);
 		} // object_array<T>::insert()
 
 
 		template <typename T>
 		void object_array<T>::remove(const iterator & i)
 		{
-			remove(i.position);
+			const object_array_iterator<T> & oi = dynamic_cast<const object_array_iterator<T> &>(i);
+			remove(oi.position);
 		} // object_array<T>::remove()
 
 
@@ -506,7 +510,7 @@ namespace gsgl
 				int target_bucket = index / bucket_size;
 				for (int i = buckets.size(); i <= target_bucket; ++i)
 				{
-					buckets[i] = static_cast<T *>(allocate(sizeof(T) * bucket_size));
+					buckets[i] = reinterpret_cast<T *>(allocate(sizeof(T) * bucket_size));
 				}
 
 				// initialize intermediate elements
@@ -527,7 +531,7 @@ namespace gsgl
 
 
 		template <typename T>
-		void object_array<T>::insert(const T & item_to_insert, const gsgl::index_t & index)
+		void object_array<T>::insert(const gsgl::index_t & index, const T & item_to_insert)
 		{
 			for (int i = num_elements; i > index; --i)
 			{

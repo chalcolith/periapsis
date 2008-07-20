@@ -78,7 +78,7 @@ namespace gsgl
         {
             if (parent_node->get_tree_nodes().size())
             {
-                get_foreground().set();
+                get_foreground().bind();
                 glLineWidth(3.0f);
 
                 glBegin(GL_LINES);
@@ -163,7 +163,7 @@ namespace gsgl
             if (this == parent_treebox->get_selected_node())
             {
                 glDisable(GL_BLEND);
-                get_foreground().set();
+                get_foreground().bind();
                 glLineWidth(1.0f);
 
                 glBegin(GL_LINE_STRIP);

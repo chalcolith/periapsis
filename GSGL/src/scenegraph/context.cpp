@@ -43,7 +43,7 @@ namespace gsgl
             : sim(0), console(0), scenery(0), 
               screen(0), view(0), cam(0),
               num_lights(0),
-              render_flags(NO_RENDER_FLAGS)
+              render_flags(RENDER_NO_FLAGS)
         {
         } // context::context()
         

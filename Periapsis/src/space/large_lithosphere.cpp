@@ -133,7 +133,7 @@ namespace periapsis
         void lithosphere_qt_node::draw(gsgl::scenegraph::context *c)
         {
             lithosphere_quadtree *lqt = dynamic_cast<lithosphere_quadtree *>(parent_quadtree);
-            assert(lqt->shader);
+            assert(lqt->shader.ptr());
 
             if (current_texture)
             {

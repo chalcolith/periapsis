@@ -44,13 +44,13 @@ namespace gsgl
     {
     
         config_record::config_record()
-            : data_object(), parent(0), associated_var(0), f(0)
+            : data_object(), parent(0), associated_var(0), f(0), line_number(0)
         {
         } // config_record::config_record()
 
 
         config_record::config_record(const config_record & conf)
-            : data_object(), parent(conf.parent), associated_var(conf.associated_var), f(conf.f)
+            : data_object(), parent(conf.parent), associated_var(conf.associated_var), f(conf.f), line_number(conf.line_number)
         {
             children = conf.children;
             name = conf.name;
@@ -83,6 +83,7 @@ namespace gsgl
             attributes = conf.attributes;
             associated_var = conf.associated_var;
             f = conf.f;
+            line_number = conf.line_number;
 
             return *this;
         } // config_record::operator= ()
@@ -100,7 +101,8 @@ namespace gsgl
                 && name == conf.name
                 && text == conf.text
                 && attributes == conf.attributes
-                && f == conf.f;
+                && f == conf.f
+                && line_number == conf.line_number;
         } // config_record::operator== ()
 
 
@@ -110,6 +112,12 @@ namespace gsgl
         {
             return *f;
         } // config_record::get_file()
+
+
+        const int config_record::get_line_number() const
+        {
+            return line_number;
+        } // config_record::get_line_number()
         
 
         const io::directory & config_record::get_directory() const
@@ -321,14 +329,14 @@ namespace gsgl
             if (parent)
                 parent->save();
 
-            if (f)
+            if (f.ptr())
             {
                 smart_pointer<io::ft_stream> s(f->open_text(io::FILE_OPEN_WRITE));
                 to_stream(*s);
             }
             else
             {
-                throw runtime_exception(L"You cannot save a config record with no associated file.");
+                throw runtime_exception(L"You cannot save a config record that has no associated file.");
             }
         } // config_record::save()
 
@@ -447,6 +455,8 @@ namespace gsgl
 
             if (ch != L'<')
                 SYNTAX_ERROR(L"missing '<'");
+
+            line_number = line;
 
             // read name
             buf.clear();

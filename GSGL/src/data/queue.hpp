@@ -224,7 +224,7 @@ namespace gsgl
                 if (front_pos > insert_pos)
                     ++front_pos;
 
-                simple_array<T>::insert(a, insert_pos);
+                simple_array<T>::insert(insert_pos, a);
             }
             else
             {

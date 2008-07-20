@@ -71,6 +71,7 @@ namespace gsgl
             global_config *associated_var; ///< Many records may point to the same variable, but the variable only knows about one (the global config).
             
             data::shared_pointer<io::file> f; ///< Shared between all the children.
+            int line_number;
             
         public:
             config_record();
@@ -93,6 +94,8 @@ namespace gsgl
 
             /// \return The file that the config_record object resides in.
             const io::file & get_file() const;
+
+            const int get_line_number() const;
             
             /// \return The directory that the config_record object resides in.
             const io::directory & get_directory() const;

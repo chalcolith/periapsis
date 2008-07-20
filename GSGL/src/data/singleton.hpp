@@ -52,7 +52,9 @@ namespace gsgl
         class singleton
             : public gsgl::data_object
         {
+        protected:
             static T *instance;
+
         public:
             singleton()
                 : data_object()
@@ -62,15 +64,18 @@ namespace gsgl
                 instance = reinterpret_cast<T *>(this);
             }
 
+
             virtual ~singleton()
             {
                 instance = 0;
             }
 
+
             static T *global_instance()
             {
                 return T::instance;
             }
+
         }; // class singleton
 
 

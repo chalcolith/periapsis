@@ -38,6 +38,7 @@
 #include "data/exception.hpp"
 #include "data/comparable.hpp"
 #include "data/indexable.hpp"
+#include "data/pointer.hpp"
 #include "data/pool.hpp"
 #include "data/list.hpp"
 #include "data/stack.hpp"

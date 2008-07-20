@@ -76,7 +76,7 @@ namespace gsgl
             glPushAttrib(GL_ALL_ATTRIB_BITS);
             glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
 
-            get_foreground().set();
+            get_foreground().bind();
             glLineWidth(3.0f);
 
             if (mode == VERTICAL)

@@ -51,13 +51,32 @@ namespace gsgl
 
         public:
             enum component { COMPONENT_RED = 0, COMPONENT_GREEN = 1, COMPONENT_BLUE = 2, COMPONENT_ALPHA = 3, NUM_COMPONENTS = 4 };
-                        
-            color(float red = 1.0f, float green = 1.0f, float blue = 1.0f, float alpha = 1.0f)
+            
+            color()
+            {
+                unsigned int hex_val = 0xa020f0ff;
+
+                val[COMPONENT_RED]   = static_cast<float>((hex_val & 0xff000000) >> 24) / 255.0f;
+                val[COMPONENT_GREEN] = static_cast<float>((hex_val & 0x00ff0000) >> 16) / 255.0f;
+                val[COMPONENT_BLUE]  = static_cast<float>((hex_val & 0x0000ff00) >> 8)  / 255.0f;
+                val[COMPONENT_ALPHA] = static_cast<float>((hex_val & 0x000000ff) >> 0)  / 255.0f;
+            } // color()
+
+
+            color(float red, float green, float blue, float alpha = 1.0f)
             {
                 val[COMPONENT_RED]   = red;
                 val[COMPONENT_GREEN] = green;
                 val[COMPONENT_BLUE]  = blue;
                 val[COMPONENT_ALPHA] = alpha;
+            } // color()
+
+            explicit color(const unsigned int & hex_val)
+            {
+                val[COMPONENT_RED]   = static_cast<float>((hex_val & 0xff000000) >> 24) / 255.0f;
+                val[COMPONENT_GREEN] = static_cast<float>((hex_val & 0x00ff0000) >> 16) / 255.0f;
+                val[COMPONENT_BLUE]  = static_cast<float>((hex_val & 0x0000ff00) >> 8)  / 255.0f;
+                val[COMPONENT_ALPHA] = static_cast<float>((hex_val & 0x000000ff) >> 0)  / 255.0f;
             } // color()
 
             color(const color & c)
@@ -73,19 +92,21 @@ namespace gsgl
                 return *this;
             } // operator= ()
 
+            //
+            inline bool operator== (const color & c) const { return val[0] == c.val[0] && val[1] == c.val[1] && val[2] == c.val[2] && val[3] == c.val[3]; }
+            inline bool operator!= (const color & c) const { return val[0] != c.val[0] || val[1] != c.val[1] || val[2] != c.val[2] || val[3] != c.val[3]; }
 
+            //
             inline const float & get_val(const component c) const { return val[c]; }
             inline float & get_val(const component c) { return val[c]; }
 
             inline const float & operator[] (const component c) const { return get_val(c); }
             inline float & operator[] (const component c) { return get_val(c); }
 
-
             /// Sets the current OpenGL color to the value of this color.
-            void set() const;
+            void bind() const;
 
             const float *get_val() const { return val; }
-
 
             // 
             static const color BLACK;

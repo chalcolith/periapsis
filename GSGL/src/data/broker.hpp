@@ -36,8 +36,7 @@
 
 #include "data/data.hpp"
 #include "data/exception.hpp"
-#include "data/global.hpp"
-#include "data/string.hpp"
+#include "data/singleton.hpp"
 #include "data/dictionary.hpp"
 
 namespace gsgl
@@ -83,44 +82,20 @@ namespace gsgl
         /// The broker will delete itself when its last creator goes out of scope.
 
         class DATA_API broker
-            : public global_register<broker_creator, gsgl::data::dictionary<broker_creator *, gsgl::string> >
+            : public data::singleton<broker>
         {
+            data::dictionary<broker_creator::creator_ft, gsgl::string> creators;
+
+        public:
 			broker();
 			virtual ~broker();
 
-        public:
-            bool has_object(const gsgl::string & type_name);
-            brokered_object *create_object(const gsgl::string & type_name, const config_record & conf);
+            static bool has_object(const gsgl::string & type_name);
+            static brokered_object *create_object(const gsgl::string & type_name, const config_record & conf);
 
-            static broker *global_instance();
+            friend class broker_creator;
         }; // class broker
-        
-
-        // 
-
-        template <typename R>
-        void global_register_resource_aux(gsgl::data::dictionary<broker_creator *, gsgl::string> & d, broker_creator *bc)
-        {
-            assert(bc);
-
-            if (d.contains_index(bc->get_type_name()))
-                throw runtime_exception(L"%ls: already registered this object type!", bc->get_type_name().w_string());
-            else
-                d[bc->get_type_name()] = bc;
-        } // broker::register_resource()
-
-
-        template <typename R>
-        void global_unregister_resource_aux(gsgl::data::dictionary<broker_creator *, gsgl::string> & d, broker_creator *bc)
-        {
-            assert(bc);
-
-            if (d.contains_index(bc->get_type_name()))
-                d.remove(bc->get_type_name());
-            else
-                throw internal_exception(__FILE__, __LINE__, L"Attempted to unregister an unregistered creator from the global broker.");
-        } // broker::unregister_resource()
-        
+                
 
     } // namespace data
     

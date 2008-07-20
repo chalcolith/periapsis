@@ -145,7 +145,7 @@ namespace gsgl
             // draw outline
             glDisable(GL_BLEND);
 
-            get_foreground().set();
+            get_foreground().bind();
             glLineWidth(1.0f);
 
             glBegin(GL_LINE_STRIP);

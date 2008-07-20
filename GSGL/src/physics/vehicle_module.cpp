@@ -61,7 +61,7 @@ namespace gsgl
             {
                 if (i->get_name() == L"model")
                 {
-                    model *m = new model(*i);
+                    model *m = new model(L"ingame_vehicles", *i);
 
                     m->get_name() = string::format(L"%ls: %ls", get_name().w_string(), m->get_name().w_string());
                     models.append(m);

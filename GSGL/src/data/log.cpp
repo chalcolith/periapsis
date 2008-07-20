@@ -50,14 +50,12 @@ namespace gsgl
     namespace data
     {
 
-        global_register<log_target> *logger::instance = 0;
+        logger *logger::instance = 0;
         int logger::global_log_level = logger::LOG_LEVEL_BASIC;
-
 	
 		//
 
 		logger::logger()
-			: global_register<log_target>()
 		{
 #ifdef DEBUG
 #ifdef WIN32
@@ -84,9 +82,9 @@ namespace gsgl
 
         void logger::print_line(int log_level, const gsgl::string & msg)
         {
-            if (log_level <= global_log_level)
+            if (instance && log_level <= global_log_level)
             {
-                for (list<log_target *>::iterator i = registered_resources.iter(); i.is_valid(); ++i)
+                for (list<log_target *>::iterator i = instance->log_targets.iter(); i.is_valid(); ++i)
                     (*i)->print_line(msg);
             }
         } // logger::print_line()
@@ -98,26 +96,28 @@ namespace gsgl
         } // logger::set_global_log_level()
 
 
-        logger *logger::global_instance()
-        {
-            logger *temp = dynamic_cast<logger *>(singleton<global_register<log_target> >::global_instance());
-            if (!temp)
-                temp = new logger();
-            return temp;
-        } // logger::global_instance()
-
-
         //////////////////////////////////////////
 
         log_target::log_target()
+            : data_object()
         {
-            logger::global_instance()->register_resource(this);
+            if (logger::instance)
+                logger::instance->log_targets.append(this);
+            else
+                throw internal_exception(__FILE__, __LINE__, L"You must define a global logger object.");
         } // log_target::log_target()
 
 
         log_target::~log_target()
         {
-            logger::global_instance()->unregister_resource(this);
+            if (logger::instance)
+            {
+                list<log_target *>::iterator i = logger::instance->log_targets.find_value(this);
+                if (i.is_valid())
+                    logger::instance->log_targets.remove(i);
+                else
+                    throw internal_exception(__FILE__, __LINE__, L"Trying to remove a log target that is not registered!");
+            }
         } // log_target::~log_target()
 
 

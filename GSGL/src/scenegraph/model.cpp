@@ -37,9 +37,7 @@
 #include "data/dictionary.hpp"
 #include "data/fstream.hpp"
 #include "data/file.hpp"
-#include "data/cache.hpp"
 
-#include "platform/vbuffer.hpp"
 #include "platform/lowlevel.hpp"
 
 #include <cmath>
@@ -53,290 +51,6 @@ namespace gsgl
     
     namespace scenegraph
     {
-
-
-        class material_impl
-        {
-        public:
-            string name;
-
-            color ambient;
-            color diffuse;
-            color specular;
-            color emissive;
-
-            float shininess;
-            bool  flat;
-
-            texture *tex;
-
-            material_impl();
-            ~material_impl();
-        }; // class material_impl
-
-
-        material_impl::material_impl()
-            : ambient(0.8f, 0.8f, 0.8f, 1),
-              diffuse(0.8f, 0.8f, 0.8f, 1),
-              specular(0.0f, 0.0f, 0.0f, 1),
-              emissive(0.0f, 0.0f, 0.0f, 1),
-              shininess(128.0f),
-              flat(false),
-              tex(0)
-        {
-        } // material_impl::material_impl()
-
-    
-        material_impl::~material_impl()
-        {
-            delete tex;
-        } // material_impl::~material_impl()
-
-
-        //////////////////////////////////////////
-
-        class material_file
-            : public shared_object
-        {
-        public:
-            dictionary<material_impl *, string> materials;
-
-            material_file(const string & fname);
-            ~material_file();
-
-        private:
-            void load_mtl_file(const string & fname);
-        }; // class material_file
-
-
-        material_file::material_file(const string & fname)
-            : shared_object()
-        {
-            string full_path = io::file::get_full_path(fname);
-
-            string ext = full_path.right_substring(4);
-            if (ext.make_lower() == L".mtl")
-                load_mtl_file(full_path);
-            else
-                throw runtime_exception(L"%ls: unknown material file format!", full_path.w_string());
-        } // material_file::material_file()
-
-
-        material_file::~material_file()
-        {
-            for (dictionary<material_impl *, string>::iterator i = materials.iter(); i.is_valid(); ++i)
-                delete *i;
-
-            materials.clear();
-        } // material_file::~material_file()
-
-
-        void material_file::load_mtl_file(const string & fname)
-        {
-            ft_stream fs(fname);
-
-            material_impl *cur = 0;
-
-            string line;
-            int line_number = 0;
-
-            for (fs >> line; !fs.at_end(); fs >> line)
-            {
-                line_number++;
-
-                line.trim();
-                if (line.size() == 0 || line[0] == L'#')
-                    continue;
-
-                list<string> tokens = line.split(L" ");
-
-                if (tokens[0] == L"newmtl")
-                {
-                    if (materials.contains_index(tokens[1]))
-                        throw runtime_exception(L"Duplicate material '%ls' in %ls.", tokens[1].w_string(), fname.w_string());
-
-                    cur = new material_impl();
-                    materials[tokens[1]] = cur;
-                }
-                else if (tokens[0] == L"Ka")
-                {
-                    cur->ambient[color::COMPONENT_RED]   = static_cast<float>(tokens[1].to_double());
-                    cur->ambient[color::COMPONENT_GREEN] = static_cast<float>(tokens[2].to_double());
-                    cur->ambient[color::COMPONENT_BLUE]  = static_cast<float>(tokens[3].to_double());
-                }
-                else if (tokens[0] == L"Kd")
-                {
-                    cur->diffuse[color::COMPONENT_RED]   = static_cast<float>(tokens[1].to_double());
-                    cur->diffuse[color::COMPONENT_GREEN] = static_cast<float>(tokens[2].to_double());
-                    cur->diffuse[color::COMPONENT_BLUE]  = static_cast<float>(tokens[3].to_double());
-                }
-                else if (tokens[0] == L"Ks")
-                {
-                    cur->specular[color::COMPONENT_RED]   = static_cast<float>(tokens[1].to_double());
-                    cur->specular[color::COMPONENT_GREEN] = static_cast<float>(tokens[2].to_double());
-                    cur->specular[color::COMPONENT_BLUE]  = static_cast<float>(tokens[3].to_double());
-                }
-                else if (tokens[0] == L"d")
-                {
-                    float alpha = static_cast<float>(tokens[1].to_double());
-
-                    cur->ambient[color::COMPONENT_ALPHA]  = alpha;
-                    cur->diffuse[color::COMPONENT_ALPHA]  = alpha;
-                    cur->specular[color::COMPONENT_ALPHA] = alpha;
-                }
-                else if (tokens[0] == L"Tr")
-                {
-                    float alpha = 1.0f - static_cast<float>(tokens[1].to_double());
-
-                    cur->ambient[color::COMPONENT_ALPHA]  = alpha;
-                    cur->diffuse[color::COMPONENT_ALPHA]  = alpha;
-                    cur->specular[color::COMPONENT_ALPHA] = alpha;
-                }
-                else if (tokens[0] == L"illum")
-                {
-                    int code = tokens[1].to_int();
-                    if (code == 1)
-                        cur->flat = true;
-                }
-                else if (tokens[0] == L"Ns")
-                {
-                    cur->shininess = static_cast<float>(tokens[1].to_double());
-                    if (cur->shininess > 128.0)
-                        cur->shininess = 128.0;
-                }
-                else if (tokens[0] == L"map_Ka" || tokens[0] == L"map_Kd")
-                {
-                    file f(fname);
-                    cur->tex = new platform::texture(f.get_dir_name() + tokens[1], TEXTURE_LOAD_NO_PARAMS);
-                }
-                else
-                {
-                    throw runtime_exception(L"Syntax error in MTL file %ls:%d", fname.w_string(), line_number);
-                }
-            }
-        } // material_file::load_mtl_file()
-
-
-        //////////////////////////////////////////////////////////////
-
-        typedef cache<material_file> material_cache;
-
-
-        material::material(const string & filename, const string & material_name)
-            : impl(0)
-        {
-            material_cache & global_material_files = *material_cache::global_instance();
-
-            material_file *mf = 0;
-            if (global_material_files.contains_index(filename))
-            {
-                mf = global_material_files[filename];
-            }
-            else
-            {
-                mf = new material_file(filename);
-                global_material_files[filename] = mf; // assign this after in case the creator throws
-                mf->attach(); // keep in the cache
-            }
-            mf->attach();
-
-            if (!(impl = mf->materials[material_name]))
-            {
-                throw runtime_exception(L"Unable to find material '%ls' in material file '%ls'.", material_name.w_string(), filename.w_string());
-            }
-        } // material::material()
-
-
-        material::~material()
-        {
-        } // material::~material()
-
-
-        string & material::get_name()     { assert(impl); return impl->name; }
-        color & material::get_ambient()   { assert(impl); return impl->ambient; }
-        color & material::get_diffuse()   { assert(impl); return impl->diffuse; }
-        color & material::get_specular()  { assert(impl); return impl->specular; }
-        float & material::get_shininess() { assert(impl); return impl->shininess; }
-        bool & material::get_flat()       { assert(impl); return impl->flat; }
-        texture *material::get_texture()  { assert(impl); return impl->tex; }
-
-
-        bool material::is_opaque()
-        {
-            assert(impl);
-            return impl->ambient[color::COMPONENT_ALPHA] == 1.0f && impl->diffuse[color::COMPONENT_ALPHA] == 1.0f;
-        } // material::is_opaque()
-
-
-        /// \todo Implement differing texture flags.
-        void material::bind(gsgl::flags_t render_flags)
-        {
-            assert(impl);
-
-            glColor4fv(impl->diffuse.get_val());                                                                    CHECK_GL_ERRORS();
-
-            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, impl->ambient.get_val());                                   CHECK_GL_ERRORS();
-            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, impl->diffuse.get_val());                                   CHECK_GL_ERRORS();
-            //glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, impl->specular.get_val());                                 CHECK_GL_ERRORS();
-            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, impl->emissive.get_val());                                 CHECK_GL_ERRORS();
-            glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, impl->shininess);                                          CHECK_GL_ERRORS();
-
-            if (impl->flat)
-            {
-                glShadeModel(GL_FLAT);                                                                              CHECK_GL_ERRORS();
-            }
-            else
-            {
-                glShadeModel(GL_SMOOTH);                                                                            CHECK_GL_ERRORS();
-            }
-
-            if (impl->tex && !(render_flags & context::RENDER_UNTEXTURED))
-            {
-                glEnable(GL_TEXTURE_2D);
-
-                impl->tex->bind();
-
-                glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);                                        CHECK_GL_ERRORS();
-               
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);                                       CHECK_GL_ERRORS();
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);                                       CHECK_GL_ERRORS();
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);                                   CHECK_GL_ERRORS();
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);                                   CHECK_GL_ERRORS();
-            }
-        } // material::bind()
-
-
-        /// Provided only so that it can be added to the global metacache in the right order.
-        gsgl::data_object *material::create_global_material_cache()
-        {
-            return new material_cache(L"material cache");
-        } // material::global_material_cache()
-
-
-        //////////////////////////////////////////////////////////////
-
-        /// A submesh is part of a mesh with a particular material.  It is only for internal use.
-        /// A submesh_node will collect one or more submeshes to use in a model part.
-        class submesh
-        {
-        public:
-            material *mat;
-
-            // we are not bothering to share vertices
-            vertex_buffer point_vertices;
-            vertex_buffer line_vertices;
-            vertex_buffer triangle_vertices;
-            vertex_buffer triangle_texcoords;
-            vertex_buffer triangle_normals;
-
-            submesh();
-            ~submesh();
-
-            void load();
-            void unload();
-            void draw(gsgl::flags_t render_flags = 0);
-        }; // class submesh
-
 
         submesh::submesh()
             : mat(0), 
@@ -390,7 +104,7 @@ namespace gsgl
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);                                                            CHECK_GL_ERRORS();
 
             // lighting and material
-            if (!(render_flags & context::RENDER_UNLIT))
+            if (!(render_flags & context::RENDER_NO_LIGHTING))
             {
                 glEnable(GL_LIGHTING);                                                                          CHECK_GL_ERRORS();
 
@@ -458,21 +172,6 @@ namespace gsgl
 
         //////////////////////////////////////////
 
-        /// A mesh is a named part of a mesh file.  Only for internal use.
-        class mesh
-        {
-            string name;
-            simple_array<submesh *> submeshes;
-
-        public:
-            mesh(const string & name);
-            ~mesh();
-
-            string & get_name() { return name; }
-            simple_array<submesh *> & get_submeshes() { return submeshes; }
-        }; // class mesh
-
-
         mesh::mesh(const string & name)
             : name(name)
         {
@@ -481,39 +180,33 @@ namespace gsgl
 
         mesh::~mesh()
         {
-            for (simple_array<submesh *>::iterator i = submeshes.iter(); i.is_valid(); ++i)
-                delete *i;
-            submeshes.clear();
         } // mesh::~mesh()
 
 
         //////////////////////////////////////////
 
         class mesh_file
-            : public shared_object
         {
-            dictionary<mesh *, string> meshes;
         public:
-            mesh_file(const string & fname);
+            dictionary<shared_pointer<mesh>, string> meshes;
+
+            mesh_file(const string & category, const string & fname);
             ~mesh_file();
 
-            dictionary<mesh *, string> & get_meshes() { return meshes; }
-
         private:
-            void load_obj_file(const string & fname);
+            void load_obj_file(const string & category, const string & fname);
         }; // class mesh_file
 
 
         //
 
-        mesh_file::mesh_file(const string & fname)
-            : shared_object()
+        mesh_file::mesh_file(const string & category, const string & fname)
         {
             string full_path = io::file::get_full_path(fname);
 
             string ext = full_path.right_substring(4);
             if (ext.make_lower() == L".obj")
-                load_obj_file(full_path);
+                load_obj_file(category, full_path);
             else
                 throw runtime_exception(L"%ls: invalid mesh file format.", full_path.w_string());
         } // mesh_file::mesh_file()
@@ -521,9 +214,6 @@ namespace gsgl
 
         mesh_file::~mesh_file()
         {
-            for (dictionary<mesh *, string>::iterator i = meshes.iter(); i.is_valid(); ++i)
-                delete *i;
-            meshes.clear();
         } // mesh_file::~mesh_file()
 
 
@@ -592,7 +282,7 @@ namespace gsgl
 
         //
 
-        void mesh_file::load_obj_file(const string & fname)
+        void mesh_file::load_obj_file(const string & category, const string & fname)
         {
             // initialize current mesh & submesh
             string mesh_name = L"__default__mesh__";
@@ -661,8 +351,8 @@ namespace gsgl
                 {
                     if (!cur_submesh)
                     {
-                        cur_mesh->get_submeshes().append(cur_submesh = new submesh());
-                        cur_submesh->mat = new material(cur_mtllib_name, cur_material_name);
+                        cur_mesh->submeshes.append(cur_submesh = new submesh());
+                        cur_submesh->mat = new material(category, cur_mtllib_name, cur_material_name);
                     }
 
                     if (tokens.size() == 5)
@@ -691,8 +381,8 @@ namespace gsgl
                 {
                     if (!cur_submesh)
                     {
-                        cur_mesh->get_submeshes().append(cur_submesh = new submesh());
-                        cur_submesh->mat = new material(cur_mtllib_name, cur_material_name);
+                        cur_mesh->submeshes.append(cur_submesh = new submesh());
+                        cur_submesh->mat = new material(category, cur_mtllib_name, cur_material_name);
                     }
 
                     for (gsgl::index_t i = 1; i < tokens.size(); ++i)
@@ -704,8 +394,8 @@ namespace gsgl
                 {
                     if (!cur_submesh)
                     {
-                        cur_mesh->get_submeshes().append(cur_submesh = new submesh());
-                        cur_submesh->mat = new material(cur_mtllib_name, cur_material_name);
+                        cur_mesh->submeshes.append(cur_submesh = new submesh());
+                        cur_submesh->mat = new material(category, cur_mtllib_name, cur_material_name);
                     }
 
                     for (gsgl::index_t i = 2; i < tokens.size(); ++i)
@@ -728,36 +418,6 @@ namespace gsgl
 
         //////////////////////////////////////////////////////////////
 
-        typedef cache<mesh_file> mesh_file_cache;
-
-
-        /// A submesh_node holds number of submeshes, to be drawn either in the opaque or translucent group.
-        class submesh_node
-            : public scenegraph::node
-        {
-            bool opaque;
-            simple_array<submesh *> submeshes;
-
-            mutable gsgl::real_t cached_max_extent;
-
-        public:
-            submesh_node(const string & name, node *parent, bool opaque);
-            virtual ~submesh_node();
-
-            bool get_opaque() { return opaque; }
-            simple_array<submesh *> & get_submeshes() { return submeshes; }
-
-
-            virtual gsgl::real_t get_priority(gsgl::scenegraph::context *); 
-            virtual gsgl::real_t max_extent() const;
-
-            virtual void init(gsgl::scenegraph::context *c);
-            virtual void draw(gsgl::scenegraph::context *c);
-            virtual void update(gsgl::scenegraph::context *c);
-            virtual void cleanup(gsgl::scenegraph::context *c);
-        }; // class submesh_node
-
-
         submesh_node::submesh_node(const string & name, node *parent, bool opaque)
             : node(name, parent), opaque(opaque), cached_max_extent(-1)
         {
@@ -766,7 +426,6 @@ namespace gsgl
 
         submesh_node::~submesh_node()
         {
-            // submeshes are cached
         } // submesh_node::~submesh_node()
 
 
@@ -803,7 +462,7 @@ namespace gsgl
             {
                 double ms, msx = 0;
                 
-                for (simple_array<submesh *>::const_iterator i = submeshes.iter(); i.is_valid(); ++i)
+                for (object_array<shared_pointer<submesh> >::const_iterator i = submeshes.iter(); i.is_valid(); ++i)
                 {
                     ms = get_max_squared( (*i)->point_vertices );
                     if (ms > msx)
@@ -861,54 +520,57 @@ namespace gsgl
 
 
         //////////////////////////////////////////////////////////////
-        
+
+        typedef dictionary<shared_pointer<mesh_file>, string> mesh_file_cache;
+        static dictionary<mesh_file_cache, string> mesh_files;
+
         static int num_model_parts = 0;
 
 
-        model_part::model_part(const config_record & obj_config)
-            : node(string::format(L"model_part_%d", num_model_parts++), 0), opaque(0), translucent(0), inertial(0), collision(0)
+        model_part::model_part(const string & category, const config_record & obj_config)
+            : node(string::format(L"model_part_%d: %ls::%ls::%d", num_model_parts++, category.w_string(), obj_config.get_file().get_full_path(), obj_config.get_line_number()), 0), 
+              opaque(0), translucent(0), inertial(0), collision(0)
         {
-            mesh_file_cache & global_mesh_files = *mesh_file_cache::global_instance();
+            gsgl::log(string::format(L"model_part: creating '%ls'.", get_name()));
 
-            opaque = new submesh_node(get_name() + L"_opaque", this, true);
-            translucent = new submesh_node(get_name() + L"_translucent", this, false);
+            opaque = new submesh_node(get_name() + L" opaque", this, true);
+            translucent = new submesh_node(get_name() + L" translucent", this, false);
 
             // get model part
             if (!obj_config[L"file"].is_empty())
             {
                 string mesh_fname = obj_config.get_directory().get_full_path() + obj_config[L"file"];
 
-                mesh_file *mf = 0;
-                if (global_mesh_files.contains_index(mesh_fname))
+                shared_pointer<mesh_file> mf(0);
+                if (mesh_files[category].contains_index(mesh_fname))
                 {
-                    mf = global_mesh_files[mesh_fname];
+                    gsgl::log(string::format(L"model_part: loading mesh file '%ls::%ls'.", category.w_string(), mesh_fname.w_string()));
+                    mf = mesh_files[category][mesh_fname];
                 }
                 else
                 {
-                    mf = new mesh_file(mesh_fname);
-                    global_mesh_files[mesh_fname] = mf;
-                    mf->attach(); // keep in the cache
+                    gsgl::log(string::format(L"model_part: creating new mesh file '%ls::%ls'.", category.w_string(), mesh_fname.w_string()));
+
+                    mf = new mesh_file(category, mesh_fname);
+                    mesh_files[category][mesh_fname] = mf;
                 }
-                mf->attach();
 
                 // get visual submeshes
-                mesh *visual_mesh = 0;
-
                 string visual_name = obj_config[L"visual"];
+                shared_pointer<mesh> visual_mesh;
+
                 if (!visual_name.is_empty())
                 {
-                    mesh *m = mf->get_meshes()[visual_name];
-
-                    if (m)
+                    if (mf->meshes.contains_index(visual_name))
                     {
-                        visual_mesh = m;
+                        visual_mesh = mf->meshes[visual_name];
 
-                        for (simple_array<submesh *>::iterator i = m->get_submeshes().iter(); i.is_valid(); ++i)
+                        for (object_array<shared_pointer<submesh> >::iterator i = visual_mesh->submeshes.iter(); i.is_valid(); ++i)
                         {
                             if ((*i)->mat->is_opaque())
-                                opaque->get_submeshes().append(*i);
+                                const_cast<object_array<shared_pointer<submesh> > &>(opaque->get_submeshes()).append(*i);
                             else
-                                translucent->get_submeshes().append(*i);
+                                const_cast<object_array<shared_pointer<submesh> > &>(translucent->get_submeshes()).append(*i);
                         }
                     }
                     else
@@ -925,11 +587,9 @@ namespace gsgl
                 string collision_name = obj_config[L"collision"];
                 if (!collision_name.is_empty())
                 {
-                    mesh *m = mf->get_meshes()[collision_name];
-
-                    if (m)
+                    if (mf->meshes.contains_index(collision_name))
                     {
-                        collision = m;
+                        collision = mf->meshes[collision_name];
                     }
                     else
                     {
@@ -945,11 +605,9 @@ namespace gsgl
                 string inertial_name = obj_config[L"inertial"];
                 if (!inertial_name.is_empty())
                 {
-                    mesh *m = mf->get_meshes()[inertial_name];
-
-                    if (m)
+                    if (mf->meshes.contains_index(inertial_name))
                     {
-                        inertial = m;
+                        inertial = mf->meshes[inertial_name];
                     }
                     else
                     {
@@ -976,11 +634,11 @@ namespace gsgl
 
         data::list<platform::vertex_buffer *> & model_part::get_inertial_triangles()
         {
-            assert(inertial);
+            assert(inertial.ptr());
 
             if (inertial_triangles.size() == 0)
             {
-                for (simple_array<submesh *>::iterator i = inertial->get_submeshes().iter(); i.is_valid(); ++i)
+                for (object_array<shared_pointer<submesh> >::iterator i = inertial->submeshes.iter(); i.is_valid(); ++i)
                 {
                     inertial_triangles.append( & (*i)->triangle_vertices );
                 }
@@ -992,11 +650,11 @@ namespace gsgl
 
         data::list<platform::vertex_buffer *> & model_part::get_collision_triangles()
         {
-            assert(collision);
+            assert(collision.ptr());
 
             if (collision_triangles.size() == 0)
             {
-                for (simple_array<submesh *>::iterator i = collision->get_submeshes().iter(); i.is_valid(); ++i)
+                for (object_array<shared_pointer<submesh> >::iterator i = collision->submeshes.iter(); i.is_valid(); ++i)
                 {
                     collision_triangles.append( & (*i)->triangle_vertices );
                 }
@@ -1012,14 +670,16 @@ namespace gsgl
         static int num_models = 0;
 
 
-        model::model(const config_record & obj_config)
-            : node(string::format(L"model_%d", num_models++), 0)
+        model::model(const string & category, const config_record & obj_config)
+            : node(string::format(L"model_%d: %ls::%ls::%d", num_models++, category.w_string(), obj_config.get_file().get_full_path().w_string(), obj_config.get_line_number()), 0)
         {
+            gsgl::log(string::format(L"model: creating '%ls'.", get_name().w_string()));
+
             for (list<config_record>::const_iterator i = obj_config.get_children().iter(); i.is_valid(); ++i)
             {
                 if (i->get_name() == L"model_part")
                 {
-                    model_part *mp = new model_part(*i);
+                    model_part *mp = new model_part(category, *i);
 
                     mp->get_name() = string::format(L"%ls: %ls", get_name().w_string(), mp->get_name().w_string());
                     model_parts.append(mp);
@@ -1031,6 +691,7 @@ namespace gsgl
 
         model::~model()
         {
+            // model parts will get deleted by the node destructor, as they are children
         } // mode::~model()
 
 
@@ -1062,20 +723,26 @@ namespace gsgl
         } // model::get_collision_triangles()
 
 
-        /// Provided only so that it can be created in the global metacache in the right order.
-        gsgl::data_object *model::create_global_model_cache()
+        void model::clear_cache(const string & category_name)
         {
-            return new mesh_file_cache(L"mesh file cache");
-        } // model::global_model_cache()
+            for (dictionary<mesh_file_cache, string>::iterator category = mesh_files.iter(); category.is_valid(); ++category)
+            {
+                if (category_name == category.get_index() || category_name == L"__ALL__") {
+                    for (mesh_file_cache::iterator file = category->iter(); file.is_valid(); ++file)
+                    {
+                        for (dictionary<shared_pointer<mesh>, string>::iterator mi = (*file)->meshes.iter(); mi.is_valid(); ++mi)
+                        {
+                            if (mi->get_ref_count() > 1)
+                                throw runtime_exception(L"Dangling mesh '%s'!", (*mi)->name);
+                        }
+                    }
+                }
+            }
+
+            mesh_files.clear();
+        } // model::clear_cache()
 
 
     } // namespace scenegraph
-
-
-    // global material cache
-    scenegraph::material_cache *scenegraph::material_cache::instance;
-
-    // global mesh file cache
-    scenegraph::mesh_file_cache *scenegraph::mesh_file_cache::instance;
     
 } // namespace gsgl

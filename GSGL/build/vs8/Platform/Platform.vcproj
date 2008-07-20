@@ -241,6 +241,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\platform\material.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\platform\platform.cpp"
 				>
 			</File>
@@ -296,6 +300,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\platform\mapped_file.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\platform\material.hpp"
 				>
 			</File>
 			<File

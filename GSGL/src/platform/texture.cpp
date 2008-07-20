@@ -33,12 +33,10 @@
 
 #include "platform/texture.hpp"
 
-#include "data/shared.hpp"
 #include "data/array.hpp"
 #include "data/dictionary.hpp"
 #include "data/file.hpp"
 #include "data/fstream.hpp"
-#include "data/cache.hpp"
 
 #include "platform/mapped_file.hpp"
 #include "platform/lowlevel.hpp"
@@ -75,9 +73,13 @@ namespace gsgl
         } // rgba_buffer::rgba_buffer()
 
 
-        rgba_buffer::rgba_buffer(SDL_Surface *surface)
-            : width(surface->w), height(surface->h), buffer(0), mf(0)
+        rgba_buffer::rgba_buffer(void *surface_ptr)
+            : width(0), height(0), buffer(0), mf(0)
         {
+            SDL_Surface *surface = static_cast<SDL_Surface *>(surface_ptr);
+
+            width = surface->w;
+            height = surface->h;
             buffer = static_cast<unsigned char *>( ::malloc(surface->w * surface->h * 4) );
             
             if (!buffer)
@@ -207,35 +209,8 @@ namespace gsgl
         //////////////////////////////////////////////////////////////
 
 
-        class texture_impl
-            : public shared_object
-        {
-            string name;
-            texture_format format;
-            gsgl::flags_t flags;
-
-            const GLenum opengl_texture_unit;
-            mutable GLuint opengl_id;
-
-            rgba_buffer *buffer;
-
-        public:
-            texture_impl(const string & fname, const texture_format & format, const GLenum opengl_texture_unit, const gsgl::flags_t flags);
-            texture_impl(SDL_Surface *surface, const string & name, const texture_format & format, const GLenum opengl_texture_unit, const gsgl::flags_t flags);
-            virtual ~texture_impl();
-
-            const string & get_name() const { return name; }
-            const int get_texture_unit() { return static_cast<int>(opengl_texture_unit); }
-
-            void bind() const;
-            void unbind() const;
-            void update() const;
-            void unload() const;
-        }; // class texture_impl
-
-
-        texture_impl::texture_impl(const string & fname, const texture_format & format, const GLenum opengl_texture_unit, const gsgl::flags_t flags)
-            : shared_object(), name(fname), format(format), opengl_texture_unit(opengl_texture_unit), flags(flags), opengl_id(0), buffer(0)
+        texture_impl::texture_impl(const string & fname, const int & format, const GLenum opengl_texture_unit, const bool compress)
+            : shared_object(), name(fname), format(format), compress(compress), opengl_texture_unit(opengl_texture_unit), opengl_id(0), buffer(0)
         {
             if (!file::exists(fname))
                 throw io_exception(L"Texture file %ls not found.", fname.w_string());
@@ -250,8 +225,8 @@ namespace gsgl
         } // texture_impl::texture_impl()
 
 
-        texture_impl::texture_impl(SDL_Surface *surface, const string & name, const texture_format & format, const GLenum opengl_texture_unit, const gsgl::flags_t flags)
-            : shared_object(), name(name), format(format), opengl_texture_unit(opengl_texture_unit), flags(flags), opengl_id(0), buffer(0)
+        texture_impl::texture_impl(void *surface, const string & name, const int & format, const GLenum opengl_texture_unit, const bool compress)
+            : shared_object(), name(name), format(format), compress(compress), opengl_texture_unit(opengl_texture_unit), opengl_id(0), buffer(0)
         {
             buffer = new rgba_buffer(surface);
         } // texture_impl::texture_impl()
@@ -260,11 +235,35 @@ namespace gsgl
         texture_impl::~texture_impl()
         {
             unload();
-            delete buffer;
         } // texture_impl::~texture_impl()
 
 
-        void texture_impl::bind() const
+        void texture_impl::bind()
+        {
+            if (opengl_id == 0)
+                load();
+
+            glActiveTexture(GL_TEXTURE0 + opengl_texture_unit);                                                     CHECK_GL_ERRORS();
+            glBindTexture(GL_TEXTURE_2D, opengl_id);                                                            CHECK_GL_ERRORS();      
+        } // texture_impl::bind()
+
+
+        void texture_impl::unbind()
+        {
+            glActiveTexture(GL_TEXTURE0 + opengl_texture_unit);                                                     CHECK_GL_ERRORS();
+            glBindTexture(GL_TEXTURE_2D, 0);                                                                        CHECK_GL_ERRORS();
+        } // texture_impl::unbind()
+
+
+        void texture_impl::update()
+        {
+            bind();
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, buffer->get_width(), buffer->get_height(), GL_RGBA, GL_UNSIGNED_BYTE, buffer->get_pointer());
+            unbind();
+        } // texture_impl::update()
+
+
+        void texture_impl::load()
         {
             GLint max_texture_units;
             glGetIntegerv(GL_MAX_TEXTURE_UNITS, &max_texture_units);
@@ -282,42 +281,29 @@ namespace gsgl
             {
                 glGenTextures(1, &opengl_id);                                                                       CHECK_GL_ERRORS();
                 if (opengl_id == 0)
-                    throw runtime_exception(L"Unable to generate an OpenGL texture ID for %ls", name.w_string());
+                    throw runtime_exception(L"Unable to generate an OpenGL texture ID for %ls.", name.w_string());
 
                 glBindTexture(GL_TEXTURE_2D, opengl_id);                                                            CHECK_GL_ERRORS();
 
                 GLint ff = 0;
                 switch (format)
                 {
-                case TEXTURE_HEIGHTMAP:
-                    ff = (flags & TEXTURE_LOAD_UNCOMPRESSED) ? GL_LUMINANCE : GL_COMPRESSED_LUMINANCE;
+                case texture::TEXTURE_HEIGHTMAP:
+                    ff = !compress ? GL_LUMINANCE : GL_COMPRESSED_LUMINANCE;
                     break;
-                case TEXTURE_COLORMAP:
+                case texture::TEXTURE_COLORMAP:
+                    // fall through
                 default:
-                    ff = (flags & TEXTURE_LOAD_UNCOMPRESSED) ? GL_RGBA : GL_COMPRESSED_RGBA;
+                    ff = !compress ? GL_RGBA : GL_COMPRESSED_RGBA;
                     break;
                 }
 
                 glTexImage2D(GL_TEXTURE_2D, 0, ff, buffer->get_width(), buffer->get_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer->get_pointer()); CHECK_GL_ERRORS();
             }
-        } // texture_impl::bind()
+        } // texture_impl::load()
 
 
-        void texture_impl::unbind() const
-        {
-            glBindTexture(GL_TEXTURE_2D, 0);                                                                        CHECK_GL_ERRORS();
-        } // texture_impl::unbind()
-
-
-        void texture_impl::update() const
-        {
-            bind();
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, buffer->get_width(), buffer->get_height(), GL_RGBA, GL_UNSIGNED_BYTE, buffer->get_pointer());
-            unbind();
-        } // texture_impl::update()
-
-
-        void texture_impl::unload() const
+        void texture_impl::unload()
         {
             if (opengl_id)
             {
@@ -327,39 +313,39 @@ namespace gsgl
         } // texture_impl::unload()
 
 
+        //////////////////////////////////////////////////////////////
+
+        dictionary<texture::texture_cache, string> texture::texture_impls;
+
+
         //
-
-        typedef data::cache<texture_impl> texture_cache;
-
 
         texture::texture(const texture & tex)
             : impl(tex.impl), flags(tex.flags),
               gl_env(tex.gl_env), gl_wrap(tex.gl_wrap), gl_filter(tex.gl_filter)
         {
-            impl->attach();
         } // texture::texture()
 
         
-        texture::texture(const string & fname, const gsgl::flags_t flags, const texture_format & format, const int & texture_unit)
+        texture::texture(const string & category, const string & fname, const gsgl::flags_t flags, const texture_format & format, const int & texture_unit)
             : impl(0), flags(flags),
               gl_env(GL_REPLACE), gl_wrap(GL_REPEAT), gl_filter(GL_LINEAR)
         {
-            texture_cache & global_textures = *texture_cache::global_instance();
-
             assign_gl_modes();
 
             string full_path = io::file::get_full_path(fname);
-            string full_name = string::format(L"%ls: %08d; %d", full_path.w_string(), flags, texture_unit);
+            string full_name = string::format(L"%ls::%ls: %08d; %d", category.w_string(), full_path.w_string(), flags, texture_unit);
 
-            if (global_textures.contains_index(full_name))
+            if (texture_impls[category].contains_index(full_name))
             {
-                impl = global_textures[full_name];
+                gsgl::log(string::format(L"texture: loading texture '%ls'", full_name.w_string()));
+                impl = texture_impls[category][full_name];
             }
             else
             {
-                impl = new texture_impl(full_path, format, static_cast<GLenum>(texture_unit), flags);
-                global_textures[full_name] = impl; // assign this after in case the creator throws
-                impl->attach(); // keep in the cache
+                gsgl::log(string::format(L"texture: creating font   '%ls'", full_name.w_string()));
+                impl = new texture_impl(full_path, format, static_cast<GLenum>(texture_unit), !(flags & TEXTURE_LOAD_UNCOMPRESSED));
+                texture_impls[category][full_name] = impl; // assign this after in case the creator throws
             }
 
             impl->attach();
@@ -368,8 +354,8 @@ namespace gsgl
 
         static int TEX_COUNT = 0;
 
-
-        texture::texture(SDL_Surface *surface,
+        texture::texture(const string & category,
+                         void *surface,
                          const gsgl::flags_t flags,
                          const texture_format & format, 
                          const string & identifier,
@@ -377,43 +363,41 @@ namespace gsgl
             : impl(0), flags(flags),
               gl_env(GL_REPLACE), gl_wrap(GL_REPEAT), gl_filter(GL_LINEAR)
         {
-            texture_cache & global_textures = *texture_cache::global_instance();
-
             assign_gl_modes();
 
             // make sure they're different every time (the surface may have changed)
-            string ptr_name = string::format(L"SDL surface (%ls): %08p %08d %08d; %d", identifier.w_string(), surface, ++TEX_COUNT, flags, texture_unit);
+            string ptr_name = string::format(L"%ls::%ls: %08p %08d %08d; %d", category.w_string(), identifier.w_string(), surface, ++TEX_COUNT, flags, texture_unit);
             
-            if (global_textures.contains_index(ptr_name))
+            if (texture_impls[category].contains_index(ptr_name))
             {
-                impl = global_textures[ptr_name];
+                gsgl::log(string::format(L"texture: loading texture '%ls'", ptr_name.w_string()));
+                impl = texture_impls[category][ptr_name];
             }
             else
             {
-                impl = new texture_impl(surface, ptr_name, format, static_cast<GLenum>(texture_unit), flags);
-                global_textures[ptr_name] = impl;
-                impl->attach(); // keep it in the cache
-            }
+                gsgl::log(string::format(L"texture: creating font   '%ls'", ptr_name.w_string()));
+                impl = new texture_impl(surface, ptr_name, format, static_cast<GLenum>(texture_unit), !(flags & TEXTURE_LOAD_UNCOMPRESSED));
 
-            impl->attach();
+                texture_impls[category][ptr_name] = impl;
+            }
         } // texture::texture()
         
 
         texture::~texture()
         {
-            impl->detach();
         } // texture::~texture()
 
 
         const int texture::get_texture_unit() const
         {
+            assert(impl.ptr());
             return impl->get_texture_unit();
         } // texture::get_texture_unit()
         
 
-        void texture::bind(gsgl::flags_t render_flags) const
+        void texture::bind(gsgl::flags_t render_flags)
         {
-            assert(impl);
+            assert(impl.ptr());
             impl->bind();
 
             if (!(flags & TEXTURE_LOAD_NO_PARAMS))
@@ -435,23 +419,30 @@ namespace gsgl
         } // texture::bind()
 
 
-        void texture::unbind() const
+        void texture::unbind()
         {
-            assert(impl);
+            assert(impl.ptr());
             impl->unbind();
         } // texture::unbind()
 
 
-        void texture::update() const
+        void texture::update()
         {
-            assert(impl);
+            assert(impl.ptr());
             impl->update();
         } // texture::update()
 
 
-        void texture::unload() const
+        void texture::load()
         {
-            assert(impl);
+            assert(impl.ptr());
+            impl->load();
+        } // texture::load()
+
+
+        void texture::unload()
+        {
+            assert(impl.ptr());
             impl->unload();
         } // texture::unload()
 
@@ -482,16 +473,24 @@ namespace gsgl
         } // texture::assign_gl_modes()
 
 
-        gsgl::data_object *texture::create_global_texture_cache()
+        void texture::clear_cache(const gsgl::string & category)
         {
-            return new texture_cache(L"texture cache");
-        } // texture::create_global_texture_cache()
-    
+            for (dictionary<texture_cache, string>::iterator cat = texture_impls.iter(); cat.is_valid(); ++cat)
+            {
+                if (category == L"__ALL__" || cat.get_index() == category)
+                {
+                    for (texture_cache::iterator i = cat->iter(); i.is_valid(); ++i)
+                    {
+                        if (i->get_ref_count() > 1)
+                            throw runtime_exception(L"Dangling texture '%ls'!", i.get_index());
+                    }
+
+                    cat->clear();
+                }
+            }
+        } // texture::clear_cache()
+
 
     } // namespace platform
     
-
-    // global texture cache
-    platform::texture_cache *platform::texture_cache::instance = 0;
-
 } // namespace gsgl

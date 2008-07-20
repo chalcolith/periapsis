@@ -105,7 +105,7 @@ namespace gsgl
                 tex->bind();
             }
 
-            background.set();
+            background.bind();
 
             display::draw_rectangle(0, 0, static_cast<float>(w), static_cast<float>(h));
 

@@ -35,10 +35,13 @@
 //
 
 #include "platform/platform.hpp"
-#include "platform/color.hpp"
-#include "data/string.hpp"
 
-struct SDL_Surface;
+#include "data/pointer.hpp"
+#include "data/string.hpp"
+#include "data/dictionary.hpp"
+
+#include "platform/color.hpp"
+
 
 namespace gsgl
 {
@@ -61,7 +64,7 @@ namespace gsgl
 
         public:
             rgba_buffer(const gsgl::string & fname);                            ///< Creates a memory-mapped buffer from an existing file.
-            rgba_buffer(SDL_Surface *surface);                                  ///< Creates a buffer from an SDL surface.
+            rgba_buffer(void *surface);                                  ///< Creates a buffer from an SDL surface.
             rgba_buffer(int width, int height, const color & c = color::WHITE); ///< Creates a blank buffer in memory.
             ~rgba_buffer();
 
@@ -78,68 +81,110 @@ namespace gsgl
         }; // class rgba_buffer
 
 
-        //
+        //////////////////////////////////////////
 
-        enum texture_format
+        class PLATFORM_API texture_impl
+            : public data::shared_object
         {
-            TEXTURE_COLORMAP  = 1,
-            TEXTURE_HEIGHTMAP = 2
-        };
+            string name;
+            int format;
+            bool compress;
 
+            const unsigned int opengl_texture_unit;
+            mutable unsigned int opengl_id;
 
-        enum texture_flags
-        {
-            TEXTURE_NO_FLAGS           = 0,
-            TEXTURE_LOAD_UNCOMPRESSED  = 1 << 0, ///< Don't compress the texture.
-            TEXTURE_LOAD_NO_PARAMS     = 1 << 1, ///< Don't set the OpenGL texture environment or params; calling code will handle it.
-            TEXTURE_RENDER_ANISOTROPIC = 1 << 2,
-            TEXTURE_ENV_REPLACE        = 1 << 3,
-            TEXTURE_ENV_MODULATE       = 1 << 4,
-            TEXTURE_ENV_MAX            = 1 << 5,
-            TEXTURE_WRAP_REPEAT        = 1 << 6,
-            TEXTURE_WRAP_CLAMP         = 1 << 7,
-            TEXTURE_WRAP_MAX           = 1 << 8,
-            TEXTURE_FILTER_LINEAR      = 1 << 9,
-            TEXTURE_FILTER_MAX         = 1 << 10
-        };
+            data::shared_pointer<rgba_buffer> buffer;
 
+        protected:
+            friend class texture;
+            texture_impl(const gsgl::string & fname, const int & format, const unsigned int opengl_texture_unit, const bool compress);
+            texture_impl(void *surface, const string & name, const int & format, const unsigned int opengl_texture_unit, const bool compress);
 
-        //
+        public:
+            ~texture_impl();
 
-        class texture_impl;
+            const string & get_name() const { return name; }
+            const int get_texture_unit() const { return static_cast<int>(opengl_texture_unit); }
+
+            void load();
+            void unload();
+
+            void bind();
+            void unbind();
+
+            void update();
+        }; // class texture_impl
 
 
         /// Texture class.  This class uses an internal cache, so you can freely create and delete multiple instances of textures from the same file.
+        /// The reason that texture_impl exists is that you may want to use different parameters for drawing with the same buffer.
         class PLATFORM_API texture
         {
-            texture_impl *impl;    
+            data::shared_pointer<texture_impl> impl;
 
             gsgl::flags_t flags;
             int gl_env, gl_wrap, gl_filter;
 
+            typedef data::dictionary<data::shared_pointer<texture_impl>, gsgl::string> texture_cache;
+            static data::dictionary<texture_cache, gsgl::string> texture_impls; ///< Category -> cache
+
         public:
+            enum texture_flags
+            {
+                TEXTURE_NO_FLAGS           = 0,
+                TEXTURE_LOAD_UNCOMPRESSED  = 1 << 0, ///< Don't compress the texture.
+                TEXTURE_LOAD_NO_PARAMS     = 1 << 1, ///< Don't set the OpenGL texture environment or params; calling code will handle it.
+                TEXTURE_ENV_REPLACE        = 1 << 3,
+                TEXTURE_ENV_MODULATE       = 1 << 4,
+                TEXTURE_ENV_MAX            = 1 << 5,
+                TEXTURE_WRAP_REPEAT        = 1 << 6,
+                TEXTURE_WRAP_CLAMP         = 1 << 7,
+                TEXTURE_WRAP_MAX           = 1 << 8,
+                TEXTURE_FILTER_LINEAR      = 1 << 9,
+                TEXTURE_FILTER_MAX         = 1 << 10
+            };
+
+            
+            enum texture_render_flags
+            {
+                TEXTURE_NO_RENDER_FLAGS    = 0,
+                TEXTURE_RENDER_ANISOTROPIC = 1 << 0
+            };
+
+
+            enum texture_format
+            {
+                TEXTURE_COLORMAP  = 1,
+                TEXTURE_HEIGHTMAP = 2
+            };
+
+
             explicit texture(const texture & tex);
-            explicit texture(const gsgl::string & fname, 
+            explicit texture(const gsgl::string & category,
+                             const gsgl::string & fname, 
                              const gsgl::flags_t flags = TEXTURE_NO_FLAGS,
                              const texture_format & format = TEXTURE_COLORMAP,
                              const int & texture_unit = 0);
-            explicit texture(SDL_Surface *surface,
+            explicit texture(const gsgl::string & category,
+                             void *surface,
                              const gsgl::flags_t flags = TEXTURE_NO_FLAGS,
                              const texture_format & format = TEXTURE_COLORMAP,
                              const gsgl::string & identifier = gsgl::string::EMPTY_STRING,
                              const int & texture_unit = 0);
 
-            ~texture();
+            virtual ~texture();
 
             const int get_texture_unit() const;
 
-            /// Bind the texture for use in OpenGL.
-            void bind(gsgl::flags_t render_flags = TEXTURE_NO_FLAGS) const;   ///< Bind the texture for use in OpenGL, if necessary loading it first.
-            void unbind() const; ///< Unbind the texture for use in OpenGL.
-            void update() const; ///< Update the texture on the card from the memory buffer.
-            void unload() const; ///< Unload the texture from the video card.
+            void load(); ///< Load the texture into the video card.
+            void unload(); ///< Unload the texture from the video card.
+            void bind(gsgl::flags_t render_flags = TEXTURE_RENDER_ANISOTROPIC);   ///< Bind the texture for use in OpenGL.
+            void unbind(); ///< Unbind the texture for use in OpenGL.
 
-            static gsgl::data_object *create_global_texture_cache();
+            void update(); ///< Update the texture on the card from the memory buffer.
+
+            /// Clears the cache of texture for the given category.  If you specify "__ALL__" for the category, will clear all textures.
+            static void clear_cache(const gsgl::string & category);
 
         private:
             void assign_gl_modes();

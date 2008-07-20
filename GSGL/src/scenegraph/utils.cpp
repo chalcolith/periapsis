@@ -102,7 +102,7 @@ namespace gsgl
                 glEnable(GL_LINE_SMOOTH);
                 glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
-                draw_color.set();
+                draw_color.bind();
 
                 if (display_list_id)
                 {
@@ -256,10 +256,11 @@ namespace gsgl
                 glEnableClientState(GL_NORMAL_ARRAY);
                 glEnableClientState(GL_INDEX_ARRAY);                                                                CHECK_GL_ERRORS();
 
-                if (tex && !(c->render_flags & context::RENDER_UNTEXTURED))
+                if (tex && !(c->render_flags & context::RENDER_NO_TEXTURES))
                 {
                     glEnable(GL_TEXTURE_2D);
-                    tex->bind((c->render_flags & context::RENDER_ANISOTROPIC) ? TEXTURE_RENDER_ANISOTROPIC : TEXTURE_NO_FLAGS);
+
+                    tex->bind();
                 }
 
                 vertices.bind();

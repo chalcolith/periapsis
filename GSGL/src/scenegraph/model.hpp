@@ -35,11 +35,12 @@
 //
 
 #include "scenegraph/scenegraph.hpp"
+
+#include "data/pointer.hpp"
+
 #include "scenegraph/node.hpp"
 
-#include "platform/color.hpp"
-#include "platform/texture.hpp"
-#include "platform/shader.hpp"
+#include "platform/material.hpp"
 #include "platform/vbuffer.hpp"
 
 namespace gsgl
@@ -48,54 +49,90 @@ namespace gsgl
     namespace scenegraph
     {
 
-        class material_impl;
-
-
-        /// A material is a named material.
-        class SCENEGRAPH_API material
+        /// A submesh is part of a mesh that is drawn with a particular material.  It is only for internal use.
+        /// A submesh_node will collect one or more submeshes to use in a model part.
+        class SCENEGRAPH_API submesh
         {
-            material_impl *impl;
+            submesh();
+            friend class mesh;
+            friend class mesh_file;
 
         public:
-            material(const gsgl::string & material_file, const gsgl::string & material_name);
-            ~material();
+            ~submesh();
 
-            gsgl::string & get_name();
-            platform::color & get_ambient();
-            platform::color & get_diffuse();
-            platform::color & get_specular();
-            float & get_shininess();
-            bool & get_flat();
+            data::shared_pointer<platform::material> mat;
 
-            platform::texture *get_texture();
-            platform::shader_base *get_shader();
+            // we are not bothering to share vertices
+            platform::vertex_buffer point_vertices;
+            platform::vertex_buffer line_vertices;
+            platform::vertex_buffer triangle_vertices;
+            platform::vertex_buffer triangle_texcoords;
+            platform::vertex_buffer triangle_normals;
 
-            bool is_opaque();
-
-            void bind(gsgl::flags_t render_flags = 0);
-
-            static gsgl::data_object *create_global_material_cache();
-        }; // class material
+            void load();
+            void unload();
+            void draw(gsgl::flags_t render_flags = 0);
+        }; // class submesh
 
 
-        //////////////////////////////////////////
+        /// A mesh is a named part of a mesh file.  Only for internal use.
+        class SCENEGRAPH_API mesh
+        {
+            mesh(const string & name);
+            friend class mesh_file;
 
-        class submesh_node;
-        class mesh;
+        public:
+            ~mesh();
+
+            string name;
+            data::object_array<data::shared_pointer<submesh> > submeshes;
+        }; // class mesh
+
+
+        /// A submesh_node holds number of submeshes, to be drawn either in the opaque or translucent group.
+        /// Only for internal use.
+        class SCENEGRAPH_API submesh_node
+            : public scenegraph::node
+        {
+            data::object_array<data::shared_pointer<submesh> > submeshes;
+            bool opaque;
+
+            mutable gsgl::real_t cached_max_extent;
+
+        public:
+            submesh_node(const string & name, node *parent, bool opaque);
+            virtual ~submesh_node();
+
+            bool get_opaque() { return opaque; }
+            const data::object_array<data::shared_pointer<submesh> > & get_submeshes() const { return submeshes; }
+
+            virtual gsgl::real_t get_priority(gsgl::scenegraph::context *); 
+            virtual gsgl::real_t max_extent() const;
+
+            virtual void init(gsgl::scenegraph::context *c);
+            virtual void draw(gsgl::scenegraph::context *c);
+            virtual void update(gsgl::scenegraph::context *c);
+            virtual void cleanup(gsgl::scenegraph::context *c);
+        }; // class submesh_node
+
 
         /// A model_part is a possibly animated part of a model.
         /// It contains child nodes for drawing the visual parts, and meshes for collision and inertia calculation.
-        class model_part
+        class SCENEGRAPH_API model_part
             : public scenegraph::node
         {
-            submesh_node *opaque, *translucent;
-            mesh *inertial, *collision;
+            submesh_node *opaque;
+            submesh_node *translucent;
+
+            data::shared_pointer<mesh> inertial, collision;
 
             data::list<platform::vertex_buffer *> inertial_triangles;
             data::list<platform::vertex_buffer *> collision_triangles;
 
+            model_part(const gsgl::string & category, const gsgl::data::config_record & obj_config);
+            friend class model;
+
         public:
-            model_part(const gsgl::data::config_record & obj_config);
             virtual ~model_part();
 
             data::list<platform::vertex_buffer *> & get_inertial_triangles();
@@ -103,7 +140,9 @@ namespace gsgl
         }; // class model_part
 
 
-        /// A model is a collection of model_parts.
+        /// A model is a collection of model_part objects.  Each model_part object contains a list of opaque and translucent submesh_nodes.
+        /// Each submesh_node contains a list of submesh objects, each to be drawn with a different material.
+        /// There is no draw() method, because its model_part objects are its children.
         class SCENEGRAPH_API model
             : public scenegraph::node
         {
@@ -113,13 +152,14 @@ namespace gsgl
             data::list<platform::vertex_buffer *> collision_triangles;
 
         public:
-            model(const gsgl::data::config_record & obj_config);
+            model(const gsgl::string & category, const gsgl::data::config_record & obj_config);
             virtual ~model();
 
             data::list<platform::vertex_buffer *> & get_inertial_triangles();
             data::list<platform::vertex_buffer *> & get_collision_triangles();
 
-            static gsgl::data_object *create_global_model_cache();
+            //
+            static void clear_cache(const gsgl::string & category);
         }; // class model
 
 

@@ -34,10 +34,8 @@
 #include "platform/font.hpp"
 #include "platform/texture.hpp"
 
-#include "data/shared.hpp"
 #include "data/pointer.hpp"
 #include "data/dictionary.hpp"
-#include "data/cache.hpp"
 #include "data/directory.hpp"
 #include "data/file.hpp"
 
@@ -110,54 +108,19 @@ namespace gsgl
                 res <<= 1;
             return res;
         } // nearest_power_2()
-            
-        //
+          
 
-        class font_impl
-            : public shared_object
-        {
-            const string face;
-            const int size;
+        //////////////////////////////////////////////////////////////
 
-            int font_height;
-            int font_ascent;
-            int texture_height; // this will be the nearest power of 2 greater than max_height
-
-            dictionary<float, wchar_t> glyph_pct_x, glyph_pct_y;
-            dictionary<float, wchar_t> glyph_widths;
-
-            TTF_Font *font;
-            color fg;
-            dictionary<texture *, wchar_t> glyph_textures;
-        public:
-            font_impl(const string &, int size, const color & fg);
-            virtual ~font_impl();
-
-            const string & get_face() const { return face; }
-            const int get_size() const { return size; }
-            const color & get_fg() const { return fg; }
-
-            float calc_height(const string &);
-            float calc_width(const string &);
-
-            void draw(const string &);
-
-        private:
-            texture *get_glyph(const wchar_t);
-
-            void get_font_dir();
-        }; // class font_impl
-
-        //
-
-        static const string FONT_DIR;
+        const string font_impl::FONT_TEXTURE_CATEGORY(L"font_glyphs");
+        const string font_impl::FONT_DIR;
 
         //
 
         font_impl::font_impl(const string & face, int size, const color & fg)
-            : shared_object(), face(face), size(size), font(0), fg(fg)
+            : face(face), size(size), ttf_font_ptr(0), fg(fg)
         {
-            //LOG_BASIC(L"font_impl: creating %ls %d (%f, %f, %f)", face.w_string(), size, fg[color::COMPONENT_RED], fg[color::COMPONENT_GREEN], fg[color::COMPONENT_BLUE]);
+            gsgl::log(string::format(L"font_impl: creating %ls %d (%f, %f, %f)", face.w_string(), size, fg[color::COMPONENT_RED], fg[color::COMPONENT_GREEN], fg[color::COMPONENT_BLUE]));
 
             if (FONT_DIR.is_empty())
                 get_font_dir();
@@ -183,52 +146,49 @@ namespace gsgl
 #endif
 
             //
-            font = TTF_OpenFont(fname.c_string(), size);
+            ttf_font_ptr = TTF_OpenFont(fname.c_string(), size);
 
-            if (!font)
+            if (!ttf_font_ptr)
                 throw runtime_exception(L"Unable to load font '%ls': %hs", face.w_string(), TTF_GetError());
 
             //
-            font_height = TTF_FontHeight(font);
-            font_ascent = TTF_FontAscent(font);
+            font_height = TTF_FontHeight(static_cast<TTF_Font *>(ttf_font_ptr));
+            font_ascent = TTF_FontAscent(static_cast<TTF_Font *>(ttf_font_ptr));
             texture_height = nearest_power_2(font_height);
         } // font_impl::font_impl()
 
 
         font_impl::~font_impl()
         {
-            //LOG_BASIC(L"font_impl: deleting %ls %d (%f, %f, %f)", face.w_string(), size, fg[color::COMPONENT_RED], fg[color::COMPONENT_GREEN], fg[color::COMPONENT_BLUE]);
+            gsgl::log(string::format(L"font_impl: deleting %ls %d (%f, %f, %f)", face.w_string(), size, fg[color::COMPONENT_RED], fg[color::COMPONENT_GREEN], fg[color::COMPONENT_BLUE]));
 
-            for (dictionary<texture *, wchar_t>::iterator i = glyph_textures.iter(); i.is_valid(); ++i)
-                delete *i;
-
-            TTF_CloseFont(font);
+            TTF_CloseFont(static_cast<TTF_Font *>(ttf_font_ptr));
         } // font_impl::~font_impl()
 
 
-        float font_impl::calc_height(const string & str)
+        float font_impl::calc_height(const string & str) const
         {
             int w, h;
 
-            if (TTF_SizeUTF8(font, str.c_string(), &w, &h) != -1)
+            if (TTF_SizeUTF8(static_cast<TTF_Font *>(ttf_font_ptr), str.c_string(), &w, &h) != -1)
                 return static_cast<float>(h);
             else
                 throw runtime_exception(L"%hs", TTF_GetError());
         } // font_impl::calc_height()
 
 
-        float font_impl::calc_width(const string & str)
+        float font_impl::calc_width(const string & str) const
         {
             int w, h;
 
-            if (TTF_SizeUTF8(font, str.c_string(), &w, &h) != -1)
+            if (TTF_SizeUTF8(static_cast<TTF_Font *>(ttf_font_ptr), str.c_string(), &w, &h) != -1)
                 return static_cast<float>(w);
             else
                 throw runtime_exception(L"%hs", TTF_GetError());
         } // font_impl::calc_width()
 
 
-        void font_impl::draw(const string & str)
+        void font_impl::draw(const string & str) const
         {
             glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                       CHECK_GL_ERRORS();
             glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                          CHECK_GL_ERRORS();
@@ -285,27 +245,27 @@ namespace gsgl
         } // font_impl::draw()
 
 
-        texture *font_impl::get_glyph(const wchar_t ch)
+        texture *font_impl::get_glyph(const wchar_t ch) const
         {
-            texture *tex = glyph_textures[ch];
+            shared_pointer<texture> tex = glyph_textures[ch];
 
-            if (!tex)
+            if (!tex.ptr())
             {
                 int minx, maxx, miny, maxy, advance;
-                if (TTF_GlyphMetrics(font, ch, &minx, &maxx, &miny, &maxy, &advance) == -1)
-                    throw runtime_exception(L"error getting glyph metrics: %hs", TTF_GetError());
+                if (TTF_GlyphMetrics(static_cast<TTF_Font *>(ttf_font_ptr), ch, &minx, &maxx, &miny, &maxy, &advance) == -1)
+                    throw runtime_exception(L"Error getting glyph metrics: %hs", TTF_GetError());
 
                 SDL_Color c;
                 c.r = static_cast<Uint8>(fg[color::COMPONENT_RED] * 255.0f);
                 c.g = static_cast<Uint8>(fg[color::COMPONENT_GREEN] * 255.0f);
                 c.b = static_cast<Uint8>(fg[color::COMPONENT_BLUE] * 255.0f);
 
-                SDL_Surface *surf1 = TTF_RenderGlyph_Blended(font, ch, c);
+                SDL_Surface *surf1 = TTF_RenderGlyph_Blended(static_cast<TTF_Font *>(ttf_font_ptr), ch, c);
 
                 SDL_Surface *surf2 = SDL_CreateRGBSurface(SDL_SWSURFACE, nearest_power_2(minx + surf1->w), texture_height, 32, surf1->format->Rmask, surf1->format->Gmask, surf1->format->Bmask, surf1->format->Amask);
 
                 if (!surf2)
-                    throw runtime_exception(L"unable to create SDL surface: %hs", SDL_GetError());
+                    throw runtime_exception(L"Unable to create SDL surface: %hs", SDL_GetError());
 
                 SDL_Rect dest;
 
@@ -318,7 +278,8 @@ namespace gsgl
                 src_alpha_blit(surf1, surf2, dest.x, dest.y);
 
                 string glyph_id = string::format(L"%ls %d: %lc", face.w_string(), size, ch);
-                glyph_textures[ch] = tex = new texture(surf2, TEXTURE_ENV_REPLACE | TEXTURE_WRAP_CLAMP | TEXTURE_FILTER_LINEAR, TEXTURE_COLORMAP, glyph_id.w_string());
+                tex = new texture(FONT_TEXTURE_CATEGORY, surf2, texture::TEXTURE_ENV_REPLACE | texture::TEXTURE_WRAP_CLAMP | texture::TEXTURE_FILTER_LINEAR, texture::TEXTURE_COLORMAP, glyph_id.w_string());
+                glyph_textures[ch] = tex;
 
                 glyph_pct_x[ch] = static_cast<float>(advance) / static_cast<float>(surf2->w);
                 glyph_pct_y[ch] = static_cast<float>(font_height) / static_cast<float>(surf2->h);
@@ -328,7 +289,7 @@ namespace gsgl
                 SDL_FreeSurface(surf1);
             }
 
-            return tex;
+            return tex.ptr();
         } // font_impl::get_glyph()
 
 
@@ -351,87 +312,88 @@ namespace gsgl
         } // font_impl::get_font_dir()
 
 
-        //
+        //////////////////////////////////////////////////////////////
 
-        typedef data::cache<font_impl> font_cache;
+        dictionary<shared_pointer<font_impl>, string> font::font_impls;
+
 
         //
         
         font::font(const string & face, int size, const color & fg)
+            : platform_object(), impl(0)
         {
-            //LOG_BASIC(L"font: creating font %ls %d (%f, %f, %f)", face.w_string(), size, fg[color::COMPONENT_RED], fg[color::COMPONENT_GREEN], fg[color::COMPONENT_BLUE]);
-            
-            font_cache & global_fonts = *font_cache::global_instance();
-
             string cache_name = string::format(L"%s %d %f %f %f %f", face.w_string(), size, fg[color::COMPONENT_RED], fg[color::COMPONENT_GREEN], fg[color::COMPONENT_BLUE], fg[color::COMPONENT_ALPHA]);
-            
-            if (global_fonts.contains_index(cache_name))
+
+            if (font_impls.contains_index(cache_name))
             {
-                impl = global_fonts[cache_name];
+                gsgl::log(string::format(L"font: loading font '%ls'", cache_name.w_string()));
+
+                impl = font_impls[cache_name];
             }
             else
             {
+                gsgl::log(string::format(L"font: creating font '%ls'", cache_name.w_string()));
+
                 impl = new font_impl(face, size, fg);
-                global_fonts[cache_name] = impl;
-                impl->attach();
+                font_impls[cache_name] = impl;
             }
-            impl->attach();
         } // font::font()
         
 
         font::~font()
         {
-            assert(impl);
-
-            //LOG_BASIC(L"font: deleting font %ls %d (%f, %f, %f)", impl->get_face().w_string(), impl->get_size(), impl->get_fg()[color::COMPONENT_RED], impl->get_fg()[color::COMPONENT_GREEN], impl->get_fg()[color::COMPONENT_BLUE]);
-            impl->detach();
+            assert(impl.ptr());
         } // font::~font()
         
 
         const string & font::get_face() const
         {
-            assert(impl);
-            return impl->get_face();
+            const font_impl *impl_ptr = dynamic_cast<const font_impl *>(impl.ptr());
+            assert(impl_ptr);
+            return impl_ptr->get_face();
         } // font::get_face()
 
 
         const int font::get_size() const
         {
-            assert(impl);
+            assert(impl.ptr());
             return impl->get_size();
         } // font::get_size()
 
 
         float font::calc_height(const string & str) const
         {
-            assert(impl);
+            assert(impl.ptr());
             return impl->calc_height(str);
         } // font::calc_height()
 
 
         float font::calc_width(const string & str) const
         {
-            assert(impl);
+            assert(impl.ptr());
             return impl->calc_width(str);
         } // font::calc_width()
 
 
         void font::draw(const string & str) const
         {
-            assert(impl);
+            assert(impl.ptr());
             impl->draw(str);
         } // font::draw()
 
 
-        gsgl::data_object *font::create_global_font_cache()
+        void font::clear_cache()
         {
-            return new font_cache(L"font cache");
-        } // font::create_global_font_cache()
+            for (dictionary<shared_pointer<font_impl>, string>::iterator i = font_impls.iter(); i.is_valid(); ++i)
+            {
+                if (i->get_ref_count() > 1)
+                    throw runtime_exception(L"Dangling font reference: '%s'!", i.get_index());
+            }
+
+            font_impls.clear();
+        } // font::clear_cache()
 
 
     } // namespace platform
-
-
-    platform::font_cache *platform::font_cache::instance = 0; // global font cache
 
 } // namespace gsgl

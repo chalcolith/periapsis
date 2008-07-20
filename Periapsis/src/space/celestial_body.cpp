@@ -66,7 +66,7 @@ namespace periapsis
             equatorial_radius = units::parse(obj_config[L"equatorial_radius"]); assert(equatorial_radius > 0);
 
             if (!obj_config[L"simple_map"].is_empty())
-                simple_colormap = new gsgl::platform::texture(obj_config.get_directory().get_full_path() + obj_config[L"simple_map"], TEXTURE_ENV_MODULATE);
+                simple_colormap = new gsgl::platform::texture(L"scene graph", obj_config.get_directory().get_full_path() + obj_config[L"simple_map"], texture::TEXTURE_ENV_MODULATE);
 
             if (simple_colormap)
             {
@@ -77,7 +77,7 @@ namespace periapsis
             }
 
             if (!obj_config[L"simple_height"].is_empty())
-                simple_heightmap = new gsgl::platform::texture(obj_config.get_directory().get_full_path() + obj_config[L"simple_height"], TEXTURE_LOAD_NO_PARAMS | TEXTURE_LOAD_UNCOMPRESSED, TEXTURE_HEIGHTMAP, 1);
+                simple_heightmap = new gsgl::platform::texture(L"scene graph", obj_config.get_directory().get_full_path() + obj_config[L"simple_height"], texture::TEXTURE_LOAD_NO_PARAMS | texture::TEXTURE_LOAD_UNCOMPRESSED, texture::TEXTURE_HEIGHTMAP, 1);
 
             if (simple_heightmap)
             {
@@ -152,7 +152,7 @@ namespace periapsis
             // check to see if we're out of range
             gsgl::real_t screen_width = utils::pixel_size(dist, radius, c->cam->get_field_of_view(), c->screen->get_height());
 
-            color::WHITE.set();
+            color::WHITE.bind();
 
             if (screen_width < MIN_PIXEL_WIDTH)
             {
@@ -183,7 +183,7 @@ namespace periapsis
                     glPolygonMode(GL_FRONT_AND_BACK, (c->render_flags & context::RENDER_WIREFRAME) ? GL_LINE : GL_FILL);     CHECK_GL_ERRORS();
 
                     // set up lighting
-                    if (!(c->render_flags & context::RENDER_UNLIT) && !(get_draw_flags() & NODE_DRAW_UNLIT))
+                    if (!(c->render_flags & context::RENDER_NO_LIGHTING) && !(get_draw_flags() & NODE_DRAW_UNLIT))
                     {
                         glEnable(GL_LIGHTING);                                                                          CHECK_GL_ERRORS();
 

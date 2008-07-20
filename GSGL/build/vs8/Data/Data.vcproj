@@ -361,10 +361,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\data\shared.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\data\stream.cpp"
 				>
 				<FileConfiguration
@@ -419,10 +415,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\data\cache.hpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\data\comparable.hpp"
 				>
 			</File>
@@ -456,10 +448,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\data\fstream.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\data\global.hpp"
 				>
 			</File>
 			<File
@@ -503,10 +491,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\data\shared.hpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\data\singleton.hpp"
 				>
 			</File>
@@ -520,10 +504,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\data\string.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\data\tuple.hpp"
 				>
 			</File>
 		</Filter>

@@ -46,10 +46,10 @@ namespace gsgl
         const color color::WHITE(1, 1, 1, 1);
 
 
-        void color::set() const
+        void color::bind() const
         {
             glColor4fv(val);                                                                                        CHECK_GL_ERRORS();
-        } // color::set()
+        } // color::bind()
 
     } // namespace gsgl
 
