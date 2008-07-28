@@ -38,9 +38,7 @@
 #include "data/indexable.hpp"
 #include "data/exception.hpp"
 
-#ifdef DEBUG
 #include <new>
-#endif
 
 namespace gsgl
 {
