@@ -73,19 +73,19 @@ namespace periapsis
         } // large_rocky_body::~large_rocky_body()
 
 
-        gsgl::real_t large_rocky_body::get_priority(context *c)
+        gsgl::real_t large_rocky_body::draw_priority(const simulation_context *, const drawing_context *)
         {
             return utils::pos_in_eye_space(this).mag2();
-        } // large_rocky_body::get_priority()
+        } // large_rocky_body::draw_priority()
 
 
-        void large_rocky_body::init(context *c)
+        void large_rocky_body::init(const simulation_context *c)
         {
             celestial_body::init(c);
         } // large_rocky_body::init()
 
 
-        void large_rocky_body::draw(context *c)
+        void large_rocky_body::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
             lithosphere *litho = get_lithosphere();
             if (litho)
@@ -105,10 +105,10 @@ namespace periapsis
 
                 glMatrixMode(GL_PROJECTION);                                                                        CHECK_GL_ERRORS();
                 glLoadIdentity();                                                                                   CHECK_GL_ERRORS();
-                gluPerspective(c->cam->get_field_of_view(), c->screen->get_aspect_ratio(), near_plane, far_plane);  CHECK_GL_ERRORS();
+                gluPerspective(draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), near_plane, far_plane);  CHECK_GL_ERRORS();
 
                 // check to see if we're out of range
-                gsgl::real_t screen_width = utils::pixel_size(dist, radius, c->cam->get_field_of_view(), c->screen->get_height());
+                gsgl::real_t screen_width = utils::pixel_size(dist, radius, draw_context->cam->get_field_of_view(), draw_context->screen->get_height());
 
                 color::WHITE.bind();
 
@@ -124,10 +124,10 @@ namespace periapsis
                     glEnable(GL_DEPTH_TEST);                                                                        CHECK_GL_ERRORS();
 
                     glEnable(GL_CULL_FACE);                                                                         CHECK_GL_ERRORS();
-                    glPolygonMode(GL_FRONT_AND_BACK, (c->render_flags & context::RENDER_WIREFRAME) ? GL_LINE : GL_FILL);     CHECK_GL_ERRORS();
+                    glPolygonMode(GL_FRONT_AND_BACK, (draw_context->render_flags & drawing_context::RENDER_WIREFRAME) ? GL_LINE : GL_FILL);     CHECK_GL_ERRORS();
 
                     // set up lighting
-                    if (!(c->render_flags & context::RENDER_NO_LIGHTING) && !(get_draw_flags() & NODE_DRAW_UNLIT))
+                    if (!(draw_context->render_flags & drawing_context::RENDER_NO_LIGHTING) && !(get_draw_flags() & NODE_DRAW_UNLIT))
                     {
                         glEnable(GL_LIGHTING);                                                                          CHECK_GL_ERRORS();
 
@@ -142,7 +142,7 @@ namespace periapsis
                     }
 
                     // set up texturing
-                    if (!(c->render_flags & context::RENDER_NO_TEXTURES))
+                    if (!(draw_context->render_flags & drawing_context::RENDER_NO_TEXTURES))
                     {
                         glEnable(GL_TEXTURE_2D);
                     }
@@ -152,7 +152,7 @@ namespace periapsis
                     glPushMatrix();
                     glLoadMatrixf(litho->get_modelview().ptr());
                     
-                    litho->draw(c);
+                    litho->draw(sim_context, draw_context);
 
                     glMatrixMode(GL_MODELVIEW);
                     glPopMatrix();
@@ -161,22 +161,22 @@ namespace periapsis
                 glPopClientAttrib();                                                                                CHECK_GL_ERRORS();
                 glPopAttrib();                                                                                      CHECK_GL_ERRORS();
 
-                draw_name(c, 1, far_plane);
+                draw_name(draw_context, 1, far_plane);
             }
             else
             {
-                celestial_body::draw(c);
+                celestial_body::draw(sim_context, draw_context);
             }
         } // large_rocky_body::draw()
 
 
-        void large_rocky_body::update(context *c)
+        void large_rocky_body::update(const simulation_context *c)
         {
             celestial_body::update(c);
         } // large_rocky_body::update()
 
 
-        void large_rocky_body::cleanup(context *c)
+        void large_rocky_body::cleanup(const simulation_context *c)
         {
             celestial_body::cleanup(c);
         } // large_rocky_body::cleanup()

@@ -51,6 +51,23 @@ namespace gsgl
             glColor4fv(val);                                                                                        CHECK_GL_ERRORS();
         } // color::bind()
 
+
+        color color::parse(const string & s)
+        {
+            color res(BLACK);
+
+            data::list<string> tokens = s.split(L" ,\t");
+            
+            int num = 0;
+            for (data::list<string>::iterator i = tokens.iter(); num < 4 && i.is_valid(); ++i)
+            {
+                if (!i->is_empty())
+                    res.val[num++] = static_cast<float>(i->to_double());
+            }
+
+            return res;
+        } // color::parse()
+
     } // namespace gsgl
 
 } // namespace gsgl

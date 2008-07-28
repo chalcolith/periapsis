@@ -48,7 +48,8 @@ namespace gsgl
 {
     namespace scenegraph
     {
-        class context;
+        class simulation_context;
+        class drawing_context;
         class node;
     }
 }
@@ -94,7 +95,7 @@ namespace periapsis
             sph_qt_node(spherical_quadtree *parent_quadtree, sph_qt_node *parent);
             virtual ~sph_qt_node();
 
-            virtual void draw(gsgl::scenegraph::context *c);
+            virtual void draw(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
 
             bool is_a_leaf() const; ///< Returns true if the node is a splittable leaf.
             bool is_a_quad() const; ///< Returns true if the node is a mergeable quad.
@@ -129,6 +130,10 @@ namespace periapsis
             sph_qt_node *root_nodes[6];
 
             // variables for keeping track of the screen so as to screen-space calculations
+            gsgl::real_t last_field_of_view;
+            gsgl::real_t last_aspect_ratio;
+            gsgl::real_t last_screen_height;
+
             int last_frame_viewport[4];
             gsgl::math::transform last_frame_modelview_projection;
 
@@ -144,9 +149,9 @@ namespace periapsis
 
             gsgl::scenegraph::node *get_parent_sg_node() { return parent_sg_node; }
 
-            virtual void init(gsgl::scenegraph::context *c);
-            virtual void draw(gsgl::scenegraph::context *c);
-            virtual void update(gsgl::scenegraph::context *c, const bool not_visible);
+            virtual void init(const gsgl::scenegraph::simulation_context *);
+            virtual void draw(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
+            virtual void update(const gsgl::scenegraph::simulation_context *, const bool not_visible);
             virtual void cleanup();
 
         protected:
@@ -160,17 +165,17 @@ namespace periapsis
             void remove_merge_node(sph_qt_node *qtn);
 
             gsgl::real_t node_cos_angle(sph_qt_node *qtn, const gsgl::math::transform & modelview);
-            gsgl::real_t node_radius(sph_qt_node *qtn, const gsgl::scenegraph::context *c);
+            gsgl::real_t node_radius(sph_qt_node *qtn, const gsgl::scenegraph::simulation_context *);
             sph_qt_node *get_adjacent(sph_qt_node *candidate, const gsgl::platform::vbuffer::index_t & index0, const gsgl::platform::vbuffer::index_t & index1, 
                                       sph_qt_node ***peer_handle, gsgl::platform::vbuffer::index_t *side0 = 0, gsgl::platform::vbuffer::index_t *side1 = 0);
 
             //
             bool neighbor_allows_merge(sph_qt_node *qtn, sph_qt_node *adj);
             void merge_node_aux(sph_qt_node *qtn);
-            bool merge_node(sph_qt_node *qtn, const gsgl::math::transform & modelview, const gsgl::scenegraph::context *c);
+            bool merge_node(sph_qt_node *qtn, const gsgl::math::transform & modelview, const gsgl::scenegraph::simulation_context *);
 
             void split_node_aux(sph_qt_node *qtn, int force_level);
-            bool split_node(sph_qt_node *qtn, const gsgl::math::transform & modelview, const gsgl::scenegraph::context *c, bool no_visual_check, int force_level);
+            bool split_node(sph_qt_node *qtn, const gsgl::math::transform & modelview, const gsgl::scenegraph::simulation_context *, bool no_visual_check, int force_level);
 
             //
             void init_root_nodes();

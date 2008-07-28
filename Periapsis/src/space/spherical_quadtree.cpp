@@ -114,10 +114,10 @@ namespace periapsis
 
         //
 
-        void sph_qt_node::draw(gsgl::scenegraph::context *c)
+        void sph_qt_node::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
             // bounds check
-            if (true || utils::is_on_screen(parent_quadtree->parent_sg_node, c->cam->get_field_of_view(), c->screen->get_aspect_ratio(), get_vector(parent_quadtree->global_vertices, vertex_indices[12]), radius_in_world_space))
+            if (utils::is_on_screen(parent_quadtree->parent_sg_node, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), get_vector(parent_quadtree->global_vertices, vertex_indices[12]), radius_in_world_space))
             {
                 // are we a leaf?
                 if (is_a_leaf())
@@ -150,7 +150,7 @@ namespace periapsis
                     for (int i = 0; i < 4; ++i)
                     {
                         if (children[i])
-                            children[i]->draw(c);
+                            children[i]->draw(sim_context, draw_context);
                     }
                 }
             }
@@ -326,7 +326,7 @@ namespace periapsis
         
         //////////////////////////////////////////
 
-        void spherical_quadtree::init(gsgl::scenegraph::context *c)
+        void spherical_quadtree::init(const simulation_context *)
         {
             // initialize buffer pool
             if (!buffers)
@@ -345,13 +345,19 @@ namespace periapsis
 
         //////////////////////////////////////////
 
-        void spherical_quadtree::draw(gsgl::scenegraph::context *c)
+        void spherical_quadtree::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
+            last_field_of_view = draw_context->cam->get_field_of_view();
+            last_aspect_ratio = draw_context->screen->get_aspect_ratio();
+            last_screen_height = static_cast<gsgl::real_t>(draw_context->screen->get_height());
+
+            utils::save_screen_info(last_frame_viewport, last_frame_modelview_projection);
+
             // make sure to split before drawing the first time
             // we can't do this during init because the positions aren't necessarily set
-            if (c->frame == 0)
+            if (sim_context->frame == 0)
             {
-                update(c, false);
+                update(sim_context, false);
             }
 
             glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                   CHECK_GL_ERRORS();
@@ -364,9 +370,7 @@ namespace periapsis
             
             for (int i = 0; i < 6; ++i)
                 if (root_nodes[i])
-                    root_nodes[i]->draw(c);
-
-            utils::save_screen_info(last_frame_viewport, last_frame_modelview_projection);
+                    root_nodes[i]->draw(sim_context, draw_context);
 
             glPopClientAttrib();
             glPopAttrib();
@@ -437,20 +441,20 @@ namespace periapsis
         } // spherical_quadtree::node_cos_angle()
 
 
-        gsgl::real_t spherical_quadtree::node_radius(sph_qt_node *qtn, const gsgl::scenegraph::context *c)
+        gsgl::real_t spherical_quadtree::node_radius(sph_qt_node *qtn, const simulation_context *sim_context)
         {
-            if (qtn->last_radius_frame != c->frame)
+            if (qtn->last_radius_frame != sim_context->frame)
             {
                 gsgl::real_t radius   = (get_vector(global_vertices, qtn->vertex_indices[0]) - get_vector(global_vertices, qtn->vertex_indices[12])).mag();
                 gsgl::real_t distance = (parent_sg_node->get_modelview() * get_vector(global_vertices, qtn->vertex_indices[12])).mag();  if (distance < 1.0f) distance = 1.0f;
                 gsgl::real_t angle    = ::atan(radius / distance);
 
-                gsgl::real_t pct_screen_angle = static_cast<gsgl::real_t>(angle / (c->cam->get_field_of_view() * math::DEG2RAD));
-                gsgl::real_t pixel_radius = pct_screen_angle * c->screen->get_height();
+                gsgl::real_t pct_screen_angle = static_cast<gsgl::real_t>(angle / (last_field_of_view * math::DEG2RAD));
+                gsgl::real_t pixel_radius = pct_screen_angle * last_screen_height;
 
                 qtn->radius_in_world_space = radius;
                 qtn->radius_in_screen_space = pixel_radius;
-                qtn->last_radius_frame = c->frame;
+                qtn->last_radius_frame = sim_context->frame;
             }
 
             return qtn->radius_in_screen_space;
@@ -618,14 +622,14 @@ namespace periapsis
         } // spherical_quadtree::merge_node_aux()
 
 
-        bool spherical_quadtree::merge_node(sph_qt_node *qtn, const transform & modelview, const gsgl::scenegraph::context *c)
+        bool spherical_quadtree::merge_node(sph_qt_node *qtn, const transform & modelview, const simulation_context *sim_context)
         {
             // if we were already merged this frame, return
-            if (qtn->last_merge_frame == c->frame)
+            if (qtn->last_merge_frame == sim_context->frame)
                 return true;
 
             // if we were split this frame, return
-            if (qtn->last_split_frame == c->frame)
+            if (qtn->last_split_frame == sim_context->frame)
                 return false;
 
             // sanity check: all our children must be leaves
@@ -636,7 +640,7 @@ namespace periapsis
             }
 
             // if the node is facing away from the eye, or is too small, merge it
-            if (node_cos_angle(qtn, modelview) < ANGLE_CUTOFF || node_radius(qtn, c) < PIXEL_CUTOFF)
+            if (node_cos_angle(qtn, modelview) < ANGLE_CUTOFF || node_radius(qtn, sim_context) < PIXEL_CUTOFF)
             {
                 // check children's neighbors and see if they will allow us to merge...
                 bool can_merge = true;
@@ -685,7 +689,7 @@ namespace periapsis
                     }
 
                     qtn->dirty = true;
-                    qtn->last_merge_frame = c->frame;
+                    qtn->last_merge_frame = sim_context->frame;
                     remove_merge_node(qtn);
                     add_leaf_node(qtn);
 
@@ -1187,12 +1191,12 @@ namespace periapsis
         } // spherical_quadtree::split_node_aux()
 
 
-        bool spherical_quadtree::split_node(sph_qt_node *qtn, const transform & modelview, const gsgl::scenegraph::context *c, bool no_visual_check, int force_level)
+        bool spherical_quadtree::split_node(sph_qt_node *qtn, const transform & modelview, const simulation_context *sim_context, bool no_visual_check, int force_level)
         {
             assert(qtn);
 
             // have we already split this frame?  why would we?
-            if (qtn->last_split_frame == c->frame)
+            if (qtn->last_split_frame == sim_context->frame)
                 return true;
 
             // sanity check: are we a leaf?
@@ -1200,7 +1204,7 @@ namespace periapsis
                 throw internal_exception(__FILE__, __LINE__, L"Trying to split a non-leaf node!");
 
             // try to split
-            if (no_visual_check || ((node_cos_angle(qtn, modelview) > ANGLE_CUTOFF) && (node_radius(qtn, c) > PIXEL_CUTOFF)))
+            if (no_visual_check || ((node_cos_angle(qtn, modelview) > ANGLE_CUTOFF) && (node_radius(qtn, sim_context) > PIXEL_CUTOFF)))
             {
 #ifdef DEBUG_SPLITS_AND_MERGES
                 gsgl::log(string(L"\n") + get_indent(force_level) + L"SPLIT {" + qtn->path.w_string() + L"}");
@@ -1212,12 +1216,12 @@ namespace periapsis
                 {
                     if (qtn->adjacent_nodes[i] && qtn->adjacent_nodes[i]->level < qtn->level)
                     {
-                        can_split = split_node(qtn->adjacent_nodes[i], modelview, c, true, force_level+1);
+                        can_split = split_node(qtn->adjacent_nodes[i], modelview, sim_context, true, force_level+1);
                     }
                 }
 
                 // make sure we weren't split as a part of all that
-                if (qtn->last_split_frame == c->frame)
+                if (qtn->last_split_frame == sim_context->frame)
                     return true;
 
                 // now split if possible
@@ -1225,7 +1229,7 @@ namespace periapsis
                 {
                     remove_leaf_node(qtn);
                     split_node_aux(qtn, force_level);
-                    qtn->last_split_frame = c->frame;
+                    qtn->last_split_frame = sim_context->frame;
 
                     if (qtn->parent_node)
                         remove_merge_node(qtn->parent_node);
@@ -1242,7 +1246,7 @@ namespace periapsis
         static const bool allow_split = true;
         static const int NUM_TO_PROCESS = 128;
 
-        void spherical_quadtree::update(gsgl::scenegraph::context *c, const bool not_visible)
+        void spherical_quadtree::update(const simulation_context *c, const bool not_visible)
         {
             // only update if the view has changed
             vector eye_pos = parent_sg_node->get_modelview().inverse() * vector::ZERO;

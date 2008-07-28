@@ -73,12 +73,12 @@ namespace gsgl
             } // coord_system::~coord_system()
 
 
-            void coord_system::init(context *c)
+            void coord_system::init(const simulation_context *c)
             {
             } // coord_system::init()
 
 
-            void coord_system::draw(context *c)
+            void coord_system::draw(const simulation_context *sim_context, const drawing_context *draw_context)
             {
                 glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                   CHECK_GL_ERRORS();
                 glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                      CHECK_GL_ERRORS();
@@ -87,13 +87,13 @@ namespace gsgl
                 vector ep = pos_in_eye_space(parent);
                 gsgl::real_t far_plane = (-ep.get_z() + radius) * 1.1f; // just to be safe
 
-                gsgl::real_t near_plane = far_plane * static_cast<gsgl::real_t>(::cos(c->cam->get_field_of_view() * math::DEG2RAD));
+                gsgl::real_t near_plane = far_plane * static_cast<gsgl::real_t>(::cos(draw_context->cam->get_field_of_view() * math::DEG2RAD));
                 if (near_plane < 0)
                     near_plane = 1;
 
                 glMatrixMode(GL_PROJECTION);                                                                        CHECK_GL_ERRORS();
                 glLoadIdentity();                                                                                   CHECK_GL_ERRORS();
-                gluPerspective(c->cam->get_field_of_view(), c->screen->get_aspect_ratio(), near_plane, far_plane);  CHECK_GL_ERRORS();
+                gluPerspective(draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), near_plane, far_plane);  CHECK_GL_ERRORS();
 
                 //
                 glEnable(GL_BLEND);                                                                                 CHECK_GL_ERRORS();
@@ -171,13 +171,13 @@ namespace gsgl
 
             //////////////////////////////////////////////////////////
 
-            simple_sphere::simple_sphere(node *parent, const int num_steps, 
+            sphere::sphere(node *parent, const int num_steps, 
                                          const gsgl::real_t equatorial_radius, const gsgl::real_t polar_radius,
-                                         texture *tex, const gsgl::real_t tex_offset_x, const gsgl::real_t tex_offset_y)
+                                         const gsgl::real_t tex_offset_x, const gsgl::real_t tex_offset_y)
                 : parent(parent), num_steps(num_steps),
                   equatorial_radius(equatorial_radius), polar_radius(polar_radius), 
-                  vertices(vbuffer::STATIC), indices(vbuffer::STATIC),
-                  tex(tex), tex_offset_x(tex_offset_x), tex_offset_y(tex_offset_y)
+                  tex_offset_x(tex_offset_x), tex_offset_y(tex_offset_y),
+                  vertices(vbuffer::STATIC), indices(vbuffer::STATIC)
             {
                 double b_over_a = polar_radius / equatorial_radius;
                 double altitude = 0;
@@ -233,20 +233,20 @@ namespace gsgl
                         indices.append( (j+1)*stride + i ); // down
                     }
                 }
-            } // simple_sphere::simple_sphere()
+            } // sphere::sphere()
 
 
-            simple_sphere::~simple_sphere()
+            sphere::~sphere()
             {
-            } // simple_sphere::~simple_sphere()
+            } // sphere::~sphere()
 
             
-            void simple_sphere::init(context *c)
+            void sphere::init(const simulation_context *c)
             {
-            } // simple_sphere::init()
+            } // sphere::init()
 
 
-            void simple_sphere::draw(context *c)
+            void sphere::draw(const simulation_context *sim_context, const drawing_context *draw_context)
             {
                 glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                   CHECK_GL_ERRORS();
                 glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                      CHECK_GL_ERRORS();
@@ -255,13 +255,6 @@ namespace gsgl
                 glEnableClientState(GL_COLOR_ARRAY);
                 glEnableClientState(GL_NORMAL_ARRAY);
                 glEnableClientState(GL_INDEX_ARRAY);                                                                CHECK_GL_ERRORS();
-
-                if (tex && !(c->render_flags & context::RENDER_NO_TEXTURES))
-                {
-                    glEnable(GL_TEXTURE_2D);
-
-                    tex->bind();
-                }
 
                 vertices.bind();
                 glInterleavedArrays(GL_T2F_N3F_V3F, 0, 0);                                                          CHECK_GL_ERRORS();
@@ -292,12 +285,9 @@ namespace gsgl
                     glDrawElements(GL_TRIANGLE_STRIP, index_stride, GL_UNSIGNED_INT, vbuffer::VBO_OFFSET<vbuffer::index_t>(i*index_stride));
                 }
 
-                if (tex)
-                    tex->unbind();
-
                 glPopClientAttrib();                                                                                CHECK_GL_ERRORS();
                 glPopAttrib();                                                                                      CHECK_GL_ERRORS();
-            } // simple_sphere::draw()
+            } // sphere::draw()
 
 
             //////////////////////////////////////////////////////////
@@ -373,7 +363,7 @@ namespace gsgl
             {
                 node *n = const_cast<node *>(cn);
 
-                gsgl::real_t max_val = n->max_extent();
+                gsgl::real_t max_val = n->view_radius();
 
                 for (simple_array<node *>::iterator i = n->get_children().iter(); i.is_valid(); ++i)
                 {
@@ -481,7 +471,7 @@ namespace gsgl
             } // add_vertex()
 
 
-            void checkered_box::init(gsgl::scenegraph::context *c)
+            void checkered_box::init(const simulation_context *)
             {
                 // top face
                 add_vertex(vertices, -1, -1,  1,  normals,  0,  0,  1,  radius);
@@ -521,7 +511,7 @@ namespace gsgl
             } // checkered_box::init()
 
 
-            void checkered_box::draw(gsgl::scenegraph::context *c)
+            void checkered_box::draw(const simulation_context *, const drawing_context *)
             {
                 return;
 
@@ -557,13 +547,13 @@ namespace gsgl
             } // checkered_box::draw()
 
 
-            void checkered_box::update(gsgl::scenegraph::context *c)
+            void checkered_box::update(const simulation_context *c)
             {
                 node::update(c);
             } // checkered_box::update()
 
 
-            void checkered_box::cleanup(gsgl::scenegraph::context *c)
+            void checkered_box::cleanup(const simulation_context *c)
             {
                 node::cleanup(c);
 
@@ -572,16 +562,16 @@ namespace gsgl
             } // checkered_bod::cleanup()
 
 
-            gsgl::real_t checkered_box::get_priority(gsgl::scenegraph::context *)
+            gsgl::real_t checkered_box::draw_priority(const simulation_context *, const drawing_context *)
             {
                 return node::NODE_DRAW_TRANSLUCENT;
-            } // checkered_box::get_priority()
+            } // checkered_box::draw_priority()
 
 
-            gsgl::real_t checkered_box::max_extent() const
+            gsgl::real_t checkered_box::view_radius() const
             {
                 return radius*2;
-            } // checkered_box::max_extent()
+            } // checkered_box::view_radius()
 
             gsgl::real_t checkered_box::default_view_distance() const
             {

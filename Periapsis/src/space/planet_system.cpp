@@ -70,7 +70,7 @@ namespace periapsis
         } // planet_system::~planet_system()
 
 
-        gsgl::real_t planet_system::get_priority(gsgl::scenegraph::context *)
+        gsgl::real_t planet_system::draw_priority(const simulation_context *, const drawing_context *)
         {
             if (get_name() == L"Earth Barysystem")
             {
@@ -80,18 +80,18 @@ namespace periapsis
             {
                 return NODE_DRAW_IGNORE;
             }
-        } // planet_system::get_priority()
+        } // planet_system::draw_priority()
 
         
 
 
-        void planet_system::draw(gsgl::scenegraph::context *c)
+        void planet_system::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
-            if ((c->render_flags & context::RENDER_COORD_SYSTEMS) && get_name() == L"Earth Barysystem")
+            if ((draw_context->render_flags & drawing_context::RENDER_COORD_SYSTEMS) && get_name() == L"Earth Barysystem")
             {
                 // the earth barysystem is still oriented to the ecliptic; we want to display the equatorial, but not move...
                 glMultMatrixf(EQUATORIAL_WRT_ECLIPTIC.ptr());                                                       CHECK_GL_ERRORS();
-                cs->draw(c);
+                cs->draw(sim_context, draw_context);
             }
         } // planet_system::draw()
 

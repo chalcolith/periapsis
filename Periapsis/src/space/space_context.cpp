@@ -44,20 +44,32 @@ namespace periapsis
     namespace space
     {
 
-        space_context::space_context()
-            : context(),
+        space_drawing_context::space_drawing_context()
+            : drawing_context(),
               DEFAULT_LABEL_COLOR(0, 1, 0, 1),
               DEFAULT_LABEL_FONT(0)
         {
             DEFAULT_LABEL_FONT = new font(L"Sans", 14, DEFAULT_LABEL_COLOR);
-        } // space_context::space_context()
+        } // space_drawing_context::space_drawing_context()
 
 
-        space_context::~space_context()
+        space_drawing_context::space_drawing_context(const space_drawing_context & sdc)
+            : drawing_context(sdc),
+              DEFAULT_LABEL_COLOR(sdc.DEFAULT_LABEL_COLOR),
+              DEFAULT_LABEL_FONT(sdc.DEFAULT_LABEL_FONT)
         {
-            delete DEFAULT_LABEL_FONT;
-        } // space_context::~space_context()
+        } // space_drawing_context::space_drawing_context()
 
+
+        space_drawing_context::~space_drawing_context()
+        {
+        } // space_drawing_context::~space_drawing_context()
+
+
+        drawing_context *space_drawing_context::copy()
+        {
+            return new space_drawing_context(*this);
+        } // space_drawing_context::copy()
 
     } // namespace space
 

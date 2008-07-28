@@ -240,16 +240,16 @@ namespace gsgl
         const gsgl::real_t node::NODE_DRAW_FIRST        = FLT_MAX;
 
 
-        gsgl::real_t node::get_priority(context *)
+        gsgl::real_t node::draw_priority(const simulation_context *, const drawing_context *)
         {
             return NODE_DRAW_IGNORE;
-        } // node::get_priority()
+        } // node::draw_priority()
 
 
-        gsgl::real_t node::max_extent() const
+        gsgl::real_t node::view_radius() const
         {
             return 0;
-        } // node::max_extent()
+        } // node::view_radius()
 
 
         gsgl::real_t node::default_view_distance() const
@@ -260,7 +260,7 @@ namespace gsgl
 
         gsgl::real_t node::minimum_view_distance() const
         {
-            return max_extent();
+            return view_radius();
         } // node::minimum_view_distance()
 
         
@@ -304,42 +304,41 @@ namespace gsgl
         } // node::connect()
         
 
-        void node::init(context *)
+        void node::init(const simulation_context *)
         {
         } // node::init()
     
-        void node::draw(context *)
+        void node::draw(const simulation_context *, const drawing_context *)
         {
         } // node::draw()
         
-        void node::update(context *)
+        void node::update(const simulation_context *)
         {
         } // node::update()
 
-        void node::cleanup(context *)
+        void node::cleanup(const simulation_context *)
         {
         } // node::cleanup()
 
-        bool node::handle_event(context *, sg_event &)
+        bool node::handle_event(const simulation_context *, sg_event &)
         {
             return false;
         } // node::handle_event()
         
-        data::config_record *node::save() const
+        void node::save(config_record & rec_to_save) const
         {
-            return 0;
         } // node::save()
         
 
         //
 
-        void node::build_draw_list(node *cur, node *prev, context *c, const transform & modelview, pre_draw_rec & rec)
+        void node::build_draw_list(node *cur, node *prev, simulation_context *sim_context, drawing_context *draw_context, const transform & modelview, pre_draw_rec & rec)
         {
             // collect parent
             if (cur->parent && cur->parent != prev)
             {
                 transform to_parent = cur->orientation.transpose() * transform::translation_transform(cur->translation * (-1 * cur->parent->scale));
-                build_draw_list(cur->parent, cur, c, modelview * to_parent, rec);
+                build_draw_list(cur->parent, cur, sim_context, draw_context, modelview * to_parent, rec);
             }
             
             // collect me
@@ -352,7 +351,7 @@ namespace gsgl
             }
             else
             {
-                gsgl::real_t pri = cur->get_priority(c);
+                gsgl::real_t pri = cur->draw_priority(sim_context, draw_context);
 
                 if (pri == node::NODE_DRAW_SOLID)
                     rec.solids.append(cur);
@@ -368,23 +367,23 @@ namespace gsgl
             {
                 node *child = cur->children[i];
 
-                if (child != prev && !(child->draw_flags & node::NODE_DUMMY_OBJECT))
+                if (child != prev)
                 {
                     transform from_parent = transform::translation_transform(child->translation * cur->scale) * child->orientation;
-                    build_draw_list(child, cur, c, modelview * from_parent, rec);
+                    build_draw_list(child, cur, sim_context, draw_context, modelview * from_parent, rec);
                 }
             }
         } // build_draw_list()
 
 
-        void node::pre_draw_scene(context *c, pre_draw_rec & rec)
+        void node::pre_draw_scene(simulation_context *sim_context, drawing_context *draw_context, pre_draw_rec & rec)
         {
             rec.light_queue.clear();
             rec.paint_queue.clear();
             rec.solids.clear();
             rec.translucents.clear();
 
-            build_draw_list(c->cam, 0, c, transform::IDENTITY, rec);
+            build_draw_list(draw_context->cam, 0, sim_context, draw_context, transform::IDENTITY, rec);
         } // node::pre_draw_scene()
 
 
@@ -394,12 +393,12 @@ namespace gsgl
         static config_variable<gsgl::real_t> LOCAL_CULL_DISTANCE(L"scenegraph/draw/local_cull_distance", 100000.0f);
 
 
-        void node::draw_scene(context *c, pre_draw_rec & rec)
+        void node::draw_scene(simulation_context *sim_context, drawing_context *draw_context, pre_draw_rec & rec)
         {
             int i, len;
 
             // init viewport
-            glViewport(0, 0, c->screen->get_width(), c->screen->get_height());                                      CHECK_GL_ERRORS();
+            glViewport(0, 0, draw_context->screen->get_width(), draw_context->screen->get_height());                                      CHECK_GL_ERRORS();
 
             glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                       CHECK_GL_ERRORS();
             glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                          CHECK_GL_ERRORS();
@@ -412,9 +411,9 @@ namespace gsgl
 
             for (i = 0; i < max_lights; ++i)
                 glDisable(GL_LIGHT0 + i); // light::bind() will call glEnable on valid lights...
-            c->num_lights = 0;
+            draw_context->num_lights = 0;
 
-            if (!(c->render_flags & context::RENDER_NO_LIGHTING))
+            if (!(draw_context->render_flags & drawing_context::RENDER_NO_LIGHTING))
             {
                 len = rec.light_queue.size();
                 for (i = 0; i < len && i < max_lights; ++i)
@@ -426,7 +425,7 @@ namespace gsgl
                     l->bind(GL_LIGHT0 + i);                                                                             CHECK_GL_ERRORS();
                 }
 
-                c->num_lights = i;
+                draw_context->num_lights = i;
             }
 
             // draw distant nodes with painter's algo; they will set up their own projections
@@ -441,8 +440,8 @@ namespace gsgl
                 glMatrixMode(GL_MODELVIEW);                                                                         CHECK_GL_ERRORS();
                 glLoadMatrixf(n->get_modelview().ptr());
                 
-                if (utils::is_on_screen(n, c->cam->get_field_of_view(), c->screen->get_aspect_ratio(), vector::ZERO, n->max_extent() * n->scale))
-                    n->draw(c);
+                if (utils::is_on_screen(n, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), vector::ZERO, n->view_radius() * n->scale))
+                    n->draw(sim_context, draw_context);
                 else
                     n->draw_results |= NODE_OFF_SCREEN;
             }
@@ -460,7 +459,7 @@ namespace gsgl
                     node *n = rec.solids[i];
                     n->draw_results = NODE_NO_DRAW_RESULTS;
 
-                    if (!utils::is_on_screen(n, c->cam->get_field_of_view(), c->screen->get_aspect_ratio(), vector::ZERO, n->max_extent()))
+                    if (!utils::is_on_screen(n, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), vector::ZERO, n->view_radius()))
                     {
                         n->draw_results |= NODE_OFF_SCREEN;
                         continue;
@@ -473,7 +472,7 @@ namespace gsgl
                         continue;
                     }
 
-                    gsgl::real_t x = n->max_extent() * n->scale;
+                    gsgl::real_t x = n->view_radius() * n->scale;
 
                     if ((e+x) > max_ext)
                         max_ext = e+x;
@@ -489,7 +488,7 @@ namespace gsgl
                     node *n = rec.translucents[i];
                     n->draw_results = NODE_NO_DRAW_RESULTS;
 
-                    if (!utils::is_on_screen(n, c->cam->get_field_of_view(), c->screen->get_aspect_ratio(), vector::ZERO, n->max_extent()))
+                    if (!utils::is_on_screen(n, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), vector::ZERO, n->view_radius()))
                     {
                         n->draw_results |= NODE_OFF_SCREEN;
                         continue;
@@ -502,7 +501,7 @@ namespace gsgl
                         continue;
                     }
 
-                    gsgl::real_t x = n->max_extent() * n->scale;
+                    gsgl::real_t x = n->view_radius() * n->scale;
 
                     if ((e+x) > max_ext)
                         max_ext = e+x;
@@ -521,7 +520,7 @@ namespace gsgl
 
                 glMatrixMode(GL_PROJECTION);                                                                        CHECK_GL_ERRORS();
                 glLoadIdentity();                                                                                   CHECK_GL_ERRORS();
-                gluPerspective(c->cam->get_field_of_view(), c->screen->get_aspect_ratio(), near_plane, far_plane);  CHECK_GL_ERRORS();
+                gluPerspective(draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), near_plane, far_plane);  CHECK_GL_ERRORS();
 
                 // draw solid objects
                 len = rec.solids.size();
@@ -537,7 +536,7 @@ namespace gsgl
                     glMatrixMode(GL_MODELVIEW);
                     glLoadMatrixf(n->get_modelview().ptr());
 
-                    n->draw(c);
+                    n->draw(sim_context, draw_context);
                 }
 
                 // draw translucent objects
@@ -557,7 +556,7 @@ namespace gsgl
                     glMatrixMode(GL_MODELVIEW);
                     glLoadMatrixf(n->get_modelview().ptr());
 
-                    n->draw(c);
+                    n->draw(sim_context, draw_context);
                 }
             }
 

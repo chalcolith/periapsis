@@ -50,20 +50,12 @@ namespace gsgl
         class camera;
         
         /// The current game context.
-        class SCENEGRAPH_API context
+        class SCENEGRAPH_API simulation_context
             : public scenegraph_object
         {
         public:
             simulation        *sim;     ///< The current simulation.
-            platform::display *console; ///< The game console.            
             node              *scenery; ///< The root of the scene graph.
-
-            platform::display *screen;  ///< The current screen (may be different from the console).
-            node              *view;    ///< The current viewpoint node.
-            camera            *cam;     ///< The current viewpoint's camera node.
-
-            //
-            int num_lights;             ///< The number of lights in the world.
 
             //
             gsgl::real_t time_scale;
@@ -71,7 +63,7 @@ namespace gsgl
             unsigned long frame;        ///< The current frame number.
 
             time_t start_t_time;        ///< The start time of the simulation.
-            time_t cur_t_time;          ///< The current time.
+            time_t cur_t_time;          ///< The current time (computer time).
 
             unsigned long start_tick;   ///< The starting tick value (in milliseconds).
             unsigned long cur_tick;     ///< The tick value at the start of the current frame.
@@ -86,6 +78,22 @@ namespace gsgl
             double julian_dt;           ///< Time since the last frame (in game-time Julian days; i.e. may be scaled).
 
             //
+
+            simulation_context();
+            virtual ~simulation_context();
+        }; // class simulation_context
+
+
+        class SCENEGRAPH_API drawing_context
+        {
+        public:
+            platform::display *console; ///< The game console.            
+            platform::display *screen;  ///< The current screen (may be different from the console).
+            node              *view;    ///< The current viewpoint node.
+            camera            *cam;     ///< The current viewpoint's camera node.
+
+            int num_lights;             ///< The number of lights in the world.
+
             enum
             {
                 RENDER_NO_FLAGS      = 0,
@@ -102,10 +110,14 @@ namespace gsgl
             gsgl::flags_t render_flags;
 
             //
+            drawing_context();
+            drawing_context(const drawing_context &);
+            virtual ~drawing_context();
 
-            context();
-            virtual ~context();
-        }; // class context
+            /// Subclasses may need to make copies.
+            virtual drawing_context *copy();
+        }; // class drawing_context
+
         
     } // namespace scenegraph
     

@@ -65,23 +65,23 @@ namespace periapsis
         } // galaxy::~galaxy()
 
 
-        gsgl::real_t galaxy::get_priority(context *)
+        gsgl::real_t galaxy::draw_priority(const simulation_context *, const drawing_context *)
         {
             return NODE_DRAW_FIRST;
-        } // galaxy::get_priority()
+        } // galaxy::draw_priority()
 
 
-        void galaxy::init(context *c)
+        void galaxy::init(const simulation_context *c)
         {
             cs->init(c);
         } // galaxy::init()
 
 
-        void galaxy::draw(context *c)
+        void galaxy::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
-            if (c->render_flags & context::RENDER_COORD_SYSTEMS)
+            if (draw_context->render_flags & drawing_context::RENDER_COORD_SYSTEMS)
             {
-                cs->draw(c);
+                cs->draw(sim_context, draw_context);
             }
         } // galaxy::draw()
 

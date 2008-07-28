@@ -71,7 +71,7 @@ namespace periapsis
 
         //
 
-        void orbital_frame::init(context *c)
+        void orbital_frame::init(const simulation_context *c)
         {
             if (prop)
                 prop->update(c->julian_cur, get_translation(), get_linear_velocity());
@@ -80,7 +80,7 @@ namespace periapsis
         } // orbital_frame::init()
 
 
-        void orbital_frame::update(context *c)
+        void orbital_frame::update(const simulation_context *c)
         {
             if (prop)
                 prop->update(c->julian_cur, get_translation(), get_linear_velocity());

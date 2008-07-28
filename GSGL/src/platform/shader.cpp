@@ -375,7 +375,7 @@ namespace gsgl
         } // shader_program::unload()
 
 
-        void shader_program::bind()
+        void shader_program::bind() const
         {
             // use shader
             if (opengl_id)
@@ -389,9 +389,9 @@ namespace gsgl
         } // shader_program::bind()
 
 
-        void shader_program::unbind()
+        void shader_program::unbind() const
         {
-            for (dictionary<shader_uniform_base *, string>::iterator i = uniforms.iter(); i.is_valid(); ++i)
+            for (dictionary<shader_uniform_base *, string>::const_iterator i = uniforms.iter(); i.is_valid(); ++i)
                 (*i)->opengl_loc = -1;
 
             glUseProgram(0);                                                                                        CHECK_GL_ERRORS();

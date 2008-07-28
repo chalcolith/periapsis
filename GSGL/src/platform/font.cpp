@@ -387,7 +387,10 @@ namespace gsgl
             for (dictionary<shared_pointer<font_impl>, string>::iterator i = fonts.iter(); i.is_valid(); ++i)
             {
                 if (i->get_ref_count() > 1)
-                    throw runtime_exception(L"Dangling font reference: '%s'!", i.get_index());
+                {
+                    gsgl::log(string::format(L"Dangling font reference: '%ls'!", i.get_index().w_string()));
+                    throw runtime_exception(L"Dangling font reference: '%ls'!", i.get_index().w_string());
+                }
             }
 
             fonts.clear();

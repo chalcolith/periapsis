@@ -178,7 +178,7 @@ namespace gsgl
 
         //
 
-        config_record & config_record::find_child(gsgl::data::list<gsgl::string>::iterator & pos_in_path, bool create)
+        config_record *config_record::find_child(gsgl::data::list<gsgl::string>::iterator & pos_in_path, bool create)
         {
             assert(pos_in_path.is_valid());
 
@@ -209,7 +209,7 @@ namespace gsgl
                 }
                 else
                 {
-                    throw runtime_exception(L"Invalid config path '%ls'.", pos_in_path->w_string());
+                    return 0;
                 }
             }
 
@@ -217,9 +217,17 @@ namespace gsgl
             if ((++pos_in_path).is_valid())
                 return child->find_child(pos_in_path, create);
             else
-                return *child;
+                return child;
         } // config_record::find_child()
 
+
+        bool config_record::contains_child(const string & path) const
+        {
+            list<string> path_list = path.split(L"/");
+            list<string>::iterator pos = path_list.iter();
+
+            return pos.is_valid() && const_cast<config_record *>(this)->find_child(pos, false);
+        } // config_record::contains_child()
 
 
         const config_record & config_record::get_child(const string & path) const
@@ -229,7 +237,7 @@ namespace gsgl
 
             if (pos.is_valid())
             {
-                return const_cast<config_record *>(this)->find_child(pos, false);
+                return *const_cast<config_record *>(this)->find_child(pos, false);
             }
             else
             {
@@ -245,7 +253,7 @@ namespace gsgl
 
             if (pos.is_valid())
             {
-                return find_child(pos, true);
+                return *find_child(pos, true);
             }
             else
             {

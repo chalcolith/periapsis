@@ -35,20 +35,44 @@
 //
 
 #include "main_window.hpp"
+
+#include "data/pointer.hpp"
 #include "framework/application.hpp"
+
+namespace gsgl
+{
+    namespace scenegraph
+    {
+        class simulation_context;
+    }
+}
 
 namespace periapsis
 {
+    namespace space
+    {
+        class space_drawing_context;
+    }
+
+
+    //
 
     class periapsis_app
         : public gsgl::framework::application
     {
+        gsgl::scenegraph::simulation_context *sim_context;
+        space::space_drawing_context   *draw_context;
+
     public:
         periapsis_app(const gsgl::string & title, const int & argc, const char **argv);
         ~periapsis_app();
 
-        void init();
-        void update();
+        gsgl::scenegraph::simulation_context *get_sim_context() { return sim_context; }
+        space::space_drawing_context   *get_draw_context() { return draw_context; }
+
+        virtual void init();
+        virtual void update();
+        virtual void cleanup();
     }; // class periapsis_app
 
 } // namespace periapsis

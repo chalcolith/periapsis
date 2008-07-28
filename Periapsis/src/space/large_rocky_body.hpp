@@ -52,12 +52,12 @@ namespace periapsis
             large_rocky_body(const gsgl::data::config_record & obj_config);
             virtual ~large_rocky_body();
 
-            virtual gsgl::real_t get_priority(gsgl::scenegraph::context *);
+            virtual gsgl::real_t draw_priority(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
 
-            virtual void init(gsgl::scenegraph::context *c);
-            virtual void draw(gsgl::scenegraph::context *c);
-            virtual void update(gsgl::scenegraph::context *c);
-            virtual void cleanup(gsgl::scenegraph::context *c);
+            virtual void init(const gsgl::scenegraph::simulation_context *);
+            virtual void draw(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
+            virtual void update(const gsgl::scenegraph::simulation_context *);
+            virtual void cleanup(const gsgl::scenegraph::simulation_context *);
 
             BROKER_DECLARE_CREATOR(periapsis::space::large_rocky_body);
         }; // class large_rocky_body

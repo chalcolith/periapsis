@@ -58,16 +58,16 @@ namespace periapsis
             large_lithosphere(const gsgl::string & name, gsgl::scenegraph::node *parent, body_rotator *rotator);
             virtual ~large_lithosphere();
 
-            virtual gsgl::real_t get_priority(gsgl::scenegraph::context *);
+            virtual gsgl::real_t draw_priority(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
 
-            virtual gsgl::real_t max_extent() const;
+            virtual gsgl::real_t view_radius() const;
             virtual gsgl::real_t default_view_distance() const;
             virtual gsgl::real_t minimum_view_distance() const;
 
-            virtual void init(gsgl::scenegraph::context *);
-            virtual void draw(gsgl::scenegraph::context *);
-            virtual void update(gsgl::scenegraph::context *);
-            virtual void cleanup(gsgl::scenegraph::context *);
+            virtual void init(const gsgl::scenegraph::simulation_context *);
+            virtual void draw(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
+            virtual void update(const gsgl::scenegraph::simulation_context *);
+            virtual void cleanup(const gsgl::scenegraph::simulation_context *);
         }; // class large_lithosphere
 
 

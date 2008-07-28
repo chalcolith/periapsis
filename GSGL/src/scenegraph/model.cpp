@@ -104,7 +104,7 @@ namespace gsgl
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);                                                            CHECK_GL_ERRORS();
 
             // lighting and material
-            if (!(render_flags & context::RENDER_NO_LIGHTING))
+            if (!(render_flags & drawing_context::RENDER_NO_LIGHTING))
             {
                 glEnable(GL_LIGHTING);                                                                          CHECK_GL_ERRORS();
 
@@ -138,7 +138,7 @@ namespace gsgl
 
             if (triangle_vertices.size())
             {
-                if (render_flags & context::RENDER_WIREFRAME)
+                if (render_flags & drawing_context::RENDER_WIREFRAME)
                 {
                     glPolygonMode(GL_FRONT, GL_LINE);                                                               CHECK_GL_ERRORS();
                 }
@@ -419,7 +419,7 @@ namespace gsgl
         //////////////////////////////////////////////////////////////
 
         submesh_node::submesh_node(const string & name, node *parent, bool opaque)
-            : node(name, parent), opaque(opaque), cached_max_extent(-1)
+            : node(name, parent), opaque(opaque), cached_view_radius(-1)
         {
         } // submesh_node::submesh_node()
 
@@ -429,10 +429,10 @@ namespace gsgl
         } // submesh_node::~submesh_node()
 
 
-        gsgl::real_t submesh_node::get_priority(context *)
+        gsgl::real_t submesh_node::draw_priority(const simulation_context *sim_context, const drawing_context *draw_context)
         {
             return opaque ? NODE_DRAW_SOLID : NODE_DRAW_TRANSLUCENT;
-        } // submesh_node::get_priority()
+        } // submesh_node::draw_priority()
 
 
         static double get_max_squared(const vertex_buffer & vertices)
@@ -456,9 +456,9 @@ namespace gsgl
         } // get_max_squared()
 
 
-        gsgl::real_t submesh_node::max_extent() const
+        gsgl::real_t submesh_node::view_radius() const
         {
-            if (cached_max_extent < 0)
+            if (cached_view_radius < 0)
             {
                 double ms, msx = 0;
                 
@@ -477,14 +477,14 @@ namespace gsgl
                         msx = ms;
                 }
 
-                cached_max_extent = static_cast<gsgl::real_t>( ::sqrt(msx) );
+                cached_view_radius = static_cast<gsgl::real_t>( ::sqrt(msx) );
             }
 
-            return cached_max_extent;
-        } // submesh_node::max_extent()
+            return cached_view_radius;
+        } // submesh_node::view_radius()
 
 
-        void submesh_node::init(context *)
+        void submesh_node::init(const simulation_context *)
         {
             int i, len = submeshes.size();
             for (i = 0; i < len; ++i)
@@ -494,22 +494,22 @@ namespace gsgl
         } // submesh_node::init()
 
 
-        void submesh_node::draw(context *c)
+        void submesh_node::draw(const simulation_context *, const drawing_context *draw_context)
         {
             int i, len = submeshes.size();
             for (i = 0; i < len; ++i)
             {
-                submeshes[i]->draw(c->render_flags);
+                submeshes[i]->draw(draw_context->render_flags);
             }
         } // submesh_node::draw()
 
 
-        void submesh_node::update(context *)
+        void submesh_node::update(const simulation_context *)
         {
         } // submesh_node::update()
 
 
-        void submesh_node::cleanup(context *)
+        void submesh_node::cleanup(const simulation_context *)
         {
             int i, len = submeshes.size();
             for (i = 0; i < len; ++i)

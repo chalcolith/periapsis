@@ -71,10 +71,13 @@ namespace gsgl
 
 
         simulation::simulation(const config_record & sim_config, 
-                               display *console, context *sim_context, node *scenery)
+                               display *console, 
+                               simulation_context *sim_context, 
+                               drawing_context *draw_context,
+                               node *scenery)
             : scenegraph_object(), running(true),
-              console(console), sim_context(sim_context), scenery(scenery), 
-              start_time(0), time_scale(1), info_font(0), frame_deltas(NUM_FRAME_DELTAS)
+              console(console), sim_context(sim_context), draw_context(draw_context), scenery(scenery), 
+              start_time(0), time_scale(1), info_font(new platform::font(L"Sans", 18, platform::color(1, 0, 0))), frame_deltas(NUM_FRAME_DELTAS)
         {
             assert(console);
             assert(sim_context);
@@ -153,11 +156,6 @@ namespace gsgl
             else
                 throw runtime_exception(L"Unable to add viewpoint to simulation.");
 
-            // misc setup
-            color info_color(1, 0, 0);
-
-            info_font = new platform::font(L"Sans", 18, info_color);
-
             //
             for (int i = 0; i < NUM_FRAME_DELTAS; ++i)
                 frame_deltas[i] = 1.0f / 60.0f;
@@ -172,20 +170,13 @@ namespace gsgl
                 delete *i;
             }
             non_scenery_nodes.clear();
-
-            delete info_font;
         } // simulation::~simulation()
 
 
         void simulation::init_context()
         {
             sim_context->sim = this;
-            sim_context->console = console;
             sim_context->scenery = scenery;
-
-            sim_context->screen = console;
-            sim_context->view = view;
-            sim_context->cam = view->get_camera();
 
             //
             sim_context->time_scale = time_scale;
@@ -207,18 +198,21 @@ namespace gsgl
             sim_context->julian_start = jdn.get_jdn();
             sim_context->julian_cur = sim_context->julian_start;
             sim_context->julian_dt = 0;
+
+            //
+            draw_context->console = console;
+            draw_context->screen = console;
+            draw_context->view = view;
+            draw_context->cam = view->get_camera();
+            draw_context->num_lights = 0;
+            draw_context->render_flags = drawing_context::RENDER_NO_FLAGS;
         } // simulation::init_context()
 
 
         void simulation::update_context()
         {
             sim_context->sim = this;
-            sim_context->console = console;
             sim_context->scenery = scenery;
-
-            sim_context->screen = console;
-            sim_context->view = view;
-            sim_context->cam = view->get_camera();
 
             //
 
@@ -230,6 +224,10 @@ namespace gsgl
             sim_context->cur_tick = SDL_GetTicks();
             sim_context->delta_tick = sim_context->cur_tick - prev_tick;
 
+            // maximum frame time is 200 milliseconds (helps with debugging)
+            if (sim_context->delta_tick > 200)
+                sim_context->delta_tick = 200;
+
             sim_context->delta_time = time_scale * static_cast<double>(sim_context->delta_tick) / 1000.0;
             sim_context->cur_time += sim_context->delta_time;
 
@@ -237,6 +235,13 @@ namespace gsgl
 
             sim_context->julian_dt = sim_context->delta_time / math::julian_day::JDAY;
             sim_context->julian_cur += sim_context->julian_dt;
+
+            //
+            draw_context->console = console;
+            draw_context->screen = console;
+            draw_context->view = view;
+            draw_context->cam = view->get_camera();
+            draw_context->num_lights = 0;
         } // simulation::update_context()
 
 
@@ -257,8 +262,8 @@ namespace gsgl
 
         void simulation::pre_draw()
         {
-            budget_record br(L"prerender");
-            node::pre_draw_scene(sim_context, pre_rec);
+            budget_record br(L"pre-render");
+            node::pre_draw_scene(sim_context, draw_context, pre_rec);
         } // simulation::pre_draw()
 
 
@@ -267,12 +272,11 @@ namespace gsgl
             // draw screens that need to be rendered first
 
             // draw main console scene
-            sim_context->screen = console;
-            sim_context->view = view;
-            sim_context->cam = view->get_camera();
+            draw_context->screen = console;
+            draw_context->view = view;
+            draw_context->cam = view->get_camera();
 
-
-            node::draw_scene(sim_context, pre_rec);
+            node::draw_scene(sim_context, draw_context, pre_rec);
 
             {
                 budget_record br(L"sim info");
@@ -377,11 +381,11 @@ namespace gsgl
                 return true;
 
             case sg_event::RENDER_TOGGLE_LABELS:
-                sim_context->render_flags ^= context::RENDER_LABELS;
+                draw_context->render_flags ^= drawing_context::RENDER_LABELS;
                 return true;
 
             case sg_event::RENDER_TOGGLE_COORD_SYSTEMS:
-                sim_context->render_flags ^= context::RENDER_COORD_SYSTEMS;
+                draw_context->render_flags ^= drawing_context::RENDER_COORD_SYSTEMS;
                 return true;
 
             default:

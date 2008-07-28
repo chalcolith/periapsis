@@ -99,7 +99,8 @@ namespace gsgl
             : framework_object(), singleton<application>(),
               state(APP_NO_STATE), title(title),
               splash_screen(0), focus_widget(0), 
-              global_context(0), global_scenery(0), global_simulation(0),
+              global_sim_context(0), global_draw_context(0),
+              global_scenery(0), global_simulation(0),
               global_console(0), global_mapper(0),
               global_budget(0)
         {
@@ -187,10 +188,11 @@ namespace gsgl
         } // application::load_package()
 
 
-        void application::load_and_run_simulation(const string & fname, gsgl::scenegraph::context *c)
+        void application::load_and_run_simulation(const string & fname, gsgl::scenegraph::simulation_context *sim_context, gsgl::scenegraph::drawing_context *draw_context)
         {
             assert(global_scenery);
-            assert(c);
+            assert(sim_context);
+            assert(draw_context);
 
             if (global_simulation)
                 unload_and_quit_simulation();
@@ -199,8 +201,10 @@ namespace gsgl
 
             state = APP_SIM_LOADING;
             config_record sim_config(fname);
-            global_context = c;
-            global_simulation = new simulation(sim_config, global_console, global_context, global_scenery);
+
+            global_sim_context = sim_context;
+            global_draw_context = draw_context;
+            global_simulation = new simulation(sim_config, global_console, global_sim_context, global_draw_context, global_scenery);
             global_simulation->init();
 
             if (widgets.size())
@@ -225,10 +229,14 @@ namespace gsgl
             }
 
             // calling code will free context
-            if (global_context)
+            if (global_sim_context)
             {
-                delete global_context;
-                global_context = 0;
+                global_sim_context = 0;
+            }
+
+            if (global_draw_context)
+            {
+                global_draw_context = 0;
             }
 
             // remove viewpoint node
@@ -264,7 +272,6 @@ namespace gsgl
 
             // clean up
             delete global_simulation; global_simulation = 0;
-            delete global_context;    global_context = 0;
             delete global_scenery;    global_scenery = 0;
 
             delete splash_screen;     splash_screen = 0;
@@ -405,17 +412,17 @@ namespace gsgl
                             else if (e.key.keysym.sym == SDLK_w && (e.key.keysym.mod & (KMOD_CTRL | KMOD_ALT)))
                             {
                                 if (global_simulation)
-                                    global_simulation->get_context()->render_flags ^= scenegraph::context::RENDER_WIREFRAME;
+                                    global_draw_context->render_flags ^= scenegraph::drawing_context::RENDER_WIREFRAME;
                             }
                             else if (e.key.keysym.sym == SDLK_t && (e.key.keysym.mod & (KMOD_CTRL | KMOD_ALT)))
                             {
                                 if (global_simulation)
-                                    global_simulation->get_context()->render_flags ^= scenegraph::context::RENDER_NO_TEXTURES;
+                                    global_draw_context->render_flags ^= scenegraph::drawing_context::RENDER_NO_TEXTURES;
                             }
                             else if (e.key.keysym.sym == SDLK_l && (e.key.keysym.mod & (KMOD_CTRL | KMOD_ALT)))
                             {
                                 if (global_simulation)
-                                    global_simulation->get_context()->render_flags ^= scenegraph::context::RENDER_NO_LIGHTING;
+                                    global_draw_context->render_flags ^= scenegraph::drawing_context::RENDER_NO_LIGHTING;
                             }
 
                             // fall through
@@ -763,9 +770,13 @@ namespace gsgl
                 // get children
                 for (list<config_record>::const_iterator child = obj_config.get_children().iter(); child.is_valid(); ++child)
                 {
-                     node *child_node = load_objects(*child, status_string);
-                     if (child_node)
-                         result->add_child(child_node);
+                    if (child->get_name() != L"property")
+                    {
+
+                        node *child_node = load_objects(*child, status_string);
+                        if (child_node)
+                            result->add_child(child_node);
+                    }
                 }
             }
             else

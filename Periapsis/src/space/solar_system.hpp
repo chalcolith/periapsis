@@ -53,9 +53,9 @@ namespace periapsis
             solar_system(const gsgl::data::config_record & conf);
             virtual ~solar_system();
 
-            virtual gsgl::real_t get_priority(gsgl::scenegraph::context *);
-            virtual void init(gsgl::scenegraph::context *);
-            virtual void draw(gsgl::scenegraph::context *);
+            virtual gsgl::real_t draw_priority(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
+            virtual void init(const gsgl::scenegraph::simulation_context *);
+            virtual void draw(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
 
             BROKER_DECLARE_CREATOR(periapsis::space::solar_system);
         }; // class solar_system

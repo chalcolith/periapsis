@@ -257,13 +257,44 @@ namespace gsgl
         } // quaternion::dot()
 
 
-        quaternion quaternion::interpolate(const quaternion & start, const quaternion & end, const double & percent)
+        quaternion quaternion::interpolate(const quaternion & start, const quaternion & end, const double & t)
         {
             quaternion result;
 
-            double theta = ::acos(start.dot(end));
-            result = ( (start * ::sin((1.0f - percent) * theta)) + (end * ::sin(percent * theta)) ) * (1.0 / ::sin(theta));
-            result.normalize();
+            if (t <= 0)
+                return result = start;
+            if (t >= 1)
+                return result = end;
+
+            // dot product
+            double cos_angle = start.dot(end);
+            assert(cos_angle < 1.1);
+
+            // use -q if necessary
+            quaternion end2 = cos_angle < 0 ? end*-1 : end;
+
+            // if quaternions are almost the same, use linear interpolation
+            double s_start, s_end;
+
+            if (cos_angle > 0.9999)
+            {
+                s_start = 1 - t;
+                s_end = t;
+            }
+            else
+            {
+                double sin_angle = ::sqrt(1 - cos_angle * cos_angle);
+                double sin_inv = 1 / sin_angle;
+                double angle = ::atan2(sin_angle, cos_angle);
+                
+                s_start = ::sin(angle * (1 - t)) * sin_inv;
+                s_end   = ::sin(angle * t) * sin_inv;
+            }
+
+            result.w = s_start * start.w + s_end * end2.w;
+            result.x = s_start * start.x + s_end * end2.x;
+            result.y = s_start * start.y + s_end * end2.y;
+            result.z = s_start * start.z + s_end * end2.z;
 
             return result;
         } // quaternion::interpolate()

@@ -72,22 +72,22 @@ namespace periapsis
         } // spacecraft::~spacecraft()
 
 
-        void spacecraft::init(gsgl::scenegraph::context *c)
+        void spacecraft::init(const simulation_context *c)
         {
             vehicle::init(c);
         } // spacecraft::init()
 
 
-        void spacecraft::draw(gsgl::scenegraph::context *c)
+        void spacecraft::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
-            vehicle::draw(c);
+            vehicle::draw(sim_context, draw_context);
         } // spacecraft::draw()
 
 
         static int accel = 0;
 
 
-        void spacecraft::update(gsgl::scenegraph::context *c)
+        void spacecraft::update(const simulation_context *c)
         {
             vehicle::update(c);
 
@@ -104,7 +104,7 @@ namespace periapsis
         } // spacecraft::update()
 
 
-        void spacecraft::cleanup(gsgl::scenegraph::context *c)
+        void spacecraft::cleanup(const simulation_context *c)
         {
             vehicle::cleanup(c);
         } // spacecraft::cleanup()

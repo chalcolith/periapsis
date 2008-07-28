@@ -55,8 +55,8 @@ namespace periapsis
             orbital_frame(const gsgl::data::config_record & obj_config);
             virtual ~orbital_frame();
 
-            virtual void init(gsgl::scenegraph::context *);
-            virtual void update(gsgl::scenegraph::context *);
+            virtual void init(const gsgl::scenegraph::simulation_context *);
+            virtual void update(const gsgl::scenegraph::simulation_context *);
         }; // class orbital_frame
 
 

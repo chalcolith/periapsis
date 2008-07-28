@@ -112,10 +112,10 @@ namespace gsgl
             void unload();
 
             /// Tells OpenGL to use the shader program.
-            void bind();
+            void bind() const;
 
             /// Tells OpenGL to used the default shaders.
-            void unbind();
+            void unbind() const;
 
             /// Returns a uniform that represents the given type.
             template <typename T>

@@ -61,15 +61,15 @@ namespace gsgl
             const data::simple_array<vehicle_module *> & get_modules() const { return modules; }
 
             // node implementation
-            virtual gsgl::real_t get_priority(gsgl::scenegraph::context *);
+            virtual gsgl::real_t draw_priority(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
             
             virtual gsgl::real_t default_view_distance() const;
             virtual gsgl::real_t minimum_view_distance() const;
 
-            virtual void init(gsgl::scenegraph::context *c);
-            virtual void draw(gsgl::scenegraph::context *c);
-            virtual void update(gsgl::scenegraph::context *c);
-            virtual void cleanup(gsgl::scenegraph::context *c);
+            virtual void init(const gsgl::scenegraph::simulation_context *);
+            virtual void draw(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
+            virtual void update(const gsgl::scenegraph::simulation_context *);
+            virtual void cleanup(const gsgl::scenegraph::simulation_context *);
 
             // rigid_body implementation
             virtual gsgl::math::transform calculate_inertia_tensor(gsgl::math::vector & center_of_mass);

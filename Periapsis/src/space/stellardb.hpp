@@ -66,10 +66,10 @@ namespace periapsis
             stellar_db(const gsgl::data::config_record & conf);
             virtual ~stellar_db();
 
-            virtual gsgl::real_t get_priority(gsgl::scenegraph::context *);
-            virtual void init(gsgl::scenegraph::context *);
-            virtual void draw(gsgl::scenegraph::context *);
-            virtual void cleanup(gsgl::scenegraph::context *);
+            virtual gsgl::real_t draw_priority(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
+            virtual void init(const gsgl::scenegraph::simulation_context *);
+            virtual void draw(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
+            virtual void cleanup(const gsgl::scenegraph::simulation_context *);
 
             BROKER_DECLARE_CREATOR(periapsis::space::stellar_db);
 

@@ -97,7 +97,7 @@ namespace gsgl
             data::object_array<data::shared_pointer<submesh> > submeshes;
             bool opaque;
 
-            mutable gsgl::real_t cached_max_extent;
+            mutable gsgl::real_t cached_view_radius;
 
         public:
             submesh_node(const string & name, node *parent, bool opaque);
@@ -106,13 +106,13 @@ namespace gsgl
             bool get_opaque() { return opaque; }
             const data::object_array<data::shared_pointer<submesh> > & get_submeshes() const { return submeshes; }
 
-            virtual gsgl::real_t get_priority(gsgl::scenegraph::context *); 
-            virtual gsgl::real_t max_extent() const;
+            virtual gsgl::real_t draw_priority(const gsgl::scenegraph::simulation_context *sim_context, const gsgl::scenegraph::drawing_context *draw_context); 
+            virtual gsgl::real_t view_radius() const;
 
-            virtual void init(gsgl::scenegraph::context *c);
-            virtual void draw(gsgl::scenegraph::context *c);
-            virtual void update(gsgl::scenegraph::context *c);
-            virtual void cleanup(gsgl::scenegraph::context *c);
+            virtual void init(const gsgl::scenegraph::simulation_context *c);
+            virtual void draw(const gsgl::scenegraph::simulation_context *sim_context, const gsgl::scenegraph::drawing_context *draw_context);
+            virtual void update(const gsgl::scenegraph::simulation_context *c);
+            virtual void cleanup(const gsgl::scenegraph::simulation_context *c);
         }; // class submesh_node
 
 

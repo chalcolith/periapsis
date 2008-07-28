@@ -84,20 +84,20 @@ namespace periapsis
         } // star::~star()
 
 
-        void star::init(context *c)
+        void star::init(const simulation_context *c)
         {
             get_simple_sphere()->init(c);
         } // star::init()
 
 
-        void star::draw(context *c)
+        void star::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
             gsgl::real_t corona_radius = get_equatorial_radius() * 16;
 
             glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                   CHECK_GL_ERRORS();
             glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                      CHECK_GL_ERRORS();
 
-            gas_body::draw(c);
+            gas_body::draw(sim_context, draw_context);
 
             glPopClientAttrib();                                                                                CHECK_GL_ERRORS();
             glPopAttrib();                                                                                      CHECK_GL_ERRORS();
@@ -121,7 +121,7 @@ namespace periapsis
 
                 glMatrixMode(GL_PROJECTION);                                                                CHECK_GL_ERRORS();
                 glLoadIdentity();                                                                           CHECK_GL_ERRORS();
-                gluPerspective(c->cam->get_field_of_view(), c->screen->get_aspect_ratio(), near_plane, far_plane);
+                gluPerspective(draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), near_plane, far_plane);
 
                 glDisable(GL_DEPTH_TEST);                                                                   CHECK_GL_ERRORS();
 
@@ -132,7 +132,7 @@ namespace periapsis
 
                 glEnable(GL_CULL_FACE);                                                                         CHECK_GL_ERRORS();
 
-                if (c->render_flags & (context::RENDER_WIREFRAME | context::RENDER_NO_TEXTURES))
+                if (draw_context->render_flags & (drawing_context::RENDER_WIREFRAME | drawing_context::RENDER_NO_TEXTURES))
                 {
                     glPolygonMode(GL_FRONT, GL_LINE);
                 }
@@ -149,7 +149,7 @@ namespace periapsis
                 glPopAttrib();                                                                                      CHECK_GL_ERRORS();
 
                 // draw twice, but there won't be many stars
-                draw_name(c, 1, far_plane);
+                draw_name(draw_context, 1, far_plane);
             }
 
         } // star::draw()

@@ -60,8 +60,8 @@ namespace periapsis
             star(const gsgl::data::config_record &);
             virtual ~star();
 
-            virtual void init(gsgl::scenegraph::context *);
-            virtual void draw(gsgl::scenegraph::context *);
+            virtual void init(const gsgl::scenegraph::simulation_context *);
+            virtual void draw(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
 
             BROKER_DECLARE_CREATOR(periapsis::space::star);
         }; // class star

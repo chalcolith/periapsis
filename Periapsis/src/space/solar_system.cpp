@@ -82,23 +82,23 @@ namespace periapsis
         } // solar_system::~solar_system()
 
 
-        gsgl::real_t solar_system::get_priority(context *)
+        gsgl::real_t solar_system::draw_priority(const simulation_context *, const drawing_context *)
         {
             return NODE_DRAW_FIRST / 100.0f;
-        } // solar_system::get_priority()
+        } // solar_system::draw_priority()
 
 
-        void solar_system::init(context *c)
+        void solar_system::init(const simulation_context *c)
         {
             cs->init(c);
         } // solar_system::init()
 
 
-        void solar_system::draw(context *c)
+        void solar_system::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
-            if ((c->render_flags & context::RENDER_COORD_SYSTEMS) && get_name() == L"Sol System")
+            if ((draw_context->render_flags & drawing_context::RENDER_COORD_SYSTEMS) && get_name() == L"Sol System")
             {
-                cs->draw(c);
+                cs->draw(sim_context, draw_context);
             }
         } // solar_system::draw()
 

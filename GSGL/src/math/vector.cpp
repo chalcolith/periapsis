@@ -236,7 +236,7 @@ namespace gsgl
             data::list<string> tokens = str.split(L" ,\t");
             
             int num = 0;
-            for (data::list<string>::iterator i = tokens.iter(); i.is_valid(); ++i)
+            for (data::list<string>::iterator i = tokens.iter(); num < 4 && i.is_valid(); ++i)
             {
                 if (!i->is_empty())
                     res.data[num++] = units::parse(*i);

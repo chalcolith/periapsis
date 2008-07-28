@@ -33,6 +33,7 @@
 
 #include "simulation_tab.hpp"
 #include "main_window.hpp"
+#include "periapsis_app.hpp"
 
 #include "data/exception.hpp"
 #include "data/pointer.hpp"
@@ -66,8 +67,11 @@ namespace periapsis
 
     simulation_tab::simulation_tab()
         : widget(0, 0, 0, 0, 0, main_window::FOREGROUND, main_window::BACKGROUND),
-          title_box(0), time_box(0), view_box(0), load_button(0), save_button(0), go_button(0), 
-          waiting_for_scenery(false), sim_is_ready(false),
+          title_box(0), time_box(0), view_box(0), vehicle_box(0),
+          load_button(0), save_button(0), go_button(0), 
+          waiting_for_scenery(false),
+          waiting_for_vehicles(false),
+          sim_is_ready(false),
           current_sim_record(0)
     {
     } // simulation_tab::simulation_tab()
@@ -129,6 +133,20 @@ namespace periapsis
             waiting_for_scenery = true;
         }
 
+        //if (!vehicle_box)
+        //{
+        //    int baseline = eight/2 + BUTTON_SPACE/2;
+
+        //    vehicle_box = new sim_vehicle_box(this,
+        //                                      BUTTON_SPACE, baseline + BUTTON_SPACE,
+        //                                      get_w() / 2 - 2 * BUTTON_SPACE, 6 * eighth - 2*BUTTON_SPACE,
+        //                                      main_window::FOREGROUND, main_window::BACKGROUND);
+        //    treebox *vehicle_tree = vehicle_box->get_vehicle_box();
+        //    treebox_node *temp_node = new treebox_node(vehicle_tree, 0, main_window::FOREGROUND, main_window::BACKGROUND, L"Loading...", 0);
+
+        //    waiting_for_vehicles = true;
+        //}
+
 
         if (!load_button)
         {
@@ -171,9 +189,14 @@ namespace periapsis
             }
         }
 
+        // check for vehicles
+        if (waiting_for_vehicles)
+        {
+
+        }
+
         // check for simulation
-        sim_is_ready = (time_box->get_jdn() != 0)
-            && (view_box->get_scenery_box()->get_selected_node() != 0);
+        sim_is_ready = (time_box->get_jdn() != 0) && (view_box->get_scenery_box()->get_selected_node() != 0);
 
         if (sim_is_ready)
         {
@@ -242,8 +265,15 @@ namespace periapsis
         delete sim_rec;
         sim_rec = 0;
 
-        // context will be deleted by application when the simulation exits
-        application::global_instance()->load_and_run_simulation(fname, new space::space_context());
+        periapsis_app *app = dynamic_cast<periapsis_app *>(application::global_instance());
+        if (app)
+        {
+            app->load_and_run_simulation(fname, app->get_sim_context(), app->get_draw_context());
+        }
+        else
+        {
+            throw runtime_exception(L"You cannot run a Periapsis simulation within a different application!");
+        }
     } // handle_run_simulation()
 
 

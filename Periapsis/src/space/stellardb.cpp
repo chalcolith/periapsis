@@ -95,10 +95,10 @@ namespace periapsis
         } // stellar_db::~stellar_db()
 
 
-        gsgl::real_t stellar_db::get_priority(context *)
+        gsgl::real_t stellar_db::draw_priority(const simulation_context *, const drawing_context *)
         {
             return NODE_DRAW_FIRST / 10.0f;
-        } // stellar_db::get_priority()
+        } // stellar_db::draw_priority()
 
 
         //
@@ -238,22 +238,14 @@ namespace periapsis
 
         //
 
-        void stellar_db::init(context *c)
+        void stellar_db::init(const simulation_context *)
         {
             star_shader.load();
             uniform_farthest_distance = star_shader.get_uniform<float>(L"FarthestStarDistance");
-
-            //star_shader.bind();
-
-            //int fd_loc = glGetUniformLocation(star_shader.get_id(), "FarthestStarDistance");                        CHECK_GL_ERRORS();
-            //if (fd_loc != GL_INVALID_VALUE)
-            //    glUniform1f(fd_loc, farthest_distance * get_scale());
-
-            //star_shader.unbind();
         } // stellar_db::init()
 
 
-        void stellar_db::cleanup(gsgl::scenegraph::context *c)
+        void stellar_db::cleanup(const simulation_context *)
         {
             star_shader.unload();
         } // stellar_db::clean()
@@ -263,7 +255,7 @@ namespace periapsis
         static float scale_factor = 1.0;
 
 
-        void stellar_db::draw(context *c)
+        void stellar_db::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
             // setup
             glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                       CHECK_GL_ERRORS();
@@ -278,7 +270,7 @@ namespace periapsis
             // projection
             glMatrixMode(GL_PROJECTION);                                                                            CHECK_GL_ERRORS();
             glLoadIdentity();                                                                                       CHECK_GL_ERRORS();
-            gluPerspective(c->cam->get_field_of_view(), c->screen->get_aspect_ratio(), near_plane, far_plane);      CHECK_GL_ERRORS();
+            gluPerspective(draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), near_plane, far_plane);      CHECK_GL_ERRORS();
 
             // depth test and blend
             glClearDepth(1);                                                                                        CHECK_GL_ERRORS();
@@ -314,21 +306,21 @@ namespace periapsis
             glPopAttrib();                                                                                          CHECK_GL_ERRORS();
 
             // draw names
-            if ((c->render_flags & context::RENDER_LABELS))
+            if ((draw_context->render_flags & drawing_context::RENDER_LABELS))
             {
-                font *label_font = dynamic_cast<space_context *>(c)->DEFAULT_LABEL_FONT;
+                const font *label_font = dynamic_cast<const space_drawing_context *>(draw_context)->DEFAULT_LABEL_FONT.ptr();
 
-                c->screen->record_3d_text_info();
-                c->screen->draw_text_start();
+                draw_context->screen->record_3d_text_info();
+                draw_context->screen->draw_text_start();
 
                 int i, len = star_names.size();
                 for (i = 0; i < len; ++i)
                 {
                     vector pos(star_name_vertices[i*3+0]*star_scale, star_name_vertices[i*3+1]*star_scale, star_name_vertices[i*3+2]*star_scale);
-                    c->screen->draw_3d_text(pos, label_font, *star_names[i], 4, -8);
+                    draw_context->screen->draw_3d_text(pos, label_font, *star_names[i], 4, -8);
                 }
 
-                c->screen->draw_text_stop();
+                draw_context->screen->draw_text_stop();
             }
         }; // stellar_db::draw()
 

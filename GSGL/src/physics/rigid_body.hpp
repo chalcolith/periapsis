@@ -109,8 +109,8 @@ namespace gsgl
             virtual void calculate_force_and_torque(const double & t, math::vector & force, math::vector & torque) = 0;
 
             // node implementation
-            virtual void init(gsgl::scenegraph::context *c);
-            virtual void update(gsgl::scenegraph::context *c);
+            virtual void init(const gsgl::scenegraph::simulation_context *);
+            virtual void update(const gsgl::scenegraph::simulation_context *c);
 
         private:
             void compute_derived_quantities();

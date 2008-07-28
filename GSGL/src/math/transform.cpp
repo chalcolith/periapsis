@@ -360,7 +360,7 @@ namespace gsgl
             data::list<string> tokens = str.split(L" ,");
 
             int num = 0;
-            for (data::list<string>::iterator i = tokens.iter(); i.is_valid(); ++i)
+            for (data::list<string>::iterator i = tokens.iter(); num < 15 && i.is_valid(); ++i)
             {
                 if (!i->is_empty())
                     res[num++] = units::parse(*i);
@@ -368,6 +368,7 @@ namespace gsgl
 
             return res;
         } // transform::parse()
+
 
         //
         

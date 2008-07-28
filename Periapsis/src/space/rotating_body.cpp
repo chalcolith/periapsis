@@ -580,7 +580,7 @@ namespace periapsis
         //
 
 
-        void rotating_body::init(context *c)
+        void rotating_body::init(const simulation_context *c)
         {
             if (rotator)
                 rotator->calc_orientation(c->julian_cur, get_orientation(), get_angular_velocity());
@@ -589,7 +589,7 @@ namespace periapsis
         } // rotating_body::init()
 
 
-        void rotating_body::update(context *c)
+        void rotating_body::update(const simulation_context *c)
         {
             if (rotator)
                 rotator->calc_orientation(c->julian_cur, get_orientation(), get_angular_velocity());

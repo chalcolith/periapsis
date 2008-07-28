@@ -68,8 +68,8 @@ namespace periapsis
             rotating_body(const gsgl::string & name, gsgl::scenegraph::node *parent, body_rotator *rotator);
             virtual ~rotating_body();
 
-            virtual void init(gsgl::scenegraph::context *);
-            virtual void update(gsgl::scenegraph::context *);
+            virtual void init(const gsgl::scenegraph::simulation_context *);
+            virtual void update(const gsgl::scenegraph::simulation_context *);
         }; // class rotating_body
 
     } // namespace space

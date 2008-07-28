@@ -49,7 +49,6 @@ namespace gsgl
     namespace scenegraph
     {
 
-        class context;
         class node;
 
         namespace utils
@@ -67,41 +66,40 @@ namespace gsgl
                 coord_system(node *parent, const gsgl::real_t radius, const gsgl::real_t degree_step, const platform::color & draw_color);
                 ~coord_system();
 
-                void init(context *);
-                void draw(context *);
+                void init(const simulation_context *);
+                void draw(const simulation_context *, const drawing_context *);
             }; // class coord_system
 
 
             //
-            class SCENEGRAPH_API simple_sphere
+            class SCENEGRAPH_API sphere
             {
                 node *parent;
                 const int num_steps;
                 const gsgl::real_t equatorial_radius, polar_radius;
                 
+                gsgl::real_t tex_offset_x, tex_offset_y;
+
                 platform::vertex_buffer vertices;
                 platform::index_buffer indices;
 
-                platform::texture *tex;
-                const gsgl::real_t tex_offset_x, tex_offset_y;
-
             public:
-                simple_sphere(node *parent, const int num_latitude_steps, 
-                              const gsgl::real_t equatorial_radius, const gsgl::real_t polar_radius,
-                              platform::texture *tex, const gsgl::real_t tex_offset_x = 0, const gsgl::real_t tex_offset_y = 0);
-                ~simple_sphere();
+                sphere(node *parent, const int num_latitude_steps, 
+                       const gsgl::real_t equatorial_radius, const gsgl::real_t polar_radius,
+                       const gsgl::real_t tex_offset_x = 0, const gsgl::real_t tex_offset_y = 0);
+                ~sphere();
 
                 const gsgl::real_t get_tex_offset_x() const { return tex_offset_x; }
                 const gsgl::real_t get_tex_offset_y() const { return tex_offset_y; }
 
-                void init(context *);
-                void draw(context *);
-            }; // class simple_sphere
+                void init(const simulation_context *);
+                void draw(const simulation_context *, const drawing_context *);
+            }; // class sphere
 
 
             //
 
-            /// \return A point in the node's frame transformed to eye coordinates.
+            /// \return A point in the node's frame transformed to eye coordinates.  This will only return valid results during a node::draw() call, when the node's modelview matrix is valid.
             SCENEGRAPH_API math::vector pos_in_eye_space(node *frame, const math::vector & pos = math::vector::ZERO);
 
             /// \return The cosine of the angle between the given point and the eye direction.
@@ -145,13 +143,13 @@ namespace gsgl
 
                 gsgl::real_t & get_radius() { return radius; }
 
-                virtual void init(gsgl::scenegraph::context *c);
-                virtual void draw(gsgl::scenegraph::context *c);
-                virtual void update(gsgl::scenegraph::context *c);
-                virtual void cleanup(gsgl::scenegraph::context *c);
+                virtual void init(const gsgl::scenegraph::simulation_context *);
+                virtual void draw(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
+                virtual void update(const gsgl::scenegraph::simulation_context *);
+                virtual void cleanup(const gsgl::scenegraph::simulation_context *);
 
-                virtual gsgl::real_t get_priority(gsgl::scenegraph::context *);
-                virtual gsgl::real_t max_extent() const;
+                virtual gsgl::real_t draw_priority(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
+                virtual gsgl::real_t view_radius() const;
 
                 virtual gsgl::real_t default_view_distance() const;
                 virtual gsgl::real_t minimum_view_distance() const;

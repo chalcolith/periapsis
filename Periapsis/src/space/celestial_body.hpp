@@ -40,7 +40,7 @@
 #include "space/atmosphere.hpp"
 #include "space/lithosphere.hpp"
 
-#include "platform/texture.hpp"
+#include "platform/material.hpp"
 #include "scenegraph/utils.hpp"
 
 namespace periapsis
@@ -65,14 +65,12 @@ namespace periapsis
             atmosphere  *atmo_child;
             lithosphere *litho_child;
 
-            gsgl::platform::texture *simple_colormap;
-            gsgl::real_t simple_color_x_offset, simple_color_y_offset;
+            gsgl::scenegraph::utils::sphere *simple_sphere;   ///< Used to draw simple spheroids if there's no litho or atomosphere info.
+            gsgl::platform::material        *simple_material; ///< Material to draw simple sphere.
 
-            gsgl::platform::texture *simple_heightmap;
-            gsgl::real_t simple_height_x_offset, simple_height_y_offset;
-            gsgl::real_t simple_height_max;
-
-            gsgl::scenegraph::utils::simple_sphere *sphere;
+            gsgl::math::vector simple_color_offset;  ///< Offset (only x and y are used) to draw the color map of the simple sphere.
+            gsgl::math::vector simple_height_offset; ///< Offset (only x and y are used) for the height map of the simple sphere.
+            gsgl::real_t       simple_height_max;    ///< Maximum height of the simple sphere heightmap.
 
         public:
             celestial_body(const gsgl::data::config_record & obj_config);
@@ -82,33 +80,28 @@ namespace periapsis
             gsgl::real_t get_polar_radius() const { return polar_radius; }
             gsgl::real_t get_equatorial_radius() const { return equatorial_radius; }
 
-            const rotating_body * get_rotating_frame() const { return rotating_frame; }
-            const atmosphere * get_atmosphere() const { return atmo_child; }
-            const lithosphere * get_lithosphere() const { return litho_child; }
+            const rotating_body *get_rotating_frame() const { return rotating_frame; }
+            const atmosphere    *get_atmosphere() const { return atmo_child; }
+            const lithosphere   *get_lithosphere() const { return litho_child; }
 
-            const gsgl::platform::texture *get_simple_colormap() const { return simple_colormap; }
-            const gsgl::real_t get_simple_color_x_offset() const { return simple_color_x_offset; }
-            const gsgl::real_t get_simple_color_y_offset() const { return simple_color_y_offset; }
-
-            const gsgl::platform::texture *get_simple_heightmap() const { return simple_heightmap; }
-            const gsgl::real_t get_simple_height_x_offset() const { return simple_height_x_offset; }
-            const gsgl::real_t get_simple_height_y_offset() const { return simple_height_y_offset; }
-            const gsgl::real_t get_simple_height_max() const { return simple_height_max; }
-
-            const gsgl::scenegraph::utils::simple_sphere *get_simple_sphere() const { return sphere; }
+            const gsgl::scenegraph::utils::sphere *get_simple_sphere() const { return simple_sphere; }
+            const gsgl::platform::material        *get_simple_material() const { return simple_material; }
+            const gsgl::math::vector             & get_simple_color_offset() const { return simple_color_offset; }
+            const gsgl::math::vector             & get_simple_height_offset() const { return simple_height_offset; }
+            const gsgl::real_t                   & get_simple_height_max() const { return simple_height_max; }
 
             //
-            virtual gsgl::real_t max_extent() const;
+            virtual gsgl::real_t view_radius() const;
             virtual gsgl::real_t default_view_distance() const;
             virtual gsgl::real_t minimum_view_distance() const;
 
-            virtual gsgl::real_t get_priority(gsgl::scenegraph::context *);
-            virtual void init(gsgl::scenegraph::context *c);
-            virtual void draw(gsgl::scenegraph::context *c); ///< This will draw the simple sphere, so override if you want to do something else...
+            virtual gsgl::real_t draw_priority(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
+            virtual void init(const gsgl::scenegraph::simulation_context *c);
+            virtual void draw(const gsgl::scenegraph::simulation_context *sim_context, const gsgl::scenegraph::drawing_context *draw_context); ///< This will draw the simple sphere, so override if you want to do something else...
 
             //
             void draw_point(float width);
-            void draw_name(gsgl::scenegraph::context *c, gsgl::real_t near_plane, gsgl::real_t far_plane);
+            void draw_name(const gsgl::scenegraph::drawing_context *c, gsgl::real_t near_plane, gsgl::real_t far_plane);
 
             static gsgl::data::config_variable<gsgl::real_t> MIN_PIXEL_WIDTH;
 
@@ -116,7 +109,7 @@ namespace periapsis
             rotating_body * & get_rotating_frame() { return rotating_frame; }
             atmosphere * & get_atmosphere() { return atmo_child; }
             lithosphere * & get_lithosphere() { return litho_child; }
-            gsgl::scenegraph::utils::simple_sphere * & get_simple_sphere() { return sphere; }
+            gsgl::scenegraph::utils::sphere * & get_simple_sphere() { return simple_sphere; }
         }; // class celestial_body
 
 

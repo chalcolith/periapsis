@@ -45,16 +45,19 @@ namespace periapsis
     namespace space
     {
 
-        class SPACE_API space_context
-            : public gsgl::scenegraph::context
+        class SPACE_API space_drawing_context
+            : public gsgl::scenegraph::drawing_context
         {
         public:
             gsgl::platform::color DEFAULT_LABEL_COLOR;
-            gsgl::platform::font *DEFAULT_LABEL_FONT;
+            gsgl::data::shared_pointer<gsgl::platform::font> DEFAULT_LABEL_FONT;
 
-            space_context();
-            virtual ~space_context();
-        }; // class space_context
+            space_drawing_context();
+            space_drawing_context(const space_drawing_context &);
+            virtual ~space_drawing_context();
+
+            virtual gsgl::scenegraph::drawing_context *copy();
+        }; // class space_drawing_context
 
 
     } // namespace space

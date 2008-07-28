@@ -348,8 +348,6 @@ namespace gsgl
                 impl = new texture_impl(full_path, format, static_cast<GLenum>(texture_unit), !(flags & TEXTURE_LOAD_UNCOMPRESSED));
                 textures[category][full_name] = impl; // assign this after in case the creator throws
             }
-
-            impl->attach();
         } // texture::texture()
 
 
@@ -376,7 +374,7 @@ namespace gsgl
             }
             else
             {
-                gsgl::log(string::format(L"texture: creating font   '%ls'", ptr_name.w_string()));
+                gsgl::log(string::format(L"texture: creating texture '%ls'", ptr_name.w_string()));
                 impl = new texture_impl(surface, ptr_name, format, static_cast<GLenum>(texture_unit), !(flags & TEXTURE_LOAD_UNCOMPRESSED));
 
                 textures[category][ptr_name] = impl;
@@ -396,7 +394,7 @@ namespace gsgl
         } // texture::get_texture_unit()
         
 
-        void texture::bind(gsgl::flags_t render_flags)
+        void texture::bind(gsgl::flags_t render_flags) const 
         {
             assert(impl.ptr());
             impl->bind();
@@ -420,7 +418,7 @@ namespace gsgl
         } // texture::bind()
 
 
-        void texture::unbind()
+        void texture::unbind() const
         {
             assert(impl.ptr());
             impl->unbind();

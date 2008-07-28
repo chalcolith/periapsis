@@ -38,6 +38,7 @@
 
 #include "datetime_box.hpp"
 #include "sim_view_box.hpp"
+#include "sim_vehicle_box.hpp"
 
 namespace gsgl
 {
@@ -75,14 +76,17 @@ namespace periapsis
         : public gsgl::framework::widget
     {
         gsgl::framework::textbox *title_box;
-        datetime_box *time_box;
-        sim_view_box *view_box;
+        datetime_box             *time_box;
+        sim_view_box             *view_box;
+        sim_vehicle_box          *vehicle_box;
 
         gsgl::framework::button *load_button;
         gsgl::framework::button *save_button;
         gsgl::framework::button *go_button;
 
         bool waiting_for_scenery;
+        bool waiting_for_vehicles;
+
         bool sim_is_ready;
 
         gsgl::data::config_record *current_sim_record;

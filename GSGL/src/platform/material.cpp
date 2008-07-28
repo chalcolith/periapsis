@@ -220,7 +220,11 @@ namespace gsgl
               shininess(128), 
               render_flat(false)
         {
-            // TODO: fill in from configuration
+            if (!conf[L"color_map"].is_empty())
+            {
+                string fname = conf.get_directory().get_full_path() + conf[L"color_map"];
+                color_map = new texture(L"material", fname, texture::TEXTURE_NO_FLAGS, texture::TEXTURE_COLORMAP, 0);
+            }
         } // material_impl::material_impl()
         
 
@@ -232,7 +236,7 @@ namespace gsgl
         //////////////////////////////////////////////////////////////
 
         material::material(const string & category, const config_record & conf)
-            : platform_object(), impl(0), draw_flags(DRAW_AMBIENT | DRAW_DIFFUSE)
+            : platform_object(), impl(0), draw_flags(DRAW_NO_FLAGS)
         {
             string mat_key = string::format(L"%ls::%ls::%d", category.w_string(), conf.get_file().get_full_path().w_string(), conf.get_line_number());
 
@@ -266,7 +270,7 @@ namespace gsgl
 
 
         material::material(const string & category, const string & fname, const string & mat_name)
-            : platform_object(), impl(0), draw_flags(DRAW_AMBIENT | DRAW_DIFFUSE)
+            : platform_object(), impl(0), draw_flags(DRAW_NO_FLAGS)
         {
             // get material key in case we've already loaded it
             io::file ff(fname);
@@ -314,6 +318,62 @@ namespace gsgl
         } // material::~material()
 
 
+        const platform::color & material::get_ambient() const
+        {
+            assert(impl.ptr());
+            return impl->ambient;
+        } // material::get_ambient()
+
+
+        const platform::color & material::get_diffuse() const
+        {
+            assert(impl.ptr());
+            return impl->diffuse;
+        } // material::get_diffuse()
+
+
+        const platform::color & material::get_specular() const
+        {
+            assert(impl.ptr());
+            return impl->specular;
+        } // material::get_specular()
+
+
+        const platform::color & material::get_emissive() const
+        {
+            assert(impl.ptr());
+            return impl->emissive;
+        } // material::get_emissive()
+
+
+        const platform::texture *material::get_color_map() const
+        {
+            assert(impl.ptr());
+            return impl->color_map.ptr();
+        } // material::get_color_map()
+
+
+        const platform::texture *material::get_normal_map() const
+        {
+            assert(impl.ptr());
+            return impl->normal_map.ptr();
+        } // material::get_normal_map()
+
+
+        const platform::texture *material::get_height_map() const
+        {
+            assert(impl.ptr());
+            return impl->height_map.ptr();
+        } // material::get_height_map()
+
+
+        const platform::shader_program *material::get_shader() const
+        {
+            assert(impl.ptr());
+            return impl->shader.ptr();
+        } // material::shader()
+
+
         void material::load()
         {
             assert(impl.ptr());
@@ -350,24 +410,34 @@ namespace gsgl
         } // material::unload()
 
 
-        void material::bind(gsgl::flags_t render_flags)
+        void material::bind(gsgl::flags_t render_flags) const
         {
             assert(impl.ptr());
 
             if (draw_flags & DRAW_DIFFUSE)
+            {
                 glColor4fv(impl->diffuse.get_val());                                                                    CHECK_GL_ERRORS();
+            }
 
             if (draw_flags & DRAW_AMBIENT)
+            {
                 glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, impl->ambient.get_val());                                   CHECK_GL_ERRORS();
+            }
 
             if (draw_flags & DRAW_DIFFUSE)
+            {
                 glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, impl->diffuse.get_val());                                   CHECK_GL_ERRORS();
+            }
 
             if (draw_flags & DRAW_SPECULAR)
+            {
                 glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, impl->specular.get_val());                                 CHECK_GL_ERRORS();
+            }
 
             if (draw_flags & DRAW_EMISSIVE)
+            {
                 glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, impl->emissive.get_val());                                 CHECK_GL_ERRORS();
+            }
 
             glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, impl->shininess);                                          CHECK_GL_ERRORS();
 
@@ -395,7 +465,7 @@ namespace gsgl
         } // material::bind()
 
 
-        void material::unbind()
+        void material::unbind() const
         {
             assert(impl.ptr());
 

@@ -13,9 +13,11 @@
 			mass="1.988435e30kg" 
 			equatorial_radius="1.392e9m" 
 			polar_radius="1.392e9m"
-            	rotator="periapsis::space::rotator::sol::sol"
-			simple_map="Sol System/sol_color.jpg"
-			corona="Sol System/sol_corona.png" />
+            	rotator="periapsis::space::rotator::sol::sol">
+
+			<property name="simple_material" color_map="Sol System/sol_color.jpg"/>
+			<property name="corona_material" color_map="Sol System/sol_corona.png"/>
+		</periapsis::space::star>
 
 
 		<periapsis::space::planet_system name="Mercury Barysystem" 

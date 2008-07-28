@@ -108,6 +108,9 @@ namespace gsgl
 
             const float *get_val() const { return val; }
 
+            //
+            static color parse(const gsgl::string &);
+
             // 
             static const color BLACK;
             static const color WHITE;

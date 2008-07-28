@@ -127,6 +127,9 @@ namespace gsgl
             const dictionary<gsgl::string, gsgl::string> & get_attributes() const;
             dictionary<gsgl::string, gsgl::string> & get_attributes();
             
+            /// \return true if the config node contains a child with the given name.
+            bool contains_child(const gsgl::string & path) const;
+
             /// \return The child with the given path, separated by '/'.
             const config_record & get_child(const gsgl::string & path) const;
             config_record & get_child(const gsgl::string & path);
@@ -143,7 +146,7 @@ namespace gsgl
             void save();
 
         private:
-            config_record & find_child(gsgl::data::list<gsgl::string>::iterator & pos_in_path, bool create);
+            config_record *find_child(gsgl::data::list<gsgl::string>::iterator & pos_in_path, bool create);
 
             void to_stream(io::text_stream &) const;            
             void from_stream(io::text_stream &);

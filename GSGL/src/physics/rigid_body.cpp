@@ -120,14 +120,15 @@ namespace gsgl
         } // rigid_body::~rigid_body()
 
 
-        void rigid_body::init(gsgl::scenegraph::context *c)
+        /// \todo When saving, make sure to account for the center of mass...
+        void rigid_body::init(const gsgl::scenegraph::simulation_context *c)
         {
             // calculate inertia tensor, mass and center of mass
             jbody = calculate_inertia_tensor(center_of_mass);
             jbody_inverse = jbody.inverse();
             mass_inverse = 1.0f / mass;
 
-            // move us to the center of mass
+            // move the center of our space to the world-space position of our center of mass
             get_translation() = get_translation() + center_of_mass;
 
             // move sub-nodes to rotate about the center of mass
@@ -148,7 +149,7 @@ namespace gsgl
         } // rigid_body::init()
 
 
-        void rigid_body::update(gsgl::scenegraph::context *c)
+        void rigid_body::update(const gsgl::scenegraph::simulation_context *c)
         {
             // calculate next state
             cur_state = motion_solver->next(cur_state, c->cur_time, c->delta_time);

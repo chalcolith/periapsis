@@ -165,7 +165,7 @@ namespace gsgl
         } // display::draw_text_start()
 
 
-        void display::draw_2d_text(const gsgl::real_t x, const gsgl::real_t y, font *f, const string & str)
+        void display::draw_2d_text(const gsgl::real_t x, const gsgl::real_t y, const font *f, const string & str)
         {
             glMatrixMode(GL_MODELVIEW);                                                                             CHECK_GL_ERRORS();
             glLoadIdentity();                                                                                       CHECK_GL_ERRORS();
@@ -174,7 +174,7 @@ namespace gsgl
         } // display::draw_2d_text()
 
 
-        void display::draw_3d_text(const vector & p, font *f, const string & str, const gsgl::real_t x_offset, const gsgl::real_t y_offset)
+        void display::draw_3d_text(const vector & p, const font *f, const string & str, const gsgl::real_t x_offset, const gsgl::real_t y_offset)
         {
             vector p_in_clip_space = text_draw_pm * p;
             

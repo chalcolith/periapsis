@@ -57,79 +57,75 @@ namespace periapsis
             : orbital_frame(obj_config), 
               mass(1), polar_radius(1), equatorial_radius(1),
               rotating_frame(0), atmo_child(0), litho_child(0), 
-              simple_colormap(0), simple_color_x_offset(0), simple_color_y_offset(0),
-              simple_heightmap(0), simple_height_x_offset(0), simple_height_y_offset(0), simple_height_max(0),
-              sphere(0)
+              simple_sphere(0), simple_material(0), simple_height_max(0)
         {
             mass              = units::parse(obj_config[L"mass"]);              assert(mass > 0);
             polar_radius      = units::parse(obj_config[L"polar_radius"]);      assert(polar_radius > 0);
             equatorial_radius = units::parse(obj_config[L"equatorial_radius"]); assert(equatorial_radius > 0);
 
-            if (!obj_config[L"simple_map"].is_empty())
-                simple_colormap = new gsgl::platform::texture(L"scene graph", obj_config.get_directory().get_full_path() + obj_config[L"simple_map"], texture::TEXTURE_ENV_MODULATE);
-
-            if (simple_colormap)
+            for (list<config_record>::const_iterator child = obj_config.get_children().iter(); child.is_valid(); ++child)
             {
-                simple_color_x_offset = static_cast<gsgl::real_t>(obj_config[L"simple_map_x_offset"].to_double());
-                simple_color_y_offset = static_cast<gsgl::real_t>(obj_config[L"simple_map_y_offset"].to_double());
+                if (child->get_name() == L"property")
+                {
+                    if ((*child)[L"name"] == L"simple_material")
+                    {
+                        simple_material = new material(L"space", *child);
 
-                sphere = new utils::simple_sphere(this, 32, equatorial_radius, polar_radius, simple_colormap, simple_color_x_offset, simple_color_y_offset);
-            }
+                        if (!(*child)[L"color_offset"].is_empty())
+                            simple_color_offset = vector::parse((*child)[L"color_offset"]);
+                        if (!(*child)[L"height_offset"].is_empty())
+                            simple_height_offset = vector::parse((*child)[L"height_offset"]);
+                        if (!(*child)[L"height_max"].is_empty())
+                            simple_height_max = units::parse((*child)[L"height_max"]);
 
-            if (!obj_config[L"simple_height"].is_empty())
-                simple_heightmap = new gsgl::platform::texture(L"scene graph", obj_config.get_directory().get_full_path() + obj_config[L"simple_height"], texture::TEXTURE_LOAD_NO_PARAMS | texture::TEXTURE_LOAD_UNCOMPRESSED, texture::TEXTURE_HEIGHTMAP, 1);
-
-            if (simple_heightmap)
-            {
-                simple_height_x_offset = static_cast<gsgl::real_t>(obj_config[L"simple_height_x_offset"].to_double());
-                simple_height_y_offset = static_cast<gsgl::real_t>(obj_config[L"simple_height_y_offset"].to_double());
-                simple_height_max = static_cast<gsgl::real_t>(obj_config[L"simple_height_max"].to_double());
+                        simple_sphere = new utils::sphere(this, 32, equatorial_radius, polar_radius, simple_color_offset.get_x(), simple_color_offset.get_y());
+                    }
+                }
             }
         } // celestial_body::celestial_body()
 
 
         celestial_body::~celestial_body()
         {
-            delete sphere;
-            delete simple_colormap;
-            delete simple_heightmap;
+            delete simple_material;
+            delete simple_sphere;
         } // celestial_body::~celestial_body()
 
 
-        gsgl::real_t celestial_body::max_extent() const
+        gsgl::real_t celestial_body::view_radius() const
         {
             return gsgl::max_val(polar_radius, equatorial_radius);
-        } // celestial_body::max_extent()
+        } // celestial_body::view_radius()
 
 
         gsgl::real_t celestial_body::default_view_distance() const
         {
-            return max_extent() * 3;
+            return view_radius() * 3;
         } // celestial_body::default_view_distance()
 
 
         gsgl::real_t celestial_body::minimum_view_distance() const
         {
-            return max_extent();
+            return view_radius();
         } // celestial_body::minimum_view_distance()
 
 
-        gsgl::real_t celestial_body::get_priority(gsgl::scenegraph::context *)
+        gsgl::real_t celestial_body::draw_priority(const simulation_context *, const drawing_context *)
         {
             return utils::pos_in_eye_space(this).mag2();
-        } // celestial_body::get_priority()
+        } // celestial_body::draw_priority()
 
 
-        void celestial_body::init(context *c)
+        void celestial_body::init(const simulation_context *c)
         {
-            if (sphere)
-                sphere->init(c);
+            if (simple_sphere)
+                simple_sphere->init(c);
 
             // the various children will be initialized by the scene drawing function
         } // celestial_body::init()
 
 
-        void celestial_body::draw(context *c)
+        void celestial_body::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
             glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                   CHECK_GL_ERRORS();
             glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                      CHECK_GL_ERRORS();
@@ -147,10 +143,10 @@ namespace periapsis
 
             glMatrixMode(GL_PROJECTION);                                                                        CHECK_GL_ERRORS();
             glLoadIdentity();                                                                                   CHECK_GL_ERRORS();
-            gluPerspective(c->cam->get_field_of_view(), c->screen->get_aspect_ratio(), near_plane, far_plane);  CHECK_GL_ERRORS();
+            gluPerspective(draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), near_plane, far_plane);  CHECK_GL_ERRORS();
 
             // check to see if we're out of range
-            gsgl::real_t screen_width = utils::pixel_size(dist, radius, c->cam->get_field_of_view(), c->screen->get_height());
+            gsgl::real_t screen_width = utils::pixel_size(dist, radius, draw_context->cam->get_field_of_view(), draw_context->screen->get_height());
 
             color::WHITE.bind();
 
@@ -161,7 +157,7 @@ namespace periapsis
             }
             else
             {
-                utils::simple_sphere *sph = get_simple_sphere();
+                utils::sphere *sph = get_simple_sphere();
 
                 if (sph)
                 {
@@ -180,10 +176,10 @@ namespace periapsis
                     glEnable(GL_DEPTH_TEST);                                                                        CHECK_GL_ERRORS();
 
                     glEnable(GL_CULL_FACE);                                                                         CHECK_GL_ERRORS();
-                    glPolygonMode(GL_FRONT_AND_BACK, (c->render_flags & context::RENDER_WIREFRAME) ? GL_LINE : GL_FILL);     CHECK_GL_ERRORS();
+                    glPolygonMode(GL_FRONT_AND_BACK, (draw_context->render_flags & drawing_context::RENDER_WIREFRAME) ? GL_LINE : GL_FILL);     CHECK_GL_ERRORS();
 
                     // set up lighting
-                    if (!(c->render_flags & context::RENDER_NO_LIGHTING) && !(get_draw_flags() & NODE_DRAW_UNLIT))
+                    if (!(draw_context->render_flags & drawing_context::RENDER_NO_LIGHTING) && !(get_draw_flags() & NODE_DRAW_UNLIT))
                     {
                         glEnable(GL_LIGHTING);                                                                          CHECK_GL_ERRORS();
 
@@ -197,7 +193,10 @@ namespace periapsis
                         glMaterialf(GL_FRONT, GL_SHININESS, 8);                                                         CHECK_GL_ERRORS();
                     }
 
-                    sph->draw(c);
+                    if (simple_material)
+                        simple_material->bind();
+
+                    sph->draw(sim_context, draw_context);
 
                     if (rb)
                     {
@@ -212,7 +211,7 @@ namespace periapsis
             glPopAttrib();                                                                                      CHECK_GL_ERRORS();
 
             // draw name
-            draw_name(c, 1, far_plane);
+            draw_name(draw_context, 1, far_plane);
         } // celestial_body::draw()
 
 
@@ -237,14 +236,14 @@ namespace periapsis
         } // celestial_body::draw_point()
 
 
-        void celestial_body::draw_name(context *c, gsgl::real_t near_plane, gsgl::real_t far_plane)
+        void celestial_body::draw_name(const drawing_context *c, gsgl::real_t near_plane, gsgl::real_t far_plane)
         {
-            if ((c->render_flags & context::RENDER_LABELS) && !get_name().is_empty())
+            if ((c->render_flags & drawing_context::RENDER_LABELS) && !get_name().is_empty())
             {
                 glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                   CHECK_GL_ERRORS();
                 glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                      CHECK_GL_ERRORS();
 
-                gsgl::platform::font *label_font = dynamic_cast<space_context *>(c)->DEFAULT_LABEL_FONT;
+                const gsgl::platform::font *label_font = dynamic_cast<const space_drawing_context *>(c)->DEFAULT_LABEL_FONT.ptr();
 
                 glMatrixMode(GL_PROJECTION);                                                                    CHECK_GL_ERRORS();
                 glLoadIdentity();                                                                               CHECK_GL_ERRORS();

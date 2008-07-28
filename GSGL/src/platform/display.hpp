@@ -87,10 +87,10 @@ namespace gsgl
             void draw_text_start();
 
             /// Draws text at the given screen coordinates.
-            void draw_2d_text(const gsgl::real_t x, const gsgl::real_t y, font *f, const gsgl::string & str);
+            void draw_2d_text(const gsgl::real_t x, const gsgl::real_t y, const font *f, const gsgl::string & str);
 
             /// Draws text at the given world coordinates.
-            void draw_3d_text(const math::vector & p, font *f, const gsgl::string & str, const gsgl::real_t x_offset = 0, const gsgl::real_t y_offset = 0);
+            void draw_3d_text(const math::vector & p, const font *f, const gsgl::string & str, const gsgl::real_t x_offset = 0, const gsgl::real_t y_offset = 0);
 
             /// Tears down the orthogonal view frustum for drawing text.
             void draw_text_stop();

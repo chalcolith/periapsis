@@ -83,6 +83,8 @@ namespace gsgl
         }; // class material_impl
 
 
+        /// Material.
+        /// By convention, the color map will be in texture unit 0, the normal map in unit 1, the heightmap in unit 2.
         class PLATFORM_API material
             : public platform_object
         {
@@ -116,13 +118,18 @@ namespace gsgl
             const platform::color & get_specular() const;
             const platform::color & get_emissive() const;
 
+            const platform::texture *get_color_map() const;
+            const platform::texture *get_normal_map() const;
+            const platform::texture *get_height_map() const;
+            const platform::shader_program *get_shader() const;
+
             bool is_opaque() const;
 
             void load();
             void unload();
 
-            void bind(gsgl::flags_t render_flags = 0);
-            void unbind();
+            void bind(gsgl::flags_t render_flags = 0) const;
+            void unbind() const;
 
             /// Clears the cache for a particular category.  Throws an exception if any of the materials still have references to them.
             /// \note Pass the string "__ALL__" to clear all the caches at once.

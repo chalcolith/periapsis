@@ -41,7 +41,10 @@
 #include "platform/texture.hpp"
 #include "platform/lowlevel.hpp"
 
+#include "scenegraph/context.hpp"
 #include "scenegraph/simulation.hpp"
+
+#include "space/space_context.hpp"
 
 using namespace gsgl;
 using namespace gsgl::data;
@@ -53,14 +56,20 @@ namespace periapsis
 {
 
     periapsis_app::periapsis_app(const string & title, const int & argc, const char **argv)
-        : application(title, argc, argv)
+        : application(title, argc, argv),
+          sim_context(0), draw_context(0)
     {
+        sim_context = new gsgl::scenegraph::simulation_context();
+        draw_context = new space::space_drawing_context();
     } // periapsis_app::periapsis_app()
 
 
     periapsis_app::~periapsis_app()
     {
         // main window will be deleted in application destructor
+
+        delete sim_context;
+        delete draw_context;
     } // periapsis_app::~periapsis_app()
 
 
@@ -79,5 +88,15 @@ namespace periapsis
     void periapsis_app::update()
     {
     } // periapsis_app::update()
+
+
+    void periapsis_app::cleanup()
+    {
+        delete sim_context;
+        sim_context = 0;
+        
+        delete draw_context;
+        draw_context = 0;
+    } // periapsis_app::cleanup()
 
 } // namespace periapsis

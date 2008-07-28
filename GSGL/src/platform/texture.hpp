@@ -120,7 +120,7 @@ namespace gsgl
         /// The reason that texture_impl exists is that you may want to use different parameters for drawing with the same buffer.
         class PLATFORM_API texture
         {
-            data::shared_pointer<texture_impl> impl;
+            mutable data::shared_pointer<texture_impl> impl;
 
             gsgl::flags_t flags;
             int gl_env, gl_wrap, gl_filter;
@@ -175,8 +175,9 @@ namespace gsgl
 
             void load(); ///< Load the texture into the video card.
             void unload(); ///< Unload the texture from the video card.
-            void bind(gsgl::flags_t render_flags = TEXTURE_RENDER_ANISOTROPIC);   ///< Bind the texture for use in OpenGL.
-            void unbind(); ///< Unbind the texture for use in OpenGL.
+
+            void bind(gsgl::flags_t render_flags = TEXTURE_RENDER_ANISOTROPIC) const;   ///< Bind the texture for use in OpenGL.
+            void unbind() const; ///< Unbind the texture for use in OpenGL.
 
             void update(); ///< Update the texture on the card from the memory buffer.
 

@@ -82,7 +82,7 @@ namespace gsgl
         static config_variable<gsgl::real_t> TRANSITION_TIME(L"scenegraph/freeview/transition_time", 0.25f);
 
 
-        void freeview::reset(context *c)
+        void freeview::reset()
         {
             assert(get_parent());
 
@@ -103,7 +103,7 @@ namespace gsgl
         } // freeview::reset()
 
 
-        void freeview::update(context *c)
+        void freeview::update(const simulation_context *c)
         {
             if (c->cur_tick < transition_end_tick)
             {
@@ -124,7 +124,7 @@ namespace gsgl
         } // freeview::update()
 
 
-        bool freeview::rot_absolute(sg_event::event_code code, context *c)
+        bool freeview::rot_absolute(sg_event::event_code code, const simulation_context *c)
         {
             if (code != last_code)
             {
@@ -173,7 +173,7 @@ namespace gsgl
         } // freeview::rot_absolute()
 
         
-        bool freeview::rot_relative(sg_event::event_code code, context *c)
+        bool freeview::rot_relative(sg_event::event_code code, const simulation_context *c)
         {
             if (code != last_code)
             {
@@ -222,10 +222,8 @@ namespace gsgl
         } // freeview::rot_relative()
 
         
-        bool freeview::handle_event(context *c, sg_event & e)
+        bool freeview::handle_event(const simulation_context *c, sg_event & e)
         {
-            assert(c->view == this);
-
             switch (e.get_code())
             {
             case sg_event::VIEW_ROT_X_POS:
@@ -280,7 +278,7 @@ namespace gsgl
                 return true;
 
             case sg_event::VIEW_RESET:
-                reset(c);
+                reset();
                 return true;
 
             default:

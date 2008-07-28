@@ -38,8 +38,11 @@
 #include "scenegraph/node.hpp"
 #include "scenegraph/context.hpp"
 #include "scenegraph/freeview.hpp"
+
 #include "platform/display.hpp"
 #include "platform/font.hpp"
+
+#include "data/pointer.hpp"
 #include "data/config.hpp"
 #include "data/list.hpp"
 
@@ -56,8 +59,9 @@ namespace gsgl
         {
             bool running;
 
-            platform::display *console;  ///< The game's single console.
-            context *sim_context;
+            platform::display  *console;      ///< The game's single console.
+            simulation_context *sim_context;  ///< The global simulation context.  Provided by the application, because different applications may subclass it.
+            drawing_context    *draw_context; ///< The drawing context of the console.  Other screens may have different drawing contexts.
 
             node *scenery;  ///< The root node of the simulation scene graph.
             data::list<node *> non_scenery_nodes; ///< These get removed from the scene graph & deleted when the simulation ends.
@@ -67,7 +71,7 @@ namespace gsgl
             time_t start_time;
             gsgl::real_t time_scale;
 
-            platform::font *info_font;
+            data::smart_pointer<platform::font> info_font;
             data::simple_array<gsgl::real_t> frame_deltas;
 
             node::pre_draw_rec pre_rec;
@@ -75,12 +79,14 @@ namespace gsgl
         public:
             simulation(const data::config_record & sim_config, 
                        platform::display *console, 
-                       context *sim_context,
+                       simulation_context *sim_context,
+                       drawing_context *draw_context,
                        scenegraph::node *scenery);
             ~simulation();
 
             bool is_running() const { return running; }
-            context *get_context() { return sim_context; }
+            simulation_context *get_sim_context() { return sim_context; }
+            drawing_context    *get_draw_context() { return draw_context; }
             
             void init();     ///< This is called at the beginning of a simulation.  It will initialize all the nodes in the scene graph.
             void pre_draw(); ///< This is called at the beginning of each frame.  It records drawing information for all the nodes in the scene graph.

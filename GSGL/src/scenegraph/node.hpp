@@ -142,8 +142,7 @@ namespace gsgl
             {
                 NODE_NO_DRAW_FLAGS    = 0,
                 NODE_NO_FRUSTUM_CHECK = 1 << 0, ///< Don't perform a frustum check when drawing this node.
-                NODE_DUMMY_OBJECT     = 1 << 2, ///< This node should never be drawn.
-                NODE_DRAW_UNLIT       = 1 << 3  ///< This node should not be lit.
+                NODE_DRAW_UNLIT       = 1 << 1  ///< This node should not be lit.
             };
 
             /// \return The node's draw flags (a bitset using node_draw_flags).
@@ -179,10 +178,10 @@ namespace gsgl
             }; // struct pre_draw_rec
 
             /// Collect information about the scene to draw.  Unsafe to call while update is being called in the tree.
-            static void pre_draw_scene(gsgl::scenegraph::context *c, pre_draw_rec & rec);
+            static void pre_draw_scene(gsgl::scenegraph::simulation_context *sim_context, gsgl::scenegraph::drawing_context *draw_context, pre_draw_rec & rec);
 
             /// Draws a scene.  Safe to call while update is also being called in the tree.
-            static void draw_scene(gsgl::scenegraph::context *c, pre_draw_rec & rec);
+            static void draw_scene(gsgl::scenegraph::simulation_context *sim_context, gsgl::scenegraph::drawing_context *draw_context, pre_draw_rec & rec);
 
             /// @}
 
@@ -190,22 +189,22 @@ namespace gsgl
             /// @{
 
             /// Called when the simulation is created.  The node's modelview matrix is invalid at this point.
-            virtual void init(gsgl::scenegraph::context *c);
+            virtual void init(const gsgl::scenegraph::simulation_context *sim_context);
             
             /// Called to draw the node.  The node's modelview matrix is in the correct state for drawing, and already loaded into the OpenGL modelview matrix.
-            virtual void draw(gsgl::scenegraph::context *c);
+            virtual void draw(const gsgl::scenegraph::simulation_context *sim_context, const gsgl::scenegraph::drawing_context *draw_context);
             
             /// Called from the root of the world-tree up to update the node's state.  The node's modelview matrix is that of the previously-drawn frame.
-            virtual void update(gsgl::scenegraph::context *c);
+            virtual void update(const gsgl::scenegraph::simulation_context *sim_context);
 
             /// Called when the simulation is done.
-            virtual void cleanup(gsgl::scenegraph::context *c);
+            virtual void cleanup(const gsgl::scenegraph::simulation_context *sim_context);
 
             /// Called with events.
-            virtual bool handle_event(gsgl::scenegraph::context *c, sg_event & e);
+            virtual bool handle_event(const gsgl::scenegraph::simulation_context *sim_context, sg_event & e);
             
             /// Called to save the node to a config_record structure.
-            virtual data::config_record *save() const;
+            virtual void save(gsgl::data::config_record & rec_to_save) const;
             
             /// @}
 
@@ -222,17 +221,17 @@ namespace gsgl
             /// A value of NODE_DRAW_SOLID means the object is solid and should be drawn after the painter's algorithm.
             /// A value of NODE_DRAW_TRANSLUCENT means the object is translucent and should be drawn after solid objects.
             /// A value > NODE_DRAW_TRANSLUCENT is interpreted as the distance to the object.  Objects that return > 2.0 are drawn with a painter's algorithm.
-            virtual gsgl::real_t get_priority(gsgl::scenegraph::context *);
+            virtual gsgl::real_t draw_priority(const gsgl::scenegraph::simulation_context *sim_context, const gsgl::scenegraph::drawing_context *draw_context);
 
             /// Should return the maximum extent of the object (in the node's coordinates, i.e. not scaled to meters).
-            virtual gsgl::real_t max_extent() const;
+            virtual gsgl::real_t view_radius() const;
             
             virtual gsgl::real_t default_view_distance() const;
             virtual gsgl::real_t minimum_view_distance() const;
             /// @}
 
         private:
-            static void build_draw_list(node *cur, node *prev, context *c, const math::transform & modelview, pre_draw_rec &);
+            static void build_draw_list(node *cur, node *prev, simulation_context *sim_context, drawing_context *draw_context, const math::transform & modelview, pre_draw_rec &);
         }; // class node
         
     } // namespace scenegraph

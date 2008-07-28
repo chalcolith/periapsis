@@ -39,17 +39,62 @@ namespace gsgl
     namespace scenegraph
     {
     
-        context::context() 
-            : sim(0), console(0), scenery(0), 
-              screen(0), view(0), cam(0),
+        simulation_context::simulation_context() 
+            : sim(0), 
+              scenery(0),
+              time_scale(1),
+              frame(0),
+              start_t_time(0),
+              cur_t_time(0),
+              start_tick(0),
+              cur_tick(0),
+              delta_tick(0),
+              start_time(0),
+              cur_time(0),
+              delta_time(0),
+              julian_start(0),
+              julian_cur(0),
+              julian_dt(0)
+        {
+        } // simulation_context::simulation_context()
+        
+
+        simulation_context::~simulation_context()
+        {
+        } // simulation_context::~simulation_context()
+
+
+        drawing_context::drawing_context()
+            : console(0), 
+              screen(0), 
+              view(0), 
+              cam(0), 
               num_lights(0),
               render_flags(RENDER_NO_FLAGS)
         {
-        } // context::context()
-        
-        context::~context()
+        } // drawing_context::drawing_context()
+
+
+        drawing_context::drawing_context(const drawing_context & dc)
+            : console(dc.console),
+              screen(dc.screen),
+              view(dc.view),
+              cam(dc.cam),
+              num_lights(dc.num_lights),
+              render_flags(dc.render_flags)
         {
-        } // context::~context()
+        } // drawing_context::drawing_context()
+
+
+        drawing_context::~drawing_context()
+        {
+        } // drawing_context::~drawing_context()
+
+
+        drawing_context *drawing_context::copy()
+        {
+            return new drawing_context(*this);
+        } // drawing_context::copy()
 
     } // namespace scenegraph
     

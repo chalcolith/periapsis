@@ -55,7 +55,7 @@ namespace periapsis
             planet_earth(const gsgl::data::config_record & obj_config);
             virtual ~planet_earth();
 
-            virtual void update(gsgl::scenegraph::context *c);
+            virtual void update(const gsgl::scenegraph::simulation_context *c);
 
             BROKER_DECLARE_CREATOR(periapsis::space::planet_earth);
         }; // class planet_earth

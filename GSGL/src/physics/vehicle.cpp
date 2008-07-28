@@ -98,10 +98,10 @@ namespace gsgl
 
         //
 
-        gsgl::real_t vehicle::get_priority(gsgl::scenegraph::context *)
+        gsgl::real_t vehicle::draw_priority(const simulation_context *, const drawing_context *)
         {
             return node::NODE_DRAW_IGNORE;
-        } // vehicle::get_priority()
+        } // vehicle::draw_priority()
 
             
         gsgl::real_t vehicle::default_view_distance() const
@@ -116,25 +116,25 @@ namespace gsgl
         } // vehicle::minimum_view_distance()
 
 
-        void vehicle::init(gsgl::scenegraph::context *c)
+        void vehicle::init(const simulation_context *c)
         {
             rigid_body::init(c);
         } // vehicle::init()
 
 
-        void vehicle::draw(gsgl::scenegraph::context *c)
+        void vehicle::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
-            rigid_body::draw(c);
+            rigid_body::draw(sim_context, draw_context);
         } // vehicle::draw()
 
 
-        void vehicle::update(gsgl::scenegraph::context *c)
+        void vehicle::update(const simulation_context *c)
         {
             rigid_body::update(c);
         } // vehicle::update()
 
 
-        void vehicle::cleanup(gsgl::scenegraph::context *c)
+        void vehicle::cleanup(const simulation_context *c)
         {
             rigid_body::cleanup(c);
         } // vehicle::cleanup()

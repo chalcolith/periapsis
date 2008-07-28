@@ -71,7 +71,8 @@ namespace gsgl
     namespace scenegraph
     {
         class event_map;
-        class context;
+        class simulation_context;
+        class drawing_context;
         class simulation;
         class node;
     } // namespace scenegraph
@@ -111,9 +112,11 @@ namespace gsgl
             widget *focus_widget;
 
             //
-            scenegraph::context    *global_context;
-            scenegraph::node       *global_scenery;
-            scenegraph::simulation *global_simulation;
+            scenegraph::simulation_context *global_sim_context;
+            scenegraph::drawing_context    *global_draw_context;
+
+            scenegraph::node               *global_scenery;
+            scenegraph::simulation         *global_simulation;
             
             platform::display      *global_console;
             scenegraph::event_map  *global_mapper;
@@ -162,7 +165,7 @@ namespace gsgl
             void load_scenery(platform::synchronized<string> & status_string);
             void unload_scenery();
 
-            void load_and_run_simulation(const string & fname, gsgl::scenegraph::context *c); ///< Loads and runs a simulation.  This will set the top widget to be invisible.
+            void load_and_run_simulation(const string & fname, gsgl::scenegraph::simulation_context *sim_context, gsgl::scenegraph::drawing_context *draw_context); ///< Loads and runs a simulation.  This will set the top widget to be invisible.
             void unload_and_quit_simulation();                  ///< Unloads and quits a simulation.  This will set the top widget to be visible, so make sure that any extra widgets have been popped off the stack.
             void quit_application();                            ///< Quits the application.  Unloads and quits any simulation loaded.
 

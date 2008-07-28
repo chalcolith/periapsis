@@ -62,7 +62,7 @@ namespace periapsis
         } // earth::~earth()
 
 
-        void planet_earth::update(context *c)
+        void planet_earth::update(const simulation_context *c)
         {
             large_rocky_body::update(c);
 

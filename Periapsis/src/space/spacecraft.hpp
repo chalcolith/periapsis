@@ -63,10 +63,10 @@ namespace periapsis
 
             /// \name node implementation
             /// @{
-            virtual void init(gsgl::scenegraph::context *c);
-            virtual void draw(gsgl::scenegraph::context *c);
-            virtual void update(gsgl::scenegraph::context *c);
-            virtual void cleanup(gsgl::scenegraph::context *c);
+            virtual void init(const gsgl::scenegraph::simulation_context *);
+            virtual void draw(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
+            virtual void update(const gsgl::scenegraph::simulation_context *);
+            virtual void cleanup(const gsgl::scenegraph::simulation_context *);
             /// @}
 
             /// \name rigid_body implementation

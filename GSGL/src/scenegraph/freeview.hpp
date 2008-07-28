@@ -73,16 +73,16 @@ namespace gsgl
             camera *get_camera() { return cam; }
             bool is_relative() const { return relative; }
 
-            void reset(gsgl::scenegraph::context *c = 0);
+            void reset();
             
-            virtual void update(gsgl::scenegraph::context *c);
-            virtual bool handle_event(gsgl::scenegraph::context *c, sg_event & e);
+            virtual void update(const gsgl::scenegraph::simulation_context *c);
+            virtual bool handle_event(const gsgl::scenegraph::simulation_context *c, sg_event & e);
 
             BROKER_DECLARE_CREATOR(gsgl::scenegraph::freeview);
 
         private:
-            bool rot_absolute(sg_event::event_code code, gsgl::scenegraph::context *c);
-            bool rot_relative(sg_event::event_code code, gsgl::scenegraph::context *c);
+            bool rot_absolute(sg_event::event_code code, const gsgl::scenegraph::simulation_context *c);
+            bool rot_relative(sg_event::event_code code, const gsgl::scenegraph::simulation_context *c);
         }; // class freeview
         
     } // namespace scenegraph

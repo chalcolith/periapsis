@@ -74,7 +74,8 @@ namespace gsgl
             quaternion operator* (const double &) const;
 
             double dot(const quaternion &) const;
-            static quaternion interpolate(const quaternion & start, const quaternion & end, const double & percent);
+
+            static quaternion interpolate(const quaternion & start, const quaternion & end, const double & t);
         }; // class quaternion
         
 
