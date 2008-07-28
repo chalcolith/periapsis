@@ -98,6 +98,7 @@ namespace periapsis
             virtual gsgl::real_t draw_priority(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
             virtual void init(const gsgl::scenegraph::simulation_context *c);
             virtual void draw(const gsgl::scenegraph::simulation_context *sim_context, const gsgl::scenegraph::drawing_context *draw_context); ///< This will draw the simple sphere, so override if you want to do something else...
+            virtual void cleanup(const gsgl::scenegraph::simulation_context *sim_context);
 
             //
             void draw_point(float width);

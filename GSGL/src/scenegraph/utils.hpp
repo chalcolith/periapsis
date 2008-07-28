@@ -66,8 +66,8 @@ namespace gsgl
                 coord_system(node *parent, const gsgl::real_t radius, const gsgl::real_t degree_step, const platform::color & draw_color);
                 ~coord_system();
 
-                void init(const simulation_context *);
-                void draw(const simulation_context *, const drawing_context *);
+                void init(const gsgl::scenegraph::simulation_context *);
+                void draw(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
             }; // class coord_system
 
 
@@ -92,8 +92,9 @@ namespace gsgl
                 const gsgl::real_t get_tex_offset_x() const { return tex_offset_x; }
                 const gsgl::real_t get_tex_offset_y() const { return tex_offset_y; }
 
-                void init(const simulation_context *);
-                void draw(const simulation_context *, const drawing_context *);
+                void init(const gsgl::scenegraph::simulation_context *);
+                void draw(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
+                void cleanup(const gsgl::scenegraph::simulation_context *);
             }; // class sphere
 
 

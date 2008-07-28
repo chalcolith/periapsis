@@ -290,6 +290,13 @@ namespace gsgl
             } // sphere::draw()
 
 
+            void sphere::cleanup(const simulation_context *)
+            {
+                vertices.unload();
+                indices.unload();
+            } // sphere::cleanup()
+
+
             //////////////////////////////////////////////////////////
 
             vector pos_in_eye_space(node *frame, const vector & p)

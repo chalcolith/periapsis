@@ -120,6 +120,8 @@ namespace periapsis
         {
             if (simple_sphere)
                 simple_sphere->init(c);
+            if (simple_material)
+                simple_material->load();
 
             // the various children will be initialized by the scene drawing function
         } // celestial_body::init()
@@ -213,6 +215,15 @@ namespace periapsis
             // draw name
             draw_name(draw_context, 1, far_plane);
         } // celestial_body::draw()
+
+
+        void celestial_body::cleanup(const simulation_context *c)
+        {
+            if (simple_sphere)
+                simple_sphere->cleanup(c);
+            if (simple_material)
+                simple_material->unload();
+        } // celestial_body::cleanup()
 
 
         void celestial_body::draw_point(float width)

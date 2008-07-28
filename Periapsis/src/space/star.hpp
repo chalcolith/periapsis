@@ -39,8 +39,8 @@
 #include "space/gas_body.hpp"
 
 #include "data/broker.hpp"
-#include "platform/texture.hpp"
 #include "scenegraph/light.hpp"
+#include "platform/material.hpp"
 
 
 namespace periapsis
@@ -52,9 +52,8 @@ namespace periapsis
         class SPACE_API star
             : public gas_body
         {
-            gsgl::platform::texture *surface;
-            gsgl::platform::texture *corona;
             gsgl::scenegraph::light *star_light;
+            gsgl::platform::material *corona_material;
 
         public:
             star(const gsgl::data::config_record &);
@@ -62,6 +61,7 @@ namespace periapsis
 
             virtual void init(const gsgl::scenegraph::simulation_context *);
             virtual void draw(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
+            virtual void cleanup(const gsgl::scenegraph::simulation_context *);
 
             BROKER_DECLARE_CREATOR(periapsis::space::star);
         }; // class star

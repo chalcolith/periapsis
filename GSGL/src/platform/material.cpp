@@ -451,6 +451,9 @@ namespace gsgl
             }
 
             //
+            if (draw_flags & DRAW_COLOR_MAP)
+                glEnable(GL_TEXTURE_2D);
+
             if ((draw_flags & DRAW_COLOR_MAP) && impl->color_map.ptr())
                 impl->color_map->bind();
 

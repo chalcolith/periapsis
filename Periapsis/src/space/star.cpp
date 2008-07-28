@@ -56,15 +56,15 @@ namespace periapsis
 
 
         star::star(const config_record & obj_config)
-            : gas_body(obj_config), surface(0), corona(0), star_light(0)
+            : gas_body(obj_config), corona_material(0), star_light(0)
         {
             get_draw_flags() |= NODE_DRAW_UNLIT;
 
-            // load textures
-            if (!obj_config[L"corona"].is_empty())
-            {
-                corona = new texture(L"scene graph", obj_config.get_directory().get_full_path() + obj_config[L"corona"], texture::TEXTURE_ENV_REPLACE);
-            }
+            //// load textures
+            //if (!obj_config[L"corona"].is_empty())
+            //{
+            //    corona = new texture(L"scene graph", obj_config.get_directory().get_full_path() + obj_config[L"corona"], texture::TEXTURE_ENV_REPLACE);
+            //}
 
             // create light
             star_light = new light(this);
@@ -79,14 +79,16 @@ namespace periapsis
 
         star::~star()
         {
-            delete corona;
-            delete surface;
+            delete corona_material;
         } // star::~star()
 
 
         void star::init(const simulation_context *c)
         {
-            get_simple_sphere()->init(c);
+            gas_body::init(c);
+
+            if (corona_material)
+                corona_material->load();
         } // star::init()
 
 
@@ -103,7 +105,7 @@ namespace periapsis
             glPopAttrib();                                                                                      CHECK_GL_ERRORS();
 
             // draw corona
-            if (corona)
+            if (corona_material)
             {
                 glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                   CHECK_GL_ERRORS();
                 glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                      CHECK_GL_ERRORS();
@@ -140,7 +142,7 @@ namespace periapsis
                 {
                     glPolygonMode(GL_FRONT, GL_FILL);
                     glEnable(GL_TEXTURE_2D);                                                                    CHECK_GL_ERRORS();
-                    corona->bind();
+                    corona_material->bind();
                 }
 
                 utils::draw_billboard(this, vector::ZERO, corona_radius);
@@ -153,6 +155,15 @@ namespace periapsis
             }
 
         } // star::draw()
+
+
+        void star::cleanup(const simulation_context *c)
+        {
+            gas_body::cleanup(c);
+
+            if (corona_material)
+                corona_material->unload();
+        } // star::cleanup()
 
 
     } // namespace space
