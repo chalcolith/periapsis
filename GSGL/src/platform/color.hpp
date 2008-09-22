@@ -105,8 +105,10 @@ namespace gsgl
 
             /// Sets the current OpenGL color to the value of this color.
             void bind() const;
+            void unbind() const;
 
-            const float *get_val() const { return val; }
+            /// Returns a pointer to the color's array, suitable for passing to OpenGL color functions.
+            const float *ptr() const { return val; }
 
             //
             static color parse(const gsgl::string &);
@@ -114,6 +116,7 @@ namespace gsgl
             // 
             static const color BLACK;
             static const color WHITE;
+            static const color HOT_PINK;
         }; // class color
 
 
@@ -126,7 +129,7 @@ namespace gsgl
         template <>
         inline gsgl::string gsgl::data::config_variable<gsgl::platform::color>::get_string() const 
         {
-            return gsgl::string::format(L"%f %f %f %f", value.get_val()[0], value.get_val()[1], value.get_val()[2], value.get_val()[3]);
+            return gsgl::string::format(L"%f %f %f %f", value.ptr()[0], value.ptr()[1], value.ptr()[2], value.ptr()[3]);
         } // config_variable<gsgl::platform::color>::get_string()
 
 
@@ -138,7 +141,7 @@ namespace gsgl
             for (gsgl::data::list<gsgl::string>::iterator i = numbers.iter(); pos < 4 && i.is_valid(); ++i)
             {
                 if (!i->is_empty())
-                    const_cast<float *>(value.get_val())[pos++] = static_cast<float>(i->to_double());
+                    const_cast<float *>(value.ptr())[pos++] = static_cast<float>(i->to_double());
             }
         } // config_variable<gsgl::platform::color>::assign_from_string()
 

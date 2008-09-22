@@ -60,7 +60,7 @@ namespace periapsis
         recalc_mode mode;
 
     public:
-        datetime_box(widget *parent, int x, int y, int w, int h, const gsgl::platform::color & fg, const gsgl::platform::color & bg);
+        datetime_box(gsgl::platform::display & screen, widget *parent, int x, int y, int w, int h, const gsgl::platform::color & fg, const gsgl::platform::color & bg);
         virtual ~datetime_box();
 
         const double & get_jdn() const;

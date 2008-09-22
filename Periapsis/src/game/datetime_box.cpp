@@ -52,16 +52,16 @@ namespace periapsis
     static config_variable<int> SPACING(L"ui/datetime_box/spacing", 8);
 
 
-    datetime_box::datetime_box(widget *parent, int x, int y, int w, int h, const color & fg, const color & bg)
-        : widget(parent, x, y, w, h, fg, bg), label(0), julian_input(0), text_input(0), jdn(0), mode(RECALC_NONE)
+    datetime_box::datetime_box(platform::display & screen, widget *parent, int x, int y, int w, int h, const color & fg, const color & bg)
+        : widget(screen, parent, x, y, w, h, fg, bg), label(0), julian_input(0), text_input(0), jdn(0), mode(RECALC_NONE)
     {
-        label = new textbox(this, 0, 0, LABEL_WIDTH, h, fg, bg, main_window::FONT_FACE, main_window::FONT_SIZE);
+        label = new textbox(screen, this, 0, 0, LABEL_WIDTH, h, fg, bg, main_window::FONT_FACE, main_window::FONT_SIZE);
         label->get_background()[color::COMPONENT_ALPHA] = 0;
         label->get_text() = L"Date & Time:";
 
-        julian_input = new textbox(this, LABEL_WIDTH, 0, JULIAN_WIDTH + SPACING, h, fg, bg, main_window::FONT_FACE, main_window::FONT_SIZE);
+        julian_input = new textbox(screen, this, LABEL_WIDTH, 0, JULIAN_WIDTH + SPACING, h, fg, bg, main_window::FONT_FACE, main_window::FONT_SIZE);
 
-        text_input = new textbox(this, LABEL_WIDTH + JULIAN_WIDTH + SPACING*2, 0, w - (LABEL_WIDTH+JULIAN_WIDTH+SPACING*2), h, fg, bg, main_window::FONT_FACE, main_window::FONT_SIZE);
+        text_input = new textbox(screen, this, LABEL_WIDTH + JULIAN_WIDTH + SPACING*2, 0, w - (LABEL_WIDTH+JULIAN_WIDTH+SPACING*2), h, fg, bg, main_window::FONT_FACE, main_window::FONT_SIZE);
         text_input->get_text() = L"<no date & time specified>";
     } // datetime_box::datetime_box()
 

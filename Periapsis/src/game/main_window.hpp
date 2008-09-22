@@ -73,7 +73,7 @@ namespace periapsis
         load_scenery_thread *loading_thread;
 
     public:
-        main_window(const gsgl::string & title, const int x, const int y);
+        main_window(gsgl::platform::display & screen, const gsgl::string & title, const int x, const int y);
         virtual ~main_window();
 
         //

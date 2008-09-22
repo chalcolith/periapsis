@@ -40,12 +40,6 @@
 namespace gsgl
 {
 
-    namespace platform
-    {
-        class font;
-    } // namespace platform
-
-
     namespace framework
     {
 
@@ -72,7 +66,7 @@ namespace gsgl
                 TEXT_SCROLL = (1 << 1) 
             };
 
-            textbox(widget *parent, 
+            textbox(platform::display & screen, widget *parent, 
                     const int x, const int y, const int w, const int h, 
                     const platform::color & fg, const platform::color & bg,
                     const gsgl::string & font_face, const int font_size, 

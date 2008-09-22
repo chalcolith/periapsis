@@ -71,7 +71,7 @@ namespace gsgl
 
             void load();
             void unload();
-            void draw(gsgl::flags_t render_flags = 0);
+            void draw(const scenegraph::drawing_context *draw_context);
         }; // class submesh
 
 

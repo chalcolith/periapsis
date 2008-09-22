@@ -38,6 +38,7 @@
 #include "data/fstream.hpp"
 #include "platform/font.hpp"
 #include "platform/shader.hpp"
+
 #include "scenegraph/context.hpp"
 #include "scenegraph/camera.hpp"
 #include "scenegraph/utils.hpp"
@@ -46,7 +47,8 @@
 #include "platform/lowlevel.hpp"
 
 #include <cmath>
-#include <cfloat>
+#include <float.h>
+
 
 using namespace gsgl;
 using namespace gsgl::data;
@@ -257,72 +259,50 @@ namespace periapsis
 
         void stellar_db::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
-            // setup
-            glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                       CHECK_GL_ERRORS();
-            glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                          CHECK_GL_ERRORS();
-            
+            display::scoped_state state(*draw_context->screen, display::ENABLE_ALL ^ (display::ENABLE_DEPTH));
+
             float star_scale = get_scale();
-            float far_plane = farthest_distance * 1.5f * star_scale;
-            float near_plane = nearest_distance * 0.5f * star_scale;
+            float far_plane = farthest_distance * 1.1f * star_scale;
+            float near_plane = nearest_distance * 0.9f * star_scale;
             if (near_plane <= 1)
                 near_plane = 1;
 
-            // projection
-            glMatrixMode(GL_PROJECTION);                                                                            CHECK_GL_ERRORS();
-            glLoadIdentity();                                                                                       CHECK_GL_ERRORS();
-            gluPerspective(draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), near_plane, far_plane);      CHECK_GL_ERRORS();
+            // draw stars
+            {
+                // projection
+                display::scoped_perspective proj(*draw_context->screen, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), near_plane, far_plane);
 
-            // depth test and blend
-            glClearDepth(1);                                                                                        CHECK_GL_ERRORS();
-            glClear(GL_DEPTH_BUFFER_BIT);                                                                           CHECK_GL_ERRORS();
-            glEnable(GL_DEPTH_TEST);                                                                                CHECK_GL_ERRORS();
+                // set up shader
+                display::scoped_shader shdr(*draw_context->screen, &star_shader);
+                uniform_farthest_distance->set(farthest_distance * get_scale());
 
-            glEnable(GL_BLEND);                                                                                     CHECK_GL_ERRORS();
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);                                                      CHECK_GL_ERRORS();
+                // scale & draw
+                display::scoped_modelview mv(*draw_context->screen);
+                mv.scale(star_scale, star_scale, star_scale);
 
-            // set up shader
-            glEnable(GL_POINT_SMOOTH);                                                                              CHECK_GL_ERRORS();
-            glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
-            glPointSize(2.7f);
+                glEnableClientState(GL_VERTEX_ARRAY);                                                                   CHECK_GL_ERRORS();
+                glEnableClientState(GL_COLOR_ARRAY);                                                                    CHECK_GL_ERRORS();
 
-            glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);                                                                 CHECK_GL_ERRORS();
-            star_shader.bind();
-            uniform_farthest_distance->set(farthest_distance * get_scale());
-
-            // scale & draw
-            glMatrixMode(GL_MODELVIEW); // modelview is already initialized by scene graph
-            glScalef(star_scale, star_scale, star_scale);                                                           CHECK_GL_ERRORS();
-
-            glEnableClientState(GL_VERTEX_ARRAY);                                                                   CHECK_GL_ERRORS();
-            glEnableClientState(GL_COLOR_ARRAY);                                                                    CHECK_GL_ERRORS();
-
-            vertices.bind();
-            glInterleavedArrays(GL_C4UB_V3F, 0, 0);                                                                 CHECK_GL_ERRORS();
-            glDrawArrays(GL_POINTS, 0, num_stars);                                                                  CHECK_GL_ERRORS();
-
-            // clean up
-            star_shader.unbind();
-            glPopClientAttrib();                                                                                    CHECK_GL_ERRORS();
-            glPopAttrib();                                                                                          CHECK_GL_ERRORS();
+                vertices.bind();
+                glInterleavedArrays(GL_C4UB_V3F, 0, 0);                                                                 CHECK_GL_ERRORS();
+                glDrawArrays(GL_POINTS, 0, num_stars);                                                                  CHECK_GL_ERRORS();
+            }
 
             // draw names
             if ((draw_context->render_flags & drawing_context::RENDER_LABELS))
             {
                 const font *label_font = dynamic_cast<const space_drawing_context *>(draw_context)->DEFAULT_LABEL_FONT.ptr();
 
-                draw_context->screen->record_3d_text_info();
-                draw_context->screen->draw_text_start();
+                display::scoped_text labels(*draw_context->screen);
 
                 int i, len = star_names.size();
                 for (i = 0; i < len; ++i)
                 {
                     vector pos(star_name_vertices[i*3+0]*star_scale, star_name_vertices[i*3+1]*star_scale, star_name_vertices[i*3+2]*star_scale);
-                    draw_context->screen->draw_3d_text(pos, label_font, *star_names[i], 4, -8);
+                    labels.draw_3d(pos, label_font, *star_names[i], 4, -8);
                 }
-
-                draw_context->screen->draw_text_stop();
             }
-        }; // stellar_db::draw()
+        } // stellar_db::draw()
 
     } // namespace space
 

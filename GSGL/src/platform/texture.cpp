@@ -408,12 +408,12 @@ namespace gsgl
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter);                                   CHECK_GL_ERRORS();
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter);                                   CHECK_GL_ERRORS();
 
-                if (GL_EXT_texture_filter_anisotropic && (render_flags & TEXTURE_RENDER_ANISOTROPIC))
-                {
-                    GLfloat max_aniso;
-                    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_aniso);                                     CHECK_GL_ERRORS();
-                    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, max_aniso);                       CHECK_GL_ERRORS();
-                }
+                //if (GL_EXT_texture_filter_anisotropic && (render_flags & TEXTURE_RENDER_ANISOTROPIC))
+                //{
+                //    GLfloat max_aniso;
+                //    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_aniso);                                     CHECK_GL_ERRORS();
+                //    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, max_aniso);                       CHECK_GL_ERRORS();
+                //}
             }
         } // texture::bind()
 

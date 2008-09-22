@@ -34,8 +34,6 @@
 #include "framework/textbox.hpp"
 #include "platform/font.hpp"
 
-#include "platform/lowlevel.hpp"
-
 
 namespace gsgl
 {
@@ -47,20 +45,18 @@ namespace gsgl
     {
 
 
-        textbox::textbox(widget *parent, 
+        textbox::textbox(display & screen, widget *parent, 
                          int x, int y, int w, int h, 
                          const color & fg, const color & bg, 
                          const string & font_face, const int font_size, 
                          text_align align, gsgl::flags_t text_flags)
-            : widget(parent, x, y, w, h, fg, bg), text_font(new font(font_face, font_size, fg)), align(align), text_flags(text_flags)
+            : widget(screen, parent, x, y, w, h, fg, bg), text_font(new font(font_face, font_size, fg)), align(align), text_flags(text_flags)
         {
-            //LOG_BASIC(L"ui: creating text box");
         } // textbox::textbox()
 
 
         textbox::~textbox()
         {
-            //LOG_BASIC(L"ui: destroying text box");
             delete text_font;
         } // texbox::~textbox()
 
@@ -97,14 +93,9 @@ namespace gsgl
                 break;
             }
 
-            glMatrixMode(GL_MODELVIEW);
-            glPushMatrix();
-
-            glTranslatef(static_cast<GLfloat>(x), static_cast<GLfloat>(y), 0);
+            display::scoped_modelview mv(get_screen());
+            mv.translate(static_cast<float>(x), static_cast<float>(y));
             text_font->draw(text);
-
-            glMatrixMode(GL_MODELVIEW);
-            glPopMatrix();
         } // textbox::draw()
 
 

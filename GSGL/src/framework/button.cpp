@@ -43,12 +43,12 @@ namespace gsgl
     {
 
 
-        button::button(widget *parent, 
+        button::button(display & screen, widget *parent, 
                        int x, int y, int w, int h, 
                        const color & fg, const color & bg, 
                        const string & font_face, int font_size,
                        const string & text)
-            : textbox(parent, 
+            : textbox(screen, parent, 
                       x, y, w, h, fg, bg,
                       font_face, font_size, 
                       textbox::ALIGN_CENTER, 
@@ -57,13 +57,11 @@ namespace gsgl
               on_click_handler(0)
         {
             get_text() = text;
-            //LOG_BASIC(L"ui: creating button %ls", text.w_string());
         } // button::button()
 
 
         button::~button()
         {
-            //LOG_BASIC(L"ui: destroying button %ls", get_text().w_string());
         } // button::~button()
 
 
@@ -93,16 +91,12 @@ namespace gsgl
 
             textbox::draw();
 
-            get_foreground().bind();
-            glLineWidth(1.0f);
-
-            glBegin(GL_LINE_STRIP);
-            glVertex2i(0, 0);
-            glVertex2i(get_w(), 0);
-            glVertex2i(get_w(), get_h());
-            glVertex2i(0, get_h());
-            glVertex2i(0, 0);
-            glEnd();
+            // border
+            display::scoped_color fg(get_screen(), get_foreground());
+            get_screen().draw_line_2d(0, 0, get_w(), 0);
+            get_screen().draw_line_2d(get_w(), 0, get_w(), get_h());
+            get_screen().draw_line_2d(get_w(), get_h(), 0, get_h());
+            get_screen().draw_line_2d(0, get_h(), 0, 0);
 
             if (down_tick)
             {

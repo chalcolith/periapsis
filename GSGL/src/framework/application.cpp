@@ -34,6 +34,7 @@
 #include "framework/application.hpp"
 #include "framework/widget.hpp"
 
+#include "data/log.hpp"
 #include "data/exception.hpp"
 #include "data/list.hpp"
 #include "data/file.hpp"
@@ -50,7 +51,6 @@
 #include "scenegraph/model.hpp"
 
 #include "platform/lowlevel.hpp"
-#include "platform/extensions.hpp"
 
 
 #ifndef WIN32
@@ -102,7 +102,7 @@ namespace gsgl
               global_sim_context(0), global_draw_context(0),
               global_scenery(0), global_simulation(0),
               global_console(0), global_mapper(0),
-              global_budget(0)
+              global_budget(0), budget_font(0)
         {
             // override global config
             get_config_overrides(argc, argv);
@@ -165,11 +165,6 @@ namespace gsgl
 
         application::~application()
         {
-            delete global_console; global_console = 0;
-            delete global_mapper;  global_mapper = 0;
-
-            delete global_budget;     global_budget = 0;
-
             // clean up SDL (also destroys the OpenGL context)
             TTF_Quit();
             SDL_Quit();
@@ -276,7 +271,12 @@ namespace gsgl
 
             delete splash_screen;     splash_screen = 0;
 
-            // clear global caches
+            delete global_console;    global_console = 0;
+            delete global_mapper;     global_mapper = 0;
+
+            delete budget_font;       budget_font = 0;
+            delete global_budget;     global_budget = 0;
+
             // this stuff is here rather than in the destructor because these might throw
             model::clear_cache(L"__ALL__");
             material::clear_cache(L"__ALL__");
@@ -304,11 +304,8 @@ namespace gsgl
             while (state != APP_QUITTING)
             {
                 // clear screen
-                glClearDepth(1);                                                                                    CHECK_GL_ERRORS();
-                glClearColor(0.0f, 0.0f, 0.0f, 1.0f);                                                               CHECK_GL_ERRORS();
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);                                                 CHECK_GL_ERRORS();
-
-                glViewport(0, 0, global_console->get_width(), global_console->get_height());                        CHECK_GL_ERRORS();
+                display::scoped_viewport view(*global_console);
+                global_console->clear(display::CLEAR_COLOR | display::CLEAR_DEPTH);
 
                 // call draw function or default sim draw function...
                 if (!this->draw())
@@ -320,7 +317,7 @@ namespace gsgl
                     }
                     else if (splash_screen)
                     {
-                        budget_record br(L"application: splash screen");
+                        BUDGET_SCOPE(L"application: splash screen");
 
                         draw_splash_screen();
                     }
@@ -329,7 +326,7 @@ namespace gsgl
                 // draw global UI elements
                 if ((state == APP_UI_RUNNING || state == APP_SIM_RUNNING))
                 {
-                    budget_record br(L"application: user interface");
+                    BUDGET_SCOPE(L"application: user interface");
 
                     // draw from bottom up
                     int i, num = widgets.size();
@@ -337,32 +334,13 @@ namespace gsgl
                     {
                         if ((widgets[i]->get_flags() & widget::WIDGET_INVISIBLE) == 0)
                         {
-                            glPushAttrib(GL_ALL_ATTRIB_BITS);                                                       CHECK_GL_ERRORS();
-                            glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                          CHECK_GL_ERRORS();
+                            display::scoped_state state(*global_console, display::ENABLE_ORTHO_2D);
 
-                            glMatrixMode(GL_PROJECTION);                                                            CHECK_GL_ERRORS();
-                            glLoadIdentity();                                                                       CHECK_GL_ERRORS();
-                            //gluOrtho2D(0, global_console->get_width(), 0, global_console->get_height());            CHECK_GL_ERRORS();
-                            glOrtho(0, global_console->get_width(), 0, global_console->get_height(), -1, 1);
+                            display::scoped_ortho ortho(*global_console);
+                            display::scoped_modelview mv(*global_console, &math::transform::IDENTITY);
 
-                            glMatrixMode(GL_MODELVIEW);                                                             CHECK_GL_ERRORS();
-                            glPushMatrix();                                                                         CHECK_GL_ERRORS();
-                            glLoadIdentity();                                                                       CHECK_GL_ERRORS();
-                            glTranslatef(0.375f, 0.375f, 0.0f);                                                     CHECK_GL_ERRORS();
-
-                            glEnable(GL_BLEND);                                                                     CHECK_GL_ERRORS();
-                            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);                                      CHECK_GL_ERRORS();
-
-                            glEnable(GL_LINE_SMOOTH);                                                               CHECK_GL_ERRORS();
-                            glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);                                                 CHECK_GL_ERRORS();
-
+                            mv.translate(0.375f, 0.375f, 0);
                             draw_ui(widgets[i]);
-
-                            glMatrixMode(GL_MODELVIEW);                                                             CHECK_GL_ERRORS();
-                            glPopMatrix();                                                                          CHECK_GL_ERRORS();
-
-                            glPopClientAttrib();                                                                    CHECK_GL_ERRORS();
-                            glPopAttrib();                                                                          CHECK_GL_ERRORS();
                         }
                     }
                 }
@@ -378,7 +356,7 @@ namespace gsgl
 
                 // swap buffers
                 {
-                    budget_record br(L"application: buffer swap");
+                    BUDGET_SCOPE(L"application: buffer swap");
                     SDL_GL_SwapBuffers();
                 }
 
@@ -393,7 +371,7 @@ namespace gsgl
 
                 // get events
                 {
-                    budget_record br(L"application: event handling");
+                    BUDGET_SCOPE(L"application: event handling");
 
                     SDL_Event e;
                     while (SDL_PollEvent(&e))
@@ -458,23 +436,14 @@ namespace gsgl
             float width = static_cast<float>(global_console->get_width());
             float height = static_cast<float>(global_console->get_height());
 
-            glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                       CHECK_GL_ERRORS();
-            glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                          CHECK_GL_ERRORS();
-            
-            glMatrixMode(GL_PROJECTION);                                                                            CHECK_GL_ERRORS();
-            glLoadIdentity();                                                                                       CHECK_GL_ERRORS();
-            //gluOrtho2D(0, width, 0, height);                                                                        CHECK_GL_ERRORS();
-            glOrtho(0, width, 0, height, -1, 1);
-            
-            glMatrixMode(GL_MODELVIEW);                                                                             CHECK_GL_ERRORS();
-            glLoadIdentity();                                                                                       CHECK_GL_ERRORS();
+            display::scoped_state state(*global_console, display::ENABLE_ORTHO_2D);
 
-            glEnable(GL_TEXTURE_2D);                                                                                CHECK_GL_ERRORS();            
-            splash_screen->bind();
-            display::draw_rectangle(0, 0, width, height);
+            display::scoped_ortho ortho(*global_console);
+            display::scoped_modelview mv(*global_console, &math::transform::IDENTITY);
 
-            glPopClientAttrib();                                                                                    CHECK_GL_ERRORS();
-            glPopAttrib();                                                                                          CHECK_GL_ERRORS();
+            display::scoped_texture t(*global_console, splash_screen);
+
+            global_console->draw_rect_2d(0, 0, width, height);
         } // application::draw_splash_screen()
 
 
@@ -482,7 +451,6 @@ namespace gsgl
         static const color BUDGET_COLOR(1.0f, 0, 0, 1.0f);
         static const int BUDGET_BAR_WIDTH = 256;
         static const wchar_t *BUDGET_FORMAT = L"%6u";
-        static font *budget_font = 0;
 
         void application::draw_budget(unsigned int ticks)
         {
@@ -508,51 +476,32 @@ namespace gsgl
                 sum += *i;
             }
 
-            // draw
-            global_console->draw_text_start();
-
-            global_console->draw_2d_text(0, static_cast<float>((num+1)*step), budget_font, L"TOTAL");
-            global_console->draw_2d_text(static_cast<float>(widest), static_cast<float>((num+1)*step), budget_font, string::format(BUDGET_FORMAT, ticks));
-
-            int n = 0;
-            for (dictionary<unsigned int, string>::iterator i = global_budget->get_data().iter(); i.is_valid(); ++i)
+            // draw text
             {
-                int y = (num-n)*step;
+                display::scoped_text td(*global_console);
+                display::scoped_color sc(*global_console, BUDGET_COLOR);
 
-                global_console->draw_2d_text(0, static_cast<float>(y), budget_font, i.get_index());
-                global_console->draw_2d_text(static_cast<float>(widest), static_cast<float>(y), budget_font, string::format(BUDGET_FORMAT, *i));
-               
-                int w = static_cast<int>(BUDGET_BAR_WIDTH * static_cast<double>(*i)/static_cast<double>(highest));
-                BUDGET_COLOR.bind();
-                glMatrixMode(GL_MODELVIEW);
-                glLoadIdentity();
+                td.draw_2d(0, static_cast<float>((num+1)*step), budget_font, L"TOTAL");
+                td.draw_2d(static_cast<float>(widest), static_cast<float>((num+1)*step), budget_font, string::format(BUDGET_FORMAT, ticks));
 
-                glBegin(GL_TRIANGLE_STRIP);
-                glVertex2i(widest+64,   y+8); // upper left
-                glVertex2i(widest+64,   y+2); // lower left
-                glVertex2i(widest+64+w, y+8); // upper right
-                glVertex2i(widest+64+w, y+2); // lower right
-                glEnd();
+                int n = 0;
+                for (dictionary<unsigned int, string>::iterator i = global_budget->get_data().iter(); i.is_valid(); ++i, ++n)
+                {
+                    int y = (num-n)*step;
 
-                ++n;
+                    td.draw_2d(0, static_cast<float>(y), budget_font, i.get_index());
+                    td.draw_2d(static_cast<float>(widest), static_cast<float>(y), budget_font, string::format(BUDGET_FORMAT, *i));
+
+                    int w = static_cast<int>(BUDGET_BAR_WIDTH * static_cast<double>(*i)/static_cast<double>(highest));
+                    global_console->draw_rect_2d(static_cast<float>(widest+64), static_cast<float>(y+2), static_cast<float>(widest+64+w), static_cast<float>(y+8));
+                }
+
+                td.draw_2d(0, 0, budget_font, L"other");
+                td.draw_2d(static_cast<float>(widest), 0, budget_font, string::format(BUDGET_FORMAT, ticks - sum));
+
+                int w = static_cast<int>(BUDGET_BAR_WIDTH * static_cast<double>(ticks - sum)/static_cast<double>(highest));
+                global_console->draw_rect_2d(static_cast<float>(widest+64), 2, static_cast<float>(widest+64+w), 10);
             }
-
-            global_console->draw_2d_text(0, 0, budget_font, L"other");
-            global_console->draw_2d_text(static_cast<float>(widest), 0, budget_font, string::format(BUDGET_FORMAT, ticks - sum));
-
-            int w = static_cast<int>(BUDGET_BAR_WIDTH * static_cast<double>(ticks - sum)/static_cast<double>(highest));
-            BUDGET_COLOR.bind();
-            glMatrixMode(GL_MODELVIEW);
-            glLoadIdentity();
-
-            glBegin(GL_TRIANGLE_STRIP);
-            glVertex2i(widest+64,   10); // upper left
-            glVertex2i(widest+64,   2);  // lower left
-            glVertex2i(widest+64+w, 10); // upper right
-            glVertex2i(widest+64+w, 2);  // lower right
-            glEnd();
-
-            global_console->draw_text_stop();
         } // application::draw_budget()
 
 
@@ -560,10 +509,8 @@ namespace gsgl
         {
             assert(w);
 
-            glMatrixMode(GL_MODELVIEW);
-            glPushMatrix();
-
-            glTranslatef(static_cast<GLfloat>(w->get_x()), static_cast<GLfloat>(w->get_y()), 0);
+            display::scoped_modelview mv(*global_console);
+            mv.translate(static_cast<float>(w->get_x()), static_cast<float>(w->get_y()), 0);
 
             if ((w->get_flags() & widget::WIDGET_INVISIBLE) == 0)
             {
@@ -576,9 +523,6 @@ namespace gsgl
                     draw_ui(w->get_children()[i]);
                 }
             }
-
-            glMatrixMode(GL_MODELVIEW);
-            glPopMatrix();
         } // application::draw_ui()
 
 

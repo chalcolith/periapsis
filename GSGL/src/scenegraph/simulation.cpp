@@ -54,6 +54,7 @@
 #include <sys/time.h>
 #endif
 
+
 namespace gsgl
 {
 
@@ -262,7 +263,7 @@ namespace gsgl
 
         void simulation::pre_draw()
         {
-            budget_record br(L"pre-render");
+            BUDGET_SCOPE(L"pre-render");
             node::pre_draw_scene(sim_context, draw_context, pre_rec);
         } // simulation::pre_draw()
 
@@ -278,8 +279,9 @@ namespace gsgl
 
             node::draw_scene(sim_context, draw_context, pre_rec);
 
+            // draw screen information
             {
-                budget_record br(L"sim info");
+                BUDGET_SCOPE(L"sim info");
 
                 // update fps info
                 gsgl::real_t avg_delta = 0.0f;
@@ -291,34 +293,19 @@ namespace gsgl
                 int fps = static_cast<int>(::ceil(1.0f / avg_delta));
                 float height = info_font->calc_height(L"Wtj");
 
-                console->draw_text_start();
-
-                glMatrixMode(GL_MODELVIEW);                                                                         CHECK_GL_ERRORS();
-                glLoadIdentity();                                                                                   CHECK_GL_ERRORS();
-                glTranslatef(1.0f, console->get_height() - height, 0.0f);                                           CHECK_GL_ERRORS();
-                info_font->draw(L"Periapsis Spaceflight Simulation");
-
-                glMatrixMode(GL_MODELVIEW);                                                                         CHECK_GL_ERRORS();
-                glLoadIdentity();                                                                                   CHECK_GL_ERRORS();
-                glTranslatef(1.0f, console->get_height() - 2*height, 0.0f);                                         CHECK_GL_ERRORS();
+                display::scoped_text td(*console);
+                td.draw_2d(1.0f, console->get_height() - height, info_font, L"Simulation");
+                
                 string rel = string::format(L"View Mode: %ls", view->is_relative() ? L"RELATIVE" : L"ABSOLUTE");
-                info_font->draw(rel);
+                td.draw_2d(1.0f, console->get_height() - 2*height, info_font, rel);
 
-                glMatrixMode(GL_MODELVIEW);                                                                         CHECK_GL_ERRORS();
-                glLoadIdentity();                                                                                   CHECK_GL_ERRORS();
-                glTranslatef(1.0f, console->get_height() - 3*height, 0.0f);                                         CHECK_GL_ERRORS();
                 struct tm *gmt = ::gmtime(&sim_context->cur_t_time);
                 string utc(::asctime(gmt));
                 string date = string::format(L"%ls UTC", utc.trim().w_string());
-                info_font->draw(date);
+                td.draw_2d(1.0f, console->get_height() - 3*height, info_font, date);
 
-                glMatrixMode(GL_MODELVIEW);                                                                         CHECK_GL_ERRORS();
-                glLoadIdentity();                                                                                   CHECK_GL_ERRORS();
-                glTranslatef(1.0f, console->get_height() - 4*height, 0.0f);                                         CHECK_GL_ERRORS();
                 string info = string::format(L"Time: %dx FPS: %d", static_cast<int>(time_scale), fps);
-                info_font->draw(info);
-
-                console->draw_text_stop();
+                td.draw_2d(1.0f, console->get_height() - 4*height, info_font, info);
             }
         } // simulation::draw()
 
@@ -419,7 +406,7 @@ namespace gsgl
             assert(n);
 
             {
-                platform::budget_record br(PHYSICS_CATEGORY + n->get_type_name());
+                BUDGET_SCOPE(PHYSICS_CATEGORY + n->get_type_name());
                 n->update(sim_context);
             }
                         

@@ -40,8 +40,8 @@ using namespace gsgl::framework;
 namespace periapsis
 {
 
-    settings_tab::settings_tab()
-        : widget(0, 0, 0, 0, 0, main_window::FOREGROUND, main_window::BACKGROUND)
+    settings_tab::settings_tab(platform::display & screen)
+        : widget(screen, 0, 0, 0, 0, 0, main_window::FOREGROUND, main_window::BACKGROUND)
     {
     } // settings_tab::settings_tab()
 

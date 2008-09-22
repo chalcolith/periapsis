@@ -15,11 +15,11 @@
 			polar_radius="1.392e9m"
             	rotator="periapsis::space::rotator::sol::sol">
 
-			<property name="simple_material" color_map="Sol System/sol_color.jpg"/>
-			<property name="corona_material" color_map="Sol System/sol_corona.png"/>
+			<property name="simple_material" color_map="Sol System/sol_color.jpg" color_map_mode="modulate"/>
+			<property name="corona_material" color_map="Sol System/sol_corona.png" color_map_mode="replace"/>
 		</periapsis::space::star>
 
-
+<!--
 		<periapsis::space::planet_system name="Mercury Barysystem" 
 			propagator="periapsis::space::keplerian_element_propagator"
 			keplerian_elements="0.38709843      0.20563661      7.00559432      252.25166724     77.45771895     48.33961819"
@@ -165,6 +165,8 @@
 				simple_map="Sol System/neptune_color.jpg" 
 				simple_map_x_offset="-0.5" />
 		</periapsis::space::planet_system>
+
+-->
 
 	</periapsis::space::solar_system>
   

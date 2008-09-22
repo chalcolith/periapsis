@@ -36,7 +36,7 @@
 #include "space/rocky_body_atmosphere.hpp"
 #include "scenegraph/camera.hpp"
 #include "platform/color.hpp"
-#include "platform/lowlevel.hpp"
+
 
 using namespace gsgl;
 using namespace gsgl::data;
@@ -87,6 +87,48 @@ namespace periapsis
 
         void large_rocky_body::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
+            lithosphere *litho = get_lithosphere();
+
+            if (litho)
+            {
+                display::scoped_state state(*draw_context->screen);
+
+                vector pos_in_view = get_modelview() * vector::ZERO;
+
+                gsgl::real_t radius = gsgl::max_val(get_polar_radius(), get_equatorial_radius());
+                gsgl::real_t dist = pos_in_view.mag();
+                gsgl::real_t zdist = -pos_in_view.get_z();
+                gsgl::real_t far_plane = zdist + (radius * 1.1f);
+                gsgl::real_t near_plane = zdist - (radius * 1.1f);
+                if (near_plane <= 0)
+                    near_plane = 1;
+
+                display::scoped_perspective proj(*draw_context->screen, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), near_plane, far_plane);
+                display::scoped_color cc(*draw_context->screen, color::WHITE);
+
+                gsgl::real_t screen_width = utils::pixel_size(dist, radius, draw_context->cam->get_field_of_view(), draw_context->screen->get_height());
+
+                if (screen_width < MIN_PIXEL_WIDTH)
+                {
+                    get_draw_results() |= node::NODE_DREW_POINT;
+                    draw_context->screen->draw_point(vector::ZERO, MIN_PIXEL_WIDTH);
+                }
+                else
+                {
+                    draw_context->screen->clear(display::CLEAR_DEPTH);
+                    display::scoped_lighting lighting(*draw_context->screen, !(draw_context->render_flags & drawing_context::RENDER_NO_LIGHTING) && !(get_draw_flags() & NODE_DRAW_UNLIT));
+                    display::scoped_modelview mv(*draw_context->screen, &litho->get_modelview());
+
+                    state.enable(display::ENABLE_DEPTH);
+                    litho->draw(sim_context, draw_context);
+                }
+            }
+            else
+            {
+                celestial_body::draw(sim_context, draw_context);
+            }
+
+#if 0
             lithosphere *litho = get_lithosphere();
             if (litho)
             {
@@ -167,6 +209,7 @@ namespace periapsis
             {
                 celestial_body::draw(sim_context, draw_context);
             }
+#endif
         } // large_rocky_body::draw()
 
 

@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="Framework"
 	ProjectGUID="{606D3E0C-A5B4-4D1C-A125-B6FC1F729440}"
 	RootNamespace="Framework"
 	Keyword="Win32Proj"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -57,7 +58,6 @@
 				UsePrecompiledHeader="0"
 				BrowseInformation="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -71,7 +71,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="GSGLData.lib GSGLPlatform.lib GSGLScenegraph.lib SDL.lib SDL_image.lib SDL_ttf.lib glew32.lib OpenGL32.lib GLU32.lib"
+				AdditionalDependencies="GSGLData.lib GSGLMath.lib GSGLPlatform.lib GSGLScenegraph.lib SDL.lib SDL_image.lib SDL_ttf.lib glew32.lib OpenGL32.lib GLU32.lib"
 				OutputFile="$(OutDir)\GSGL$(ProjectName).dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(OutDir)"
@@ -80,7 +80,9 @@
 				SubSystem="2"
 				OptimizeReferences="0"
 				EnableCOMDATFolding="0"
-				OptimizeForWindows98="1"
+				OptimizeForWindows98="0"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -100,9 +102,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -151,7 +150,6 @@
 				BrowseInformation="0"
 				WarningLevel="3"
 				WarnAsError="true"
-				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -165,7 +163,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="GSGLData.lib GSGLPlatform.lib GSGLScenegraph.lib SDL.lib SDL_image.lib SDL_ttf.lib glew32.lib OpenGL32.lib GLU32.lib"
+				AdditionalDependencies="GSGLData.lib GSGLMath.lib GSGLPlatform.lib GSGLScenegraph.lib SDL.lib SDL_image.lib SDL_ttf.lib glew32.lib OpenGL32.lib GLU32.lib"
 				OutputFile="$(OutDir)\GSGL$(ProjectName).dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(OutDir)"
@@ -174,7 +172,9 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				OptimizeForWindows98="1"
+				OptimizeForWindows98="0"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 				Profile="false"
 			/>
@@ -195,9 +195,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -280,10 +277,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\framework\listbox.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\platform\lowlevel.hpp"
 				>
 			</File>
 			<File

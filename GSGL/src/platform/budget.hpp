@@ -72,8 +72,18 @@ namespace gsgl
             ~budget_record();
         }; // class budget_record
 
+
     } // namespace platform
 
 } // namespace gsgl
+
+
+#ifdef DEBUG
+/// This is kinda silly, but it's to avoid doing useless string concatenation in a release build.
+#define BUDGET_SCOPE(str) budget_record _br(str)
+#else
+#define BUDGET_SCOPE(str)
+#endif
+
 
 #endif

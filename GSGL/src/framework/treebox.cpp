@@ -33,6 +33,7 @@
 
 #include "treebox.hpp"
 #include "data/config.hpp"
+
 #include "platform/font.hpp"
 #include "platform/lowlevel.hpp"
 
@@ -53,7 +54,7 @@ namespace gsgl
         {
             treebox_node *parent_node;
         public:
-            treebox_plus(treebox_node *parent, const color & fg, const color & bg);
+            treebox_plus(display & screen, treebox_node *parent, const color & fg, const color & bg);
             virtual ~treebox_plus();
 
             virtual void draw();
@@ -61,8 +62,8 @@ namespace gsgl
         }; // class treebox_plus
 
 
-        treebox_plus::treebox_plus(treebox_node *parent, const color & fg, const color & bg)
-            : widget(parent, 0, 0, 0, 0, fg, bg), parent_node(parent)
+        treebox_plus::treebox_plus(display & screen, treebox_node *parent, const color & fg, const color & bg)
+            : widget(screen, parent, 0, 0, 0, 0, fg, bg), parent_node(parent)
         {
             //LOG_BASIC(L"ui: creating treebox plus");
         } // treebox_plus::treebox_plus()
@@ -78,21 +79,13 @@ namespace gsgl
         {
             if (parent_node->get_tree_nodes().size())
             {
-                get_foreground().bind();
-                glLineWidth(3.0f);
-
-                glBegin(GL_LINES);
-
-                glVertex2i(get_x(), get_y() + get_h()/2);
-                glVertex2i(get_x() + get_w(), get_y() + get_h()/2);
+                display::scoped_color fg(get_screen(), get_foreground());
+                get_screen().draw_line_2d(get_x(), get_y() + get_h()/2, get_x() + get_w(), get_y() + get_h()/2, 3);
 
                 if (!parent_node->get_expanded())
                 {
-                    glVertex2i(get_x() + get_w()/2, get_y() + get_h()/2 - PLUS_WIDTH/2);
-                    glVertex2i(get_x() + get_w()/2, get_y() + get_h()/2 + PLUS_WIDTH/2);
+                    get_screen().draw_line_2d(get_x() + get_w()/2, get_y() + get_h()/2 - PLUS_WIDTH/2, get_x() + get_w()/2, get_y() + get_h()/2 + PLUS_WIDTH/2, 3);
                 }
-
-                glEnd();
             }
         } // treebox_plus::draw()
 
@@ -110,18 +103,16 @@ namespace gsgl
 
         //
 
-        treebox_node::treebox_node(treebox *parent_treebox, treebox_node *parent_node, const color & fg, const color & bg, const string & text, void *user_data)
-            : widget(parent_treebox, 0, 0, 0, 0, fg, bg), parent_treebox(parent_treebox), parent_node(parent_node), plus_widget(0), text_widget(0), expanded(false), indent(0), user_data(user_data)
+        treebox_node::treebox_node(display & screen, treebox *parent_treebox, treebox_node *parent_node, const color & fg, const color & bg, const string & text, void *user_data)
+            : widget(screen, parent_treebox, 0, 0, 0, 0, fg, bg), parent_treebox(parent_treebox), parent_node(parent_node), plus_widget(0), text_widget(0), expanded(false), indent(0), user_data(user_data)
         {
-            //LOG_BASIC(L"ui: creating treebox");
-
             if (parent_treebox && !parent_node)
                 parent_treebox->get_tree_nodes().append(this);
             if (parent_node)
                 parent_node->get_tree_nodes().append(this);
 
-            plus_widget = new treebox_plus(this, fg, bg);
-            text_widget = new textbox(this, 0, 0, 0, 0, fg, bg, 
+            plus_widget = new treebox_plus(screen, this, fg, bg);
+            text_widget = new textbox(screen, this, 0, 0, 0, 0, fg, bg, 
                                       parent_treebox->get_text_font()->get_face(), 
                                       parent_treebox->get_text_font()->get_size());
             text_widget->get_text() = text;
@@ -130,7 +121,6 @@ namespace gsgl
 
         treebox_node::~treebox_node()
         {
-            //LOG_BASIC(L"ui: destroying treebox");
             // children are deleted automatically
         } // treebox_node::~treebox_node()
 
@@ -162,17 +152,11 @@ namespace gsgl
 
             if (this == parent_treebox->get_selected_node())
             {
-                glDisable(GL_BLEND);
-                get_foreground().bind();
-                glLineWidth(1.0f);
-
-                glBegin(GL_LINE_STRIP);
-                glVertex2i(PLUS_WIDTH, 0);
-                glVertex2i(get_w(), 0);
-                glVertex2i(get_w(), get_h());
-                glVertex2i(PLUS_WIDTH, get_h());
-                glVertex2i(PLUS_WIDTH, 0);
-                glEnd();
+                display::scoped_color fg(get_screen(), get_foreground());
+                get_screen().draw_line_2d(PLUS_WIDTH, 0, get_w(), 0);
+                get_screen().draw_line_2d(get_w(), 0, get_w(), get_h());
+                get_screen().draw_line_2d(get_w(), get_h(), PLUS_WIDTH, get_h());
+                get_screen().draw_line_2d(PLUS_WIDTH, get_h(), PLUS_WIDTH, 0);
             }
         } // treebox_node::draw()
 
@@ -197,11 +181,11 @@ namespace gsgl
         static config_variable<int> SCROLL_WIDTH(L"framework/treebox/scroll_width", 16);
 
 
-        treebox::treebox(widget *parent, int x, int y, int w, int h, const color & fg, const color & bg, const string & font_face, const int font_size)
-            : widget(parent, x, y, w, h, fg, bg), text_font(0), side_scroll(0), selected_node(0)
+        treebox::treebox(display & screen, widget *parent, int x, int y, int w, int h, const color & fg, const color & bg, const string & font_face, const int font_size)
+            : widget(screen, parent, x, y, w, h, fg, bg), text_font(0), side_scroll(0), selected_node(0)
         {
             text_font = new font(font_face, font_size, fg);
-            side_scroll = new scrollbar(this, w-SCROLL_WIDTH, 0, SCROLL_WIDTH, h, fg, bg);
+            side_scroll = new scrollbar(screen, this, w-SCROLL_WIDTH, 0, SCROLL_WIDTH, h, fg, bg);
             side_scroll->set_flags(WIDGET_INVISIBLE, true);
         } // treebox::treebox()
 

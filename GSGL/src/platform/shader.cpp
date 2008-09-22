@@ -32,13 +32,14 @@
 //
 
 #include "platform/shader.hpp"
-#include "platform/extensions.hpp"
 
 #include "data/log.hpp"
 #include "data/pointer.hpp"
 #include "data/array.hpp"
 #include "data/file.hpp"
 #include "data/fstream.hpp"
+
+#include "platform/lowlevel.hpp"
 
 namespace gsgl
 {
@@ -380,6 +381,7 @@ namespace gsgl
             // use shader
             if (opengl_id)
             {
+                glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);                                                             CHECK_GL_ERRORS();
                 glUseProgram(opengl_id);                                                                            CHECK_GL_ERRORS();
             }
             else
@@ -395,6 +397,7 @@ namespace gsgl
                 (*i)->opengl_loc = -1;
 
             glUseProgram(0);                                                                                        CHECK_GL_ERRORS();
+            glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);                                                                CHECK_GL_ERRORS();
         } // shader_program::unbind()
 
 

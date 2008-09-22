@@ -32,8 +32,8 @@
 //
 
 #include "platform/budget.hpp"
-#include "data/exception.hpp"
 
+#include "data/exception.hpp"
 #include "platform/lowlevel.hpp"
 
 namespace gsgl
@@ -82,7 +82,8 @@ namespace gsgl
         {
 #ifdef DEBUG
             unsigned int end_tick = SDL_GetTicks();
-            parent->get_data()[category] += end_tick - start_tick;
+            if (parent->global_instance())
+                parent->get_data()[category] += end_tick - start_tick;
 #endif
         } // budget_record::~budget_record()
 

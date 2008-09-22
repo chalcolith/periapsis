@@ -32,7 +32,7 @@
 //
 
 #include "scenegraph/light.hpp"
-#include "platform/lowlevel.hpp"
+
 
 namespace gsgl
 {
@@ -55,20 +55,6 @@ namespace gsgl
         light::~light()
         {
         } // light::~light()
-
-
-        void light::bind(int light_number)
-        {
-            glEnable(light_number);
-            glLightfv(light_number, GL_AMBIENT, ambient.get_val());
-            glLightfv(light_number, GL_DIFFUSE, diffuse.get_val());
-            glLightfv(light_number, GL_SPECULAR, specular.get_val());
-            glLightfv(light_number, GL_POSITION, math::vector::ZERO.ptr());
-
-            glLightf(light_number, GL_CONSTANT_ATTENUATION, attenuation_constant);
-            glLightf(light_number, GL_LINEAR_ATTENUATION, attenuation_linear);
-            glLightf(light_number, GL_QUADRATIC_ATTENUATION, attenuation_quadratic);
-        } // light::bind()
 
 
     } // namespace scenegraph

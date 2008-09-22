@@ -101,7 +101,6 @@ namespace periapsis
             virtual void cleanup(const gsgl::scenegraph::simulation_context *sim_context);
 
             //
-            void draw_point(float width);
             void draw_name(const gsgl::scenegraph::drawing_context *c, gsgl::real_t near_plane, gsgl::real_t far_plane);
 
             static gsgl::data::config_variable<gsgl::real_t> MIN_PIXEL_WIDTH;

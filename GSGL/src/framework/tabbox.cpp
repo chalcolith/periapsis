@@ -48,13 +48,13 @@ namespace gsgl
     namespace framework
     {
 
-        tabbox::tabbox(widget *parent, 
+        tabbox::tabbox(display & screen, widget *parent, 
                        int x, int y, int w, int h, 
                        const color & fg, const color & bg,
                        const string & tab_font_face, 
                        const int tab_font_size,
                        const int tab_bar_height)
-            : widget(parent, x, y, w, h, fg, bg), active_tab_index(-1), 
+            : widget(screen, parent, x, y, w, h, fg, bg), active_tab_index(-1), 
               tab_font(new font(tab_font_face, tab_font_size, fg)), tab_bar_height(tab_bar_height)
         {
             //LOG_BASIC(L"ui: creating tab box");
@@ -77,7 +77,7 @@ namespace gsgl
 
         void tabbox::add_tab(const string & name, widget *contents)
         {
-            textbox *title_bar = new textbox(0, 0, 0, 0, 0, get_foreground(), get_background(), tab_font->get_face(), tab_font->get_size());
+            textbox *title_bar = new textbox(get_screen(), 0, 0, 0, 0, 0, get_foreground(), get_background(), tab_font->get_face(), tab_font->get_size());
             title_bar->get_text() = name;
 
             contents->get_x() = 0;
@@ -125,13 +125,10 @@ namespace gsgl
                 title_bar->get_y() = get_h() - tab_bar_height;
             
                 // draw (graying out inactive tabs)
-                glMatrixMode(GL_MODELVIEW);
-                glPushMatrix();
-                glTranslatef(static_cast<GLfloat>(title_bar->get_x()), static_cast<GLfloat>(title_bar->get_y()), 0);
+                display::scoped_modelview mv(get_screen());
+                mv.translate(static_cast<float>(title_bar->get_x()), static_cast<float>(title_bar->get_y()), 0);
 
                 title_bar->draw();
-
-                glPopMatrix();
 
                 // also make sure of contents flags
                 widget *contents = tabs[i].contents;
@@ -143,22 +140,15 @@ namespace gsgl
             }
 
             // draw outline
-            glDisable(GL_BLEND);
-
-            get_foreground().bind();
-            glLineWidth(1.0f);
-
-            glBegin(GL_LINE_STRIP);
-            glVertex2i(0, 0);
-            glVertex2i(0, get_h() - tab_bar_height);
-            glVertex2i(active_tab_index * tab_bar_width, get_h() - tab_bar_height);
-            glVertex2i(active_tab_index * tab_bar_width, get_h());
-            glVertex2i((active_tab_index+1) * tab_bar_width, get_h());
-            glVertex2i((active_tab_index+1) * tab_bar_width, get_h() - tab_bar_height);
-            glVertex2i(get_w(), get_h() - tab_bar_height);
-            glVertex2i(get_w(), 0);
-            glVertex2i(0, 0);
-            glEnd();
+            display::scoped_color fg(get_screen(), get_foreground());
+            get_screen().draw_line_2d(0, 0, 0, get_h() - tab_bar_height);
+            get_screen().draw_line_2d(0, get_h() - tab_bar_height, active_tab_index * tab_bar_width, get_h() - tab_bar_height);
+            get_screen().draw_line_2d(active_tab_index * tab_bar_width, get_h() - tab_bar_height, active_tab_index * tab_bar_width, get_h());
+            get_screen().draw_line_2d(active_tab_index * tab_bar_width, get_h(), (active_tab_index+1) * tab_bar_width, get_h());
+            get_screen().draw_line_2d((active_tab_index+1) * tab_bar_width, get_h(), (active_tab_index+1) * tab_bar_width, get_h() - tab_bar_height);
+            get_screen().draw_line_2d((active_tab_index+1) * tab_bar_width, get_h() - tab_bar_height, get_w(), get_h() - tab_bar_height);
+            get_screen().draw_line_2d(get_w(), get_h() - tab_bar_height, get_w(), 0);
+            get_screen().draw_line_2d(get_w(), 0, 0, 0);
 
             // contents widget will be drawn normally as it is a child...
         } // tabbox::draw()

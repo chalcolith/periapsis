@@ -34,9 +34,9 @@
 #include "space/star.hpp"
 #include "math/units.hpp"
 #include "scenegraph/camera.hpp"
-#include "platform/lowlevel.hpp"
 
 #include <cmath>
+
 
 using namespace gsgl;
 using namespace gsgl::data;
@@ -60,12 +60,6 @@ namespace periapsis
         {
             get_draw_flags() |= NODE_DRAW_UNLIT;
 
-            //// load textures
-            //if (!obj_config[L"corona"].is_empty())
-            //{
-            //    corona = new texture(L"scene graph", obj_config.get_directory().get_full_path() + obj_config[L"corona"], texture::TEXTURE_ENV_REPLACE);
-            //}
-
             // create light
             star_light = new light(this);
             star_light->get_ambient() = color::BLACK;
@@ -74,6 +68,18 @@ namespace periapsis
             star_light->get_attenuation_constant() = 1;
             star_light->get_attenuation_linear() = static_cast<gsgl::real_t>(1.0 / (10.0 * units::METERS_PER_AU)); // light halved at 10 AU, just for fun
             star_light->get_attenuation_quadratic() = 0;
+
+            // load properties
+            for (list<config_record>::const_iterator child = obj_config.get_children().iter(); child.is_valid(); ++child)
+            {
+                if (child->get_name() == L"property")
+                {
+                    if ((*child)[L"name"] == L"corona_material")
+                    {
+                        corona_material = new material(L"space", *child);
+                    }
+                }
+            }
         } // star::star()
 
 
@@ -96,19 +102,12 @@ namespace periapsis
         {
             gsgl::real_t corona_radius = get_equatorial_radius() * 16;
 
-            glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                   CHECK_GL_ERRORS();
-            glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                      CHECK_GL_ERRORS();
-
             gas_body::draw(sim_context, draw_context);
 
-            glPopClientAttrib();                                                                                CHECK_GL_ERRORS();
-            glPopAttrib();                                                                                      CHECK_GL_ERRORS();
-
             // draw corona
-            if (corona_material)
+            if (false && corona_material)
             {
-                glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                   CHECK_GL_ERRORS();
-                glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                      CHECK_GL_ERRORS();
+                display::scoped_state state(*draw_context->screen, display::ENABLE_ALL ^ (display::ENABLE_DEPTH));
 
                 vector ep = utils::pos_in_eye_space(this);
                 gsgl::real_t dist = ep.mag();
@@ -121,39 +120,14 @@ namespace periapsis
                 if (near_plane < 1.0f)
                     near_plane = 1.0f;
 
-                glMatrixMode(GL_PROJECTION);                                                                CHECK_GL_ERRORS();
-                glLoadIdentity();                                                                           CHECK_GL_ERRORS();
-                gluPerspective(draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), near_plane, far_plane);
-
-                glDisable(GL_DEPTH_TEST);                                                                   CHECK_GL_ERRORS();
-
-                glEnable(GL_BLEND);                                                                         CHECK_GL_ERRORS();
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);                                          CHECK_GL_ERRORS();
-
-                color::WHITE.bind();
-
-                glEnable(GL_CULL_FACE);                                                                         CHECK_GL_ERRORS();
-
-                if (draw_context->render_flags & (drawing_context::RENDER_WIREFRAME | drawing_context::RENDER_NO_TEXTURES))
-                {
-                    glPolygonMode(GL_FRONT, GL_LINE);
-                }
-                else
-                {
-                    glPolygonMode(GL_FRONT, GL_FILL);
-                    glEnable(GL_TEXTURE_2D);                                                                    CHECK_GL_ERRORS();
-                    corona_material->bind();
-                }
+                display::scoped_perspective proj(*draw_context->screen, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), near_plane, far_plane);
+                display::scoped_material    mat(*draw_context->screen, corona_material);
 
                 utils::draw_billboard(this, vector::ZERO, corona_radius);
-
-                glPopClientAttrib();                                                                                CHECK_GL_ERRORS();
-                glPopAttrib();                                                                                      CHECK_GL_ERRORS();
 
                 // draw twice, but there won't be many stars
                 draw_name(draw_context, 1, far_plane);
             }
-
         } // star::draw()
 
 

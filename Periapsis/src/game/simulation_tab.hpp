@@ -92,7 +92,7 @@ namespace periapsis
         gsgl::data::config_record *current_sim_record;
 
     public:
-        simulation_tab();
+        simulation_tab(gsgl::platform::display & screen);
         virtual ~simulation_tab();
 
         datetime_box *get_time_box() { return time_box; }

@@ -52,7 +52,7 @@ namespace gsgl
             void (*on_click_handler)(button *);
 
         public:
-            button(widget *parent, 
+            button(platform::display & screen, widget *parent, 
                    const int x, const int y, const int w, const int h,
                    const platform::color & fg, const platform::color & bg, 
                    const gsgl::string & font_face, int font_size,

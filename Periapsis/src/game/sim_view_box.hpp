@@ -55,7 +55,7 @@ namespace periapsis
         gsgl::framework::textbox *title_box;
         gsgl::framework::treebox *scenery_box;
     public:
-        sim_view_box(gsgl::framework::widget *parent,
+        sim_view_box(gsgl::platform::display & screen, gsgl::framework::widget *parent,
                      int x, int y, int w, int h,
                      const gsgl::platform::color & fg, const gsgl::platform::color & bg);
         virtual ~sim_view_box();

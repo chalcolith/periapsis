@@ -37,9 +37,11 @@
 #include "framework/framework.hpp"
 #include "scenegraph/event_map.hpp"
 #include "data/stack.hpp"
-#include "platform/platform.hpp"
+
 #include "platform/color.hpp"
 #include "platform/texture.hpp"
+#include "platform/font.hpp"
+#include "platform/display.hpp"
 
 
 union SDL_Event;
@@ -53,6 +55,7 @@ namespace gsgl
         class FRAMEWORK_API widget
             : public framework_object
         {
+            platform::display & screen;
             gsgl::flags_t flags;
 
             widget *parent, *next_tab, *prev_tab;
@@ -72,12 +75,15 @@ namespace gsgl
             };
 
 
-            widget(widget *parent, const int x, const int y, const int w, const int h,
+            widget(platform::display & screen, 
+                   widget *parent, const int x, const int y, const int w, const int h,
                    const platform::color & foreground, const platform::color & background);
             virtual ~widget();
 
             /// \name Accessors
             /// @{
+            platform::display & get_screen() { return screen; }
+
             gsgl::flags_t & get_flags() { return flags; }
             void set_flags(const gsgl::flags_t f, bool flag_on);
 

@@ -243,16 +243,28 @@ namespace gsgl
             
             void sphere::init(const simulation_context *c)
             {
+                vertices.load();
+                indices.load();
             } // sphere::init()
 
 
             void sphere::draw(const simulation_context *sim_context, const drawing_context *draw_context)
             {
+#if 0
+                display::scoped_buffer vb(*draw_context->screen, display::PRIMITIVE_TRIANGLE_STRIP, vertices, indices, true);
+
+                int index_stride = (num_steps*2+1)*2;
+
+                for (int i = 0; i < num_steps; ++i)
+                {
+                    vb.draw(index_stride, i*index_stride, (draw_context->render_flags & drawing_context::RENDER_WIREFRAME) != 0);
+                }
+
+#else
                 glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                   CHECK_GL_ERRORS();
                 glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                      CHECK_GL_ERRORS();
 
                 glEnableClientState(GL_VERTEX_ARRAY);                                                               CHECK_GL_ERRORS();
-                glEnableClientState(GL_COLOR_ARRAY);
                 glEnableClientState(GL_NORMAL_ARRAY);
                 glEnableClientState(GL_INDEX_ARRAY);                                                                CHECK_GL_ERRORS();
 
@@ -264,7 +276,18 @@ namespace gsgl
                 int index_stride = (num_steps*2+1)*2;
                 int vertex_stride = 8;
 
-                // for debugging
+                for (int i = 0; i < num_steps; ++i)
+                {
+                    glDrawElements(GL_TRIANGLE_STRIP, index_stride, GL_UNSIGNED_INT, vbuffer::VBO_OFFSET<vbuffer::index_t>(i*index_stride));
+                }
+
+                //// for debugging
+                //glColor4f(1, 1, 1, 1);
+                //glDisable(GL_CULL_FACE);
+                //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+                //int index_stride = (num_steps*2+1)*2;
+                //int vertex_stride = 8;
                 //for (int lat = 0; lat < num_steps; ++lat)
                 //{
                 //    glBegin(GL_TRIANGLE_STRIP);
@@ -280,13 +303,9 @@ namespace gsgl
                 //    glEnd();
                 //}
 
-                for (int i = 0; i < num_steps; ++i)
-                {
-                    glDrawElements(GL_TRIANGLE_STRIP, index_stride, GL_UNSIGNED_INT, vbuffer::VBO_OFFSET<vbuffer::index_t>(i*index_stride));
-                }
-
                 glPopClientAttrib();                                                                                CHECK_GL_ERRORS();
                 glPopAttrib();                                                                                      CHECK_GL_ERRORS();
+#endif
             } // sphere::draw()
 
 
@@ -522,6 +541,7 @@ namespace gsgl
             {
                 return;
 
+#if 0
                 glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                   CHECK_GL_ERRORS();
                 glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                      CHECK_GL_ERRORS();
 
@@ -529,16 +549,16 @@ namespace gsgl
                 glEnableClientState(GL_NORMAL_ARRAY);                                                               CHECK_GL_ERRORS();
 
                 platform::color cc(0.8f, 0.8f, 0.8f, 0.8f);
-                glColor4fv(cc.get_val());
+                glColor4fv(cc.ptr());
 
                 glEnable(GL_LIGHTING);                                                                              CHECK_GL_ERRORS();
 
                 glLightModelf(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);                                                CHECK_GL_ERRORS();
                 glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);                                                    CHECK_GL_ERRORS();
 
-                glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, cc.get_val());                                       CHECK_GL_ERRORS();
-                glMaterialfv(GL_FRONT, GL_SPECULAR, color::BLACK.get_val());                                        CHECK_GL_ERRORS();
-                glMaterialfv(GL_FRONT, GL_EMISSION, color::BLACK.get_val());                                        CHECK_GL_ERRORS();
+                glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, cc.ptr());                                       CHECK_GL_ERRORS();
+                glMaterialfv(GL_FRONT, GL_SPECULAR, color::BLACK.ptr());                                        CHECK_GL_ERRORS();
+                glMaterialfv(GL_FRONT, GL_EMISSION, color::BLACK.ptr());                                        CHECK_GL_ERRORS();
                 glMaterialf(GL_FRONT, GL_SHININESS, 8);                                                             CHECK_GL_ERRORS();
 
                 normals.bind();
@@ -551,6 +571,7 @@ namespace gsgl
 
                 glPopClientAttrib();                                                                                CHECK_GL_ERRORS();
                 glPopAttrib();                                                                                      CHECK_GL_ERRORS();
+#endif
             } // checkered_box::draw()
 
 

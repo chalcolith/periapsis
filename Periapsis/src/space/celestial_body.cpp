@@ -36,7 +36,6 @@
 
 #include "math/units.hpp"
 #include "scenegraph/camera.hpp"
-#include "platform/lowlevel.hpp"
 
 using namespace gsgl;
 using namespace gsgl::data;
@@ -77,11 +76,11 @@ namespace periapsis
                             simple_height_offset = vector::parse((*child)[L"height_offset"]);
                         if (!(*child)[L"height_max"].is_empty())
                             simple_height_max = units::parse((*child)[L"height_max"]);
-
-                        simple_sphere = new utils::sphere(this, 32, equatorial_radius, polar_radius, simple_color_offset.get_x(), simple_color_offset.get_y());
                     }
                 }
             }
+
+            simple_sphere = new utils::sphere(this, 32, equatorial_radius, polar_radius, simple_color_offset.get_x(), simple_color_offset.get_y());
         } // celestial_body::celestial_body()
 
 
@@ -129,8 +128,10 @@ namespace periapsis
 
         void celestial_body::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
-            glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                   CHECK_GL_ERRORS();
-            glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                      CHECK_GL_ERRORS();
+            display::scoped_state state(*draw_context->screen);
+
+            if (draw_context->render_flags & drawing_context::RENDER_WIREFRAME)
+                state.disable(display::ENABLE_FILLED_POLYS);
 
             // set up projection
             vector ep = utils::pos_in_eye_space(this);
@@ -143,19 +144,16 @@ namespace periapsis
             if (near_plane <= 0)
                 near_plane = 1;
 
-            glMatrixMode(GL_PROJECTION);                                                                        CHECK_GL_ERRORS();
-            glLoadIdentity();                                                                                   CHECK_GL_ERRORS();
-            gluPerspective(draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), near_plane, far_plane);  CHECK_GL_ERRORS();
+            display::scoped_perspective proj(*draw_context->screen, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), near_plane, far_plane);
+            display::scoped_color white(*draw_context->screen, color::WHITE);
 
             // check to see if we're out of range
             gsgl::real_t screen_width = utils::pixel_size(dist, radius, draw_context->cam->get_field_of_view(), draw_context->screen->get_height());
 
-            color::WHITE.bind();
-
             if (screen_width < MIN_PIXEL_WIDTH)
             {
                 get_draw_results() |= node::NODE_DREW_POINT;
-                draw_point(MIN_PIXEL_WIDTH);
+                draw_context->screen->draw_point(vector::ZERO, MIN_PIXEL_WIDTH);
             }
             else
             {
@@ -165,52 +163,15 @@ namespace periapsis
                 {
                     // the simple sphere may be rotated...
                     rotating_body *rb = get_rotating_frame();
+                    display::scoped_modelview mv(*draw_context->screen, rb ? &rb->get_modelview() : 0);
 
-                    if (rb)
-                    {
-                        glMatrixMode(GL_MODELVIEW);
-                        glPushMatrix();
-                        glLoadMatrixf(rb->get_modelview().ptr());
-                    }
+                    display::scoped_lighting lighting(*draw_context->screen, !(draw_context->render_flags & drawing_context::RENDER_NO_LIGHTING) && !(get_draw_flags() & NODE_DRAW_UNLIT));
+                    display::scoped_material mat(*draw_context->screen, (draw_context->render_flags & drawing_context::RENDER_NO_TEXTURES) ? 0 : simple_material);
 
-                    glClearDepth(1);                                                                                CHECK_GL_ERRORS();
-                    glClear(GL_DEPTH_BUFFER_BIT);                                                                   CHECK_GL_ERRORS();
-                    glEnable(GL_DEPTH_TEST);                                                                        CHECK_GL_ERRORS();
-
-                    glEnable(GL_CULL_FACE);                                                                         CHECK_GL_ERRORS();
-                    glPolygonMode(GL_FRONT_AND_BACK, (draw_context->render_flags & drawing_context::RENDER_WIREFRAME) ? GL_LINE : GL_FILL);     CHECK_GL_ERRORS();
-
-                    // set up lighting
-                    if (!(draw_context->render_flags & drawing_context::RENDER_NO_LIGHTING) && !(get_draw_flags() & NODE_DRAW_UNLIT))
-                    {
-                        glEnable(GL_LIGHTING);                                                                          CHECK_GL_ERRORS();
-
-                        glLightModelf(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);                                            CHECK_GL_ERRORS();
-                        glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);                                               CHECK_GL_ERRORS();
-                        //glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
-
-                        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color::WHITE.get_val());                         CHECK_GL_ERRORS();
-                        glMaterialfv(GL_FRONT, GL_SPECULAR, color::BLACK.get_val());                                    CHECK_GL_ERRORS();
-                        glMaterialfv(GL_FRONT, GL_EMISSION, color::BLACK.get_val());                                    CHECK_GL_ERRORS();
-                        glMaterialf(GL_FRONT, GL_SHININESS, 8);                                                         CHECK_GL_ERRORS();
-                    }
-
-                    if (simple_material)
-                        simple_material->bind();
-
+                    draw_context->screen->clear(display::CLEAR_DEPTH);
                     sph->draw(sim_context, draw_context);
-
-                    if (rb)
-                    {
-                        glMatrixMode(GL_MODELVIEW);
-                        glPopMatrix();
-                    }
                 }
             }
-
-            // clean up
-            glPopClientAttrib();                                                                                CHECK_GL_ERRORS();
-            glPopAttrib();                                                                                      CHECK_GL_ERRORS();
 
             // draw name
             draw_name(draw_context, 1, far_plane);
@@ -226,47 +187,19 @@ namespace periapsis
         } // celestial_body::cleanup()
 
 
-        void celestial_body::draw_point(float width)
-        {
-            glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                   CHECK_GL_ERRORS();
-            glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                      CHECK_GL_ERRORS();
-
-            glEnable(GL_BLEND);                                                                                 CHECK_GL_ERRORS();
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);                                                  CHECK_GL_ERRORS();
-
-            glEnable(GL_POINT_SMOOTH);                                                                          CHECK_GL_ERRORS();
-            glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);                                                            CHECK_GL_ERRORS();
-            glPointSize(width);                                                                                 CHECK_GL_ERRORS();
-
-            glBegin(GL_POINTS);                                                                             
-            glVertex3f(0, 0, 0);                                                                            
-            glEnd();                                                                                            CHECK_GL_ERRORS();
-
-            glPopClientAttrib();                                                                                CHECK_GL_ERRORS();
-            glPopAttrib();                                                                                      CHECK_GL_ERRORS();
-        } // celestial_body::draw_point()
-
-
         void celestial_body::draw_name(const drawing_context *c, gsgl::real_t near_plane, gsgl::real_t far_plane)
         {
             if ((c->render_flags & drawing_context::RENDER_LABELS) && !get_name().is_empty())
             {
-                glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                   CHECK_GL_ERRORS();
-                glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                      CHECK_GL_ERRORS();
-
                 const gsgl::platform::font *label_font = dynamic_cast<const space_drawing_context *>(c)->DEFAULT_LABEL_FONT.ptr();
 
-                glMatrixMode(GL_PROJECTION);                                                                    CHECK_GL_ERRORS();
-                glLoadIdentity();                                                                               CHECK_GL_ERRORS();
-                gluPerspective(c->cam->get_field_of_view(), c->screen->get_aspect_ratio(), near_plane, far_plane);          CHECK_GL_ERRORS();           
+                if (label_font)
+                {
+                    display::scoped_state state(*c->screen);
+                    display::scoped_text  text(*c->screen);
 
-                c->screen->record_3d_text_info();
-                c->screen->draw_text_start();
-                c->screen->draw_3d_text(vector::ZERO, label_font, get_name(), 4, -8);
-                c->screen->draw_text_stop();
-
-                glPopClientAttrib();                                                                                CHECK_GL_ERRORS();
-                glPopAttrib();                                                                                      CHECK_GL_ERRORS();
+                    text.draw_3d(vector::ZERO, label_font, get_name(), 4, -8);
+                }
             }
         } // celestial_body::draw_name()
 

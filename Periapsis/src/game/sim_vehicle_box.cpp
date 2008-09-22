@@ -44,18 +44,18 @@ using namespace gsgl::framework;
 namespace periapsis
 {
 
-    sim_vehicle_box::sim_vehicle_box(widget *parent, int x, int y, int w, int h, const color & fg, const color & bg)
-        : widget(parent, x, y, w, h, fg, bg), title_box(0), vehicle_box(0)
+    sim_vehicle_box::sim_vehicle_box(platform::display & screen, widget *parent, int x, int y, int w, int h, const color & fg, const color & bg)
+        : widget(screen, parent, x, y, w, h, fg, bg), title_box(0), vehicle_box(0)
     {
         int title_height = 4 + main_window::FONT_SIZE * 3 / 2;
 
-        title_box = new textbox(this, 
+        title_box = new textbox(screen, this, 
                                 0, h - title_height, 
                                 w, title_height,
                                 fg, bg, main_window::FONT_FACE, main_window::FONT_SIZE * 4 / 3);
         title_box->get_text() = L"Vehicle";
 
-        vehicle_box = new treebox(this,
+        vehicle_box = new treebox(screen, this,
                                   0, 0,
                                   w, h - (title_height + 4),
                                   fg, bg, main_window::FONT_FACE, main_window::FONT_SIZE);

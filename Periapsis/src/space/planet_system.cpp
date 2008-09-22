@@ -37,13 +37,15 @@
 #include "math/math.hpp"
 #include "math/units.hpp"
 #include "platform/color.hpp"
-#include "platform/lowlevel.hpp"
+#include "platform/display.hpp"
 
 using namespace gsgl;
 using namespace gsgl::data;
 using namespace gsgl::math;
 using namespace gsgl::scenegraph;
 using namespace gsgl::physics;
+using namespace gsgl::platform;
+
 
 namespace periapsis
 {
@@ -90,7 +92,9 @@ namespace periapsis
             if ((draw_context->render_flags & drawing_context::RENDER_COORD_SYSTEMS) && get_name() == L"Earth Barysystem")
             {
                 // the earth barysystem is still oriented to the ecliptic; we want to display the equatorial, but not move...
-                glMultMatrixf(EQUATORIAL_WRT_ECLIPTIC.ptr());                                                       CHECK_GL_ERRORS();
+                display::scoped_modelview mv(*draw_context->screen, 0);
+                mv.mult(EQUATORIAL_WRT_ECLIPTIC);
+
                 cs->draw(sim_context, draw_context);
             }
         } // planet_system::draw()

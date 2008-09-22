@@ -33,7 +33,7 @@
 
 #include "framework/scrollbar.hpp"
 #include "math/vector.hpp"
-#include "platform/lowlevel.hpp"
+
 
 namespace gsgl
 {
@@ -48,19 +48,17 @@ namespace gsgl
         config_variable<int> scrollbar::ARROW_SIZE(L"framework/scrollbar/arrow_size", 10);
 
 
-        scrollbar::scrollbar(widget *parent, 
+        scrollbar::scrollbar(display & screen, widget *parent, 
                              int x, int y, int w, int h, 
                              const color & fg, const color & bg, 
                              bar_mode mode)
-            : widget(parent, x, y, w, h, fg, bg), min_val(0), max_val(0), pos(0), extent(0), mode(mode)
+            : widget(screen, parent, x, y, w, h, fg, bg), min_val(0), max_val(0), pos(0), extent(0), mode(mode)
         {
-            //LOG_BASIC(L"ui: creating scrollbar");
         } // scrollbar::scrollbar()
 
 
         scrollbar::~scrollbar()
         {
-            //LOG_BASIC(L"ui: destroying scrollbar");
         } // scrollbar::~scrollbar()
 
 
@@ -73,12 +71,7 @@ namespace gsgl
 
             widget::draw();
 
-            glPushAttrib(GL_ALL_ATTRIB_BITS);
-            glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
-
-            get_foreground().bind();
-            glLineWidth(3.0f);
-
+            display::scoped_color fg(get_screen(), get_foreground());
             if (mode == VERTICAL)
             {
                 // draw up arrow
@@ -88,9 +81,6 @@ namespace gsgl
             else
             {
             }
-
-            glPopClientAttrib();
-            glPopAttrib();
         } // scrollbar::draw()
 
     } // namespace framework

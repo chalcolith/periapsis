@@ -59,7 +59,7 @@ namespace gsgl
                 HORIZONTAL
             };
 
-            scrollbar(widget *parent, 
+            scrollbar(platform::display & screen, widget *parent, 
                       const int x, const int y, const int w, const int h,
                       const platform::color & foreground, 
                       const platform::color & background,

@@ -36,6 +36,8 @@
 
 #include "framework/widget.hpp"
 
+using namespace gsgl;
+
 namespace periapsis
 {
 
@@ -43,7 +45,7 @@ namespace periapsis
         : public gsgl::framework::widget
     {
     public:
-        settings_tab();
+        settings_tab(gsgl::platform::display & screen);
         virtual ~settings_tab();
 
         virtual void draw();

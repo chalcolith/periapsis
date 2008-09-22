@@ -44,7 +44,6 @@
 #include "scenery_tab.hpp"
 #include "settings_tab.hpp"
 
-#include "platform/lowlevel.hpp"
 
 using namespace gsgl;
 using namespace gsgl::data;
@@ -118,12 +117,12 @@ namespace periapsis
 
     //
 
-    main_window::main_window(const string & title, const int x, const int y)
-        : widget(0, x, y, WIDTH, HEIGHT, FOREGROUND, BACKGROUND), gsgl::data::singleton<main_window>(),
+    main_window::main_window(platform::display & screen, const string & title, const int x, const int y)
+        : widget(screen, 0, x, y, WIDTH, HEIGHT, FOREGROUND, BACKGROUND), gsgl::data::singleton<main_window>(),
           title_box(0), status_bar(0), tab_box(0), sim_tab(0), set_tab(0),
           need_to_load_scenery(true), loading_thread(0)
     {
-        title_box = new textbox(this, 
+        title_box = new textbox(screen, this, 
                                 0, HEIGHT - TITLE_BOX_HEIGHT, 
                                 WIDTH, TITLE_BOX_HEIGHT, 
                                 FOREGROUND, BACKGROUND, 
@@ -131,18 +130,18 @@ namespace periapsis
         title_box->get_text() = title;
 
         //
-        quit_button = new button(this, WIDTH - QUIT_BUTTON_WIDTH, HEIGHT - TITLE_BOX_HEIGHT*3/4, QUIT_BUTTON_WIDTH, TITLE_BOX_HEIGHT * 3 / 4, FOREGROUND, BACKGROUND, FONT_FACE, FONT_SIZE, L"Quit");
+        quit_button = new button(screen, this, WIDTH - QUIT_BUTTON_WIDTH, HEIGHT - TITLE_BOX_HEIGHT*3/4, QUIT_BUTTON_WIDTH, TITLE_BOX_HEIGHT * 3 / 4, FOREGROUND, BACKGROUND, FONT_FACE, FONT_SIZE, L"Quit");
         quit_button->set_on_click_handler(&handle_quit);
 
         //
-        status_bar = new textbox(this, 0, 0, WIDTH, STATUS_BAR_HEIGHT, FOREGROUND, BACKGROUND, FONT_FACE, FONT_SIZE);
+        status_bar = new textbox(screen, this, 0, 0, WIDTH, STATUS_BAR_HEIGHT, FOREGROUND, BACKGROUND, FONT_FACE, FONT_SIZE);
         status_bar->get_text() = L"Welcome to Periapsis, the spaceflight simulator.";
 
         //
-        sim_tab = new simulation_tab();
-        set_tab = new settings_tab();
+        sim_tab = new simulation_tab(screen);
+        set_tab = new settings_tab(screen);
 
-        tab_box = new tabbox(this, 
+        tab_box = new tabbox(screen, this, 
                              2*TAB_BOX_SPACE, STATUS_BAR_HEIGHT+2*TAB_BOX_SPACE, 
                              WIDTH-4*TAB_BOX_SPACE, HEIGHT - (TITLE_BOX_HEIGHT + STATUS_BAR_HEIGHT + 4*TAB_BOX_SPACE), 
                              FOREGROUND, BACKGROUND, 

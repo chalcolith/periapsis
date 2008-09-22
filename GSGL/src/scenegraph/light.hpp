@@ -62,8 +62,6 @@ namespace gsgl
             gsgl::real_t & get_attenuation_constant() { return attenuation_constant; }
             gsgl::real_t & get_attenuation_linear() { return attenuation_linear; }
             gsgl::real_t & get_attenuation_quadratic() { return attenuation_quadratic; }
-
-            virtual void bind(int light_number);
         }; // class light
 
     } // namespace scenegraph

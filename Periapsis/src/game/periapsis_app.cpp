@@ -39,7 +39,6 @@
 #include "data/file.hpp"
 
 #include "platform/texture.hpp"
-#include "platform/lowlevel.hpp"
 
 #include "scenegraph/context.hpp"
 #include "scenegraph/simulation.hpp"
@@ -81,7 +80,7 @@ namespace periapsis
         int x = (sw / 2) - (main_window::WIDTH / 2);
         int y = (sh / 2) - (main_window::HEIGHT / 2);
 
-        widgets.push(new main_window(get_title(), x, y));
+        widgets.push(new main_window(*global_console, get_title(), x, y));
     } // periapsis_app::init()
 
 

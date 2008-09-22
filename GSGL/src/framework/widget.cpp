@@ -35,7 +35,7 @@
 #include "framework/application.hpp"
 
 #include "platform/display.hpp"
-#include "platform/lowlevel.hpp"
+
 
 namespace gsgl
 {
@@ -46,8 +46,8 @@ namespace gsgl
     namespace framework
     {
 
-        widget::widget(widget *parent, const int x, const int y, const int w, const int h, const color & fg, const color & bg)
-            : flags(NO_FLAGS), parent(parent), next_tab(0), prev_tab(0), x(x), y(y), w(w), h(h), foreground(fg), background(bg), tex(0), handler(0)
+        widget::widget(display & screen, widget *parent, const int x, const int y, const int w, const int h, const color & fg, const color & bg)
+            : screen(screen), flags(NO_FLAGS), parent(parent), next_tab(0), prev_tab(0), x(x), y(y), w(w), h(h), foreground(fg), background(bg), tex(0), handler(0)
         {
             if (parent)
                 parent->add_child(this);
@@ -93,24 +93,11 @@ namespace gsgl
 
         void widget::draw()
         {
-            glPushAttrib(GL_ALL_ATTRIB_BITS);
-            glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
+            display::scoped_state state(get_screen(), display::ENABLE_ORTHO_2D);
+            display::scoped_color bg(get_screen(), get_background());
+            display::scoped_texture t(get_screen(), tex);
 
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            if (tex)
-            {
-                glEnable(GL_TEXTURE_2D);
-                tex->bind();
-            }
-
-            background.bind();
-
-            display::draw_rectangle(0, 0, static_cast<float>(w), static_cast<float>(h));
-
-            glPopClientAttrib();
-            glPopAttrib();
+            get_screen().draw_rect_2d(0, 0, static_cast<float>(w), static_cast<float>(h));
         } // widget::draw()
 
 
@@ -168,19 +155,14 @@ namespace gsgl
         {
             get_abs(x0, y0);
             get_abs(x1, y1);
-
-            glBegin(GL_LINES);
-            glVertex2i(x0, y0);
-            glVertex2i(x1, y1);
-            glEnd();
+            get_screen().draw_line_2d(x0, y0, x1, y1);
         } // widget::draw_line()
 
 
         void widget::draw_box(int x, int y, int w, int h)
         {
             get_abs(x, y);
-
-            display::draw_rectangle(static_cast<float>(x), static_cast<float>(y), static_cast<float>(x+w), static_cast<float>(y+h));
+            get_screen().draw_rect_2d(static_cast<float>(x), static_cast<float>(y), static_cast<float>(x+w), static_cast<float>(y+h));
         } // widget::draw_box()
 
     } // namespace framework

@@ -41,11 +41,6 @@
 namespace gsgl
 {
 
-    namespace platform
-    {
-        class font;
-    }
-
     namespace framework
     {
 
@@ -71,7 +66,7 @@ namespace gsgl
             int tab_bar_height;
 
         public:
-            tabbox(widget *parent,
+            tabbox(platform::display & screen, widget *parent,
                    int x, int y, int w, int h, 
                    const platform::color & fg, 
                    const platform::color & bg,

@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="ThirdParty"
 	ProjectGUID="{B62AE820-BE4B-4B4B-ABC1-CA63618E41DE}"
 	RootNamespace="ThirdParty"
 	Keyword="MakeFileProj"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform

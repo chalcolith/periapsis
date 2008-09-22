@@ -33,14 +33,14 @@
 
 #include "scenegraph/model.hpp"
 
+#include "data/log.hpp"
 #include "data/list.hpp"
 #include "data/dictionary.hpp"
 #include "data/fstream.hpp"
 #include "data/file.hpp"
 
-#include "platform/lowlevel.hpp"
-
 #include <cmath>
+
 
 namespace gsgl
 {
@@ -90,18 +90,38 @@ namespace gsgl
         } // submesh::unload()
 
 
-        void submesh::draw(gsgl::flags_t render_flags)
+        void submesh::draw(const drawing_context *draw_context)
         {
+            display & fb = *draw_context->screen;
+
+            display::scoped_state state(fb);
+            display::scoped_lighting lighting(fb);
+            display::scoped_material cur_mat(fb, mat.ptr());
+
+            if (point_vertices.size())
+            {
+                display::scoped_buffer points(fb, display::PRIMITIVE_POINTS, point_vertices);
+                points.draw(point_vertices.size()/3);
+            }
+
+            if (line_vertices.size())
+            {
+                display::scoped_buffer lines(fb, display::PRIMITIVE_LINES, line_vertices);
+                lines.draw(line_vertices.size()/3);
+            }
+
+            if (triangle_vertices.size())
+            {
+                display::scoped_buffer tris(fb, display::PRIMITIVE_TRIANGLES, triangle_vertices, triangle_normals, triangle_texcoords);
+                tris.draw(triangle_vertices.size()/3, 0, (draw_context->render_flags & drawing_context::RENDER_WIREFRAME) != 0);
+            }
+        } // submesh::draw()
+
+#if 0
+
+
             glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                       CHECK_GL_ERRORS();
             glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                          CHECK_GL_ERRORS();
-
-            glEnable(GL_POINT_SMOOTH);                                                                              CHECK_GL_ERRORS();
-            glEnable(GL_LINE_SMOOTH);                                                                               CHECK_GL_ERRORS();
-            glEnable(GL_POLYGON_SMOOTH);                                                                            CHECK_GL_ERRORS();
-
-            glEnableClientState(GL_VERTEX_ARRAY);                                                                   CHECK_GL_ERRORS();
-            glEnableClientState(GL_NORMAL_ARRAY);                                                                   CHECK_GL_ERRORS();
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY);                                                            CHECK_GL_ERRORS();
 
             // lighting and material
             if (!(render_flags & drawing_context::RENDER_NO_LIGHTING))
@@ -168,6 +188,7 @@ namespace gsgl
             glPopClientAttrib();                                                                                    CHECK_GL_ERRORS();
             glPopAttrib();                                                                                          CHECK_GL_ERRORS();
         } // submesh::draw()
+#endif
 
 
         //////////////////////////////////////////
@@ -499,7 +520,7 @@ namespace gsgl
             int i, len = submeshes.size();
             for (i = 0; i < len; ++i)
             {
-                submeshes[i]->draw(draw_context->render_flags);
+                submeshes[i]->draw(draw_context);
             }
         } // submesh_node::draw()
 

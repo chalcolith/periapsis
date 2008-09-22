@@ -38,17 +38,12 @@
 #include "framework/widget.hpp"
 #include "framework/textbox.hpp"
 #include "framework/scrollbar.hpp"
+
 #include "data/array.hpp"
 #include "data/list.hpp"
 
 namespace gsgl
 {
-
-    namespace platform
-    {
-        class font;
-    }
-
 
     namespace framework
     {
@@ -75,7 +70,7 @@ namespace gsgl
 
         public:
 
-            treebox_node(treebox *parent_treebox, treebox_node *parent_node, 
+            treebox_node(platform::display & screen, treebox *parent_treebox, treebox_node *parent_node, 
                          const platform::color & fg, const platform::color & bg, 
                          const gsgl::string & text, void *user_data);
             virtual ~treebox_node();
@@ -108,7 +103,7 @@ namespace gsgl
             treebox_node *selected_node;
 
         public:
-            treebox(widget *parent, int x, int y, int w, int h, const platform::color & fg, const platform::color & bg, const gsgl::string & font_face, const int font_size);
+            treebox(platform::display & screen, widget *parent, int x, int y, int w, int h, const platform::color & fg, const platform::color & bg, const gsgl::string & font_face, const int font_size);
             virtual ~treebox();
 
             platform::font *get_text_font() { return text_font; }

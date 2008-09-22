@@ -44,6 +44,7 @@
 #include "data/config.hpp"
 #include "data/stack.hpp"
 
+
 // forward declarations
 union SDL_Event;
 
@@ -52,7 +53,6 @@ namespace gsgl
 
     namespace data
     {
-        class log;
         class broker;
     } // namespace data
 
@@ -87,7 +87,7 @@ namespace gsgl
         {
             data::list<gsgl::data_object *> global_caches;
 
-        protected:
+        public:
             enum app_state
             {
                 APP_NO_STATE = 0,
@@ -99,6 +99,7 @@ namespace gsgl
                 APP_DEAD
             };
 
+        protected:
             app_state state;
 
             gsgl::string title;
@@ -122,6 +123,7 @@ namespace gsgl
             scenegraph::event_map  *global_mapper;
 
             platform::budget       *global_budget;
+            platform::font         *budget_font;
 
         public:
 
@@ -141,6 +143,8 @@ namespace gsgl
 
             /// \name Accessors
             /// @{
+
+            const app_state get_state() const { return state; }
 
             string & get_title() { return title; }
 
@@ -166,8 +170,8 @@ namespace gsgl
             void unload_scenery();
 
             void load_and_run_simulation(const string & fname, gsgl::scenegraph::simulation_context *sim_context, gsgl::scenegraph::drawing_context *draw_context); ///< Loads and runs a simulation.  This will set the top widget to be invisible.
-            void unload_and_quit_simulation();                  ///< Unloads and quits a simulation.  This will set the top widget to be visible, so make sure that any extra widgets have been popped off the stack.
-            void quit_application();                            ///< Quits the application.  Unloads and quits any simulation loaded.
+            void unload_and_quit_simulation(); ///< Unloads and quits a simulation.  This will set the top widget to be visible, so make sure that any extra widgets have been popped off the stack.
+            void quit_application();           ///< Quits the application.  Unloads and quits any simulation loaded.
 
             ///< This contains the main event loop of the application.  It clears the screen, calls draw(), draws UI elements, and flips the buffers.
             void run();

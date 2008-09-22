@@ -38,7 +38,6 @@
 #include "scenegraph/utils.hpp"
 #include "platform/texture.hpp"
 #include "platform/heightmap.hpp"
-#include "platform/lowlevel.hpp"
 
 #include <cmath>
 
@@ -124,20 +123,20 @@ namespace periapsis
                 {
                     update_fan_indices();
 
-                    buffer_pool_rec.parent->vertices.bind();
-                    glInterleavedArrays(GL_T2F_N3F_V3F, 0, vbuffer::VBO_OFFSET<float>(buffer_pool_rec.pos_in_vertices));
+                    display::scoped_buffer buf(*draw_context->screen, display::PRIMITIVE_TRIANGLE_FAN, buffer_pool_rec.parent->vertices, buffer_pool_rec.parent->indices, true);
 
-                    buffer_pool_rec.parent->indices.bind();
+                    //buffer_pool_rec.parent->vertices.bind();
+                    //glInterleavedArrays(GL_T2F_N3F_V3F, 0, vbuffer::VBO_OFFSET<float>(buffer_pool_rec.pos_in_vertices));
+
+                    //buffer_pool_rec.parent->indices.bind();
 
                     int prev_elements_drawn = 0;
                     for (int i = 0; i < 4; ++i)
                     {
                         if (num_indices_in_quadrants[i])
                         {
-                            //glDrawElements(GL_TRIANGLE_FAN, num_indices_in_quadrants[i], GL_UNSIGNED_INT, vbuffer::VBO_OFFSET<vbuffer::index_t>(prev_elements_drawn));
-                            //glDrawElements(GL_TRIANGLE_FAN, num_indices_in_quadrants[i], GL_UNSIGNED_INT, triangle_fan_indices.ptr() + prev_elements_drawn);
-
-                            glDrawElements(GL_TRIANGLE_FAN, num_indices_in_quadrants[i], GL_UNSIGNED_INT, vbuffer::VBO_OFFSET<unsigned int>( buffer_pool_rec.pos_in_indices + prev_elements_drawn ));
+                            buf.draw(num_indices_in_quadrants[i], buffer_pool_rec.pos_in_indices + prev_elements_drawn);
+                            //glDrawElements(GL_TRIANGLE_FAN, num_indices_in_quadrants[i], GL_UNSIGNED_INT, vbuffer::VBO_OFFSET<unsigned int>( buffer_pool_rec.pos_in_indices + prev_elements_drawn ));
 
                             prev_elements_drawn += num_indices_in_quadrants[i];
                         }
@@ -360,20 +359,11 @@ namespace periapsis
                 update(sim_context, false);
             }
 
-            glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                   CHECK_GL_ERRORS();
-            glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                      CHECK_GL_ERRORS();
-
-            glEnableClientState(GL_VERTEX_ARRAY);                                                               CHECK_GL_ERRORS();
-            glEnableClientState(GL_NORMAL_ARRAY);
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            glEnableClientState(GL_INDEX_ARRAY);                                                                CHECK_GL_ERRORS();
+            display::scoped_state state(*draw_context->screen);
             
             for (int i = 0; i < 6; ++i)
                 if (root_nodes[i])
                     root_nodes[i]->draw(sim_context, draw_context);
-
-            glPopClientAttrib();
-            glPopAttrib();
         } // spherical_quadtree::draw()
 
 

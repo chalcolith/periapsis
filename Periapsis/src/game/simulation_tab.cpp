@@ -65,8 +65,8 @@ namespace periapsis
     static config_variable<int> BUTTON_SPACE(L"ui/simulation_tab/button_space", 10);
 
 
-    simulation_tab::simulation_tab()
-        : widget(0, 0, 0, 0, 0, main_window::FOREGROUND, main_window::BACKGROUND),
+    simulation_tab::simulation_tab(platform::display & screen)
+        : widget(screen, 0, 0, 0, 0, 0, main_window::FOREGROUND, main_window::BACKGROUND),
           title_box(0), time_box(0), view_box(0), vehicle_box(0),
           load_button(0), save_button(0), go_button(0), 
           waiting_for_scenery(false),
@@ -94,7 +94,7 @@ namespace periapsis
         {
             int baseline = 7 * eighth;
 
-            title_box = new textbox(this, 
+            title_box = new textbox(get_screen(), this, 
                                     BUTTON_SPACE, baseline + BUTTON_SPACE, 
                                     get_w() - 2*BUTTON_SPACE, eighth - 2*BUTTON_SPACE, 
                                     main_window::FOREGROUND, main_window::BACKGROUND, 
@@ -107,7 +107,7 @@ namespace periapsis
         {
             int baseline = 6 * eighth + eighth/2;
 
-            time_box = new datetime_box(this,
+            time_box = new datetime_box(get_screen(), this,
                                         BUTTON_SPACE, baseline + BUTTON_SPACE,
                                         get_w() - 2*BUTTON_SPACE, main_window::FONT_SIZE*4/3,
                                         main_window::FOREGROUND, main_window::BACKGROUND);                                        
@@ -123,12 +123,12 @@ namespace periapsis
         {
             int baseline = eighth/2 + BUTTON_SPACE/2;
 
-            view_box = new sim_view_box(this,
+            view_box = new sim_view_box(get_screen(), this,
                                         BUTTON_SPACE, baseline + BUTTON_SPACE,
                                         get_w()/2 - 2*BUTTON_SPACE, 6*eighth - 2*BUTTON_SPACE,
                                         main_window::FOREGROUND, main_window::BACKGROUND);
             treebox *view_tree = view_box->get_scenery_box();
-            treebox_node *temp_node = new treebox_node(view_tree, 0, main_window::FOREGROUND, main_window::BACKGROUND, L"Loading...", 0);
+            treebox_node *temp_node = new treebox_node(get_screen(), view_tree, 0, main_window::FOREGROUND, main_window::BACKGROUND, L"Loading...", 0);
 
             waiting_for_scenery = true;
         }
@@ -150,7 +150,7 @@ namespace periapsis
 
         if (!load_button)
         {
-            load_button = new button(this, 
+            load_button = new button(get_screen(), this, 
                                      BUTTON_SPACE, BUTTON_SPACE, 
                                      (get_w() / 3) - 2*BUTTON_SPACE, main_window::FONT_SIZE * 4 / 3, 
                                      main_window::FOREGROUND, main_window::BACKGROUND, 
@@ -160,7 +160,7 @@ namespace periapsis
 
         if (!save_button)
         {
-            save_button = new button(this,
+            save_button = new button(get_screen(), this,
                                      (get_w() / 3) + BUTTON_SPACE, BUTTON_SPACE,
                                      (get_w() / 3) - 2*BUTTON_SPACE, main_window::FONT_SIZE * 4 / 3,
                                      main_window::FOREGROUND, main_window::BACKGROUND,
@@ -170,7 +170,7 @@ namespace periapsis
 
         if (!go_button)
         {
-            go_button = new button(this,
+            go_button = new button(get_screen(), this,
                                    (get_w() * 2 / 3) + BUTTON_SPACE, BUTTON_SPACE,
                                    (get_w() / 3) - 2*BUTTON_SPACE, main_window::FONT_SIZE * 4 / 3,
                                    main_window::FOREGROUND, main_window::BACKGROUND,

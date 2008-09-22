@@ -40,16 +40,18 @@
 #include "math/units.hpp"
 
 #include "platform/budget.hpp"
-#include "platform/lowlevel.hpp"
 
 #include <cmath>
 #include <cfloat>
+
 
 namespace gsgl
 {
 
     using namespace data;
     using namespace math;
+    using namespace platform;
+
     
     namespace scenegraph
     {
@@ -212,25 +214,6 @@ namespace gsgl
             return parent_name;
         } // node::get_parent_name()
 
-        gsgl::real_t & node::get_scale()
-        {
-            return scale;
-        } // node::get_scale()
-        
-        math::vector & node::get_translation()
-        {
-            return translation;
-        } // node::get_translation()
-        
-        math::transform & node::get_orientation()
-        {
-            return orientation;
-        } // node::get_orientation()
-                
-        math::transform & node::get_modelview()
-        {
-            return modelview;
-        } // node::get_modelview()
         
         //
 
@@ -395,16 +378,147 @@ namespace gsgl
 
         void node::draw_scene(simulation_context *sim_context, drawing_context *draw_context, pre_draw_rec & rec)
         {
+            display & fb = *draw_context->screen;
+
+            display::scoped_state state(fb);
+            display::scoped_viewport view(fb);
+
+            draw_scene_lighting(sim_context, draw_context, rec);
+            draw_distant_nodes(sim_context, draw_context, rec);
+
+            if (rec.solids.size() || rec.translucents.size())
+            {
+                float nearest_extent = FLT_MAX;
+                float farthest_extent = 0.0f;
+
+                get_local_info(sim_context, draw_context, rec.solids, nearest_extent, farthest_extent);
+                get_local_info(sim_context, draw_context, rec.translucents, nearest_extent, farthest_extent);
+
+                state.enable(display::ENABLE_DEPTH);
+                state.enable(display::ENABLE_BLEND);
+
+                display::scoped_perspective proj(fb, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), nearest_extent, farthest_extent);
+
+                draw_local_objects(sim_context, draw_context, rec.solids);
+                draw_local_objects(sim_context, draw_context, rec.translucents);
+            }
+
+            return;
+        } // node::draw_scene()
+
+
+        void node::draw_scene_lighting(simulation_context *sim_context, drawing_context *draw_context, pre_draw_rec & rec)
+        {
+            display & fb = *draw_context->screen;
+
+            // set up lighting
+            int max_lights = fb.get_max_lights();
+            fb.define_ambient_light(AMBIENT_LIGHT);
+            
+            draw_context->num_lights = 0;
+            if (!(draw_context->render_flags & drawing_context::RENDER_NO_LIGHTING))
+            {
+                int i, len = rec.light_queue.size();
+
+                if (len > max_lights)
+                    throw runtime_exception(L"You have defined %d lights; the maximum number is %d!", len, max_lights);
+
+                for (i = 0; i < len && i < max_lights; ++i)
+                {
+                    light *l = rec.light_queue[i];
+
+                    fb.define_light(i, l->get_modelview(), vector::ZERO, 
+                                    l->get_ambient(), l->get_diffuse(), l->get_specular(), 
+                                    l->get_attenuation_constant(), l->get_attenuation_linear(), l->get_attenuation_quadratic());
+                }
+
+                draw_context->num_lights = i;
+            }
+        } // node::draw_scene_lighting()
+
+
+        void node::draw_distant_nodes(simulation_context *sim_context, drawing_context *draw_context, pre_draw_rec & rec)
+        {
+            display & fb = *draw_context->screen;
+
+            int i, len = rec.paint_queue.size();
+            for (i = 0; i < len; ++i)
+            {
+                node *n = rec.paint_queue[i];
+                n->draw_results = NODE_NO_DRAW_RESULTS;
+
+                BUDGET_SCOPE(RENDER_CATEGORY + n->get_type_name());
+                display::scoped_modelview mv(fb, &n->get_modelview());
+
+                // nodes need to do their own frustum checks
+                n->draw(sim_context, draw_context);
+            }
+        } // node::draw_distant_nodes()
+
+
+        void node::get_local_info(simulation_context *sim_context, drawing_context *draw_context, simple_array<node *> & nodes, float & near, float & far)
+        {
+            int i, len = nodes.size();
+            for (i = 0; i < len; ++i)
+            {
+                node *n = nodes[i];
+                n->draw_results = NODE_NO_DRAW_RESULTS;
+
+                // individual nodes may define their own projection frustums
+                if (!utils::is_on_screen(n, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), vector::ZERO, n->view_radius()))
+                {
+                    n->draw_results |= NODE_OFF_SCREEN;
+                    continue;
+                }
+                
+                float zdist = (n->get_modelview() * vector::ZERO).get_z();
+                if (zdist < 0.1f) zdist = 0.1f;
+
+                if (zdist > LOCAL_CULL_DISTANCE) {
+                    n->draw_results |= NODE_DISTANCE_CULLED;
+                    continue;
+                }
+
+                if (zdist < near)
+                    near = zdist;
+                if (zdist > far)
+                    far = zdist;
+            }
+        } // node::get_local_info()
+
+
+        void node::draw_local_objects(simulation_context *sim_context, drawing_context *draw_context, data::simple_array<node *> & nodes)
+        {
+            int i, len = nodes.size();
+            for (i = 0; i < len; ++i)
+            {
+                node *n = nodes[i];
+
+                if (n->draw_results & (NODE_OFF_SCREEN | NODE_DISTANCE_CULLED))
+                    continue;
+
+                BUDGET_SCOPE(RENDER_CATEGORY + n->get_type_name());
+                display::scoped_modelview mv(*draw_context->screen, &n->get_modelview());
+                n->draw(sim_context, draw_context);
+            }
+        } // node::draw_local_objects()
+
+
+
+
+#if 0
+            ///////////
+
             int i, len;
 
             // init viewport
-            glViewport(0, 0, draw_context->screen->get_width(), draw_context->screen->get_height());                                      CHECK_GL_ERRORS();
+            glViewport(0, 0, draw_context->screen->get_width(), draw_context->screen->get_height());                CHECK_GL_ERRORS();
 
             glPushAttrib(GL_ALL_ATTRIB_BITS);                                                                       CHECK_GL_ERRORS();
             glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);                                                          CHECK_GL_ERRORS();
 
             // set up lights
-            glLightModelfv(GL_LIGHT_MODEL_AMBIENT, AMBIENT_LIGHT.get_value().get_val());                                        CHECK_GL_ERRORS();
+            glLightModelfv(GL_LIGHT_MODEL_AMBIENT, AMBIENT_LIGHT.get_value().ptr());                                CHECK_GL_ERRORS();
 
             int max_lights;
             glGetIntegerv(GL_MAX_LIGHTS, &max_lights);                                                              CHECK_GL_ERRORS();
@@ -435,7 +549,7 @@ namespace gsgl
                 node *n = rec.paint_queue[i];
                 n->draw_results = NODE_NO_DRAW_RESULTS;
              
-                platform::budget_record br(RENDER_CATEGORY + n->get_type_name());
+                BUDGET_SCOPE(RENDER_CATEGORY + n->get_type_name());
 
                 glMatrixMode(GL_MODELVIEW);                                                                         CHECK_GL_ERRORS();
                 glLoadMatrixf(n->get_modelview().ptr());
@@ -531,7 +645,7 @@ namespace gsgl
                     if (n->draw_results & (NODE_OFF_SCREEN | NODE_DISTANCE_CULLED))
                         continue;
 
-                    platform::budget_record br(RENDER_CATEGORY + n->get_type_name());
+                    BUDGET_SCOPE(RENDER_CATEGORY + n->get_type_name());
 
                     glMatrixMode(GL_MODELVIEW);
                     glLoadMatrixf(n->get_modelview().ptr());
@@ -551,7 +665,7 @@ namespace gsgl
                     if (n->draw_results & (NODE_OFF_SCREEN | NODE_DISTANCE_CULLED))
                         continue;
 
-                    platform::budget_record br(RENDER_CATEGORY + n->get_type_name());
+                    BUDGET_SCOPE(RENDER_CATEGORY + n->get_type_name());
 
                     glMatrixMode(GL_MODELVIEW);
                     glLoadMatrixf(n->get_modelview().ptr());
@@ -564,6 +678,7 @@ namespace gsgl
             glPopClientAttrib();                                                                                    CHECK_GL_ERRORS();
             glPopAttrib();                                                                                          CHECK_GL_ERRORS();
         } // node::draw_scene()
+#endif
 
 
     } // namespace scenegraph

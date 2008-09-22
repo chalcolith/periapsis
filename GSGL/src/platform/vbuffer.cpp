@@ -71,6 +71,7 @@ namespace gsgl
             {
                 glDeleteBuffers(1, (GLuint *) &opengl_id);                                                          CHECK_GL_ERRORS();
                 opengl_id = 0;
+                prev_size = 0;
             }
         } // vbuffer_base::unload()
 

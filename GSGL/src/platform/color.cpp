@@ -44,12 +44,19 @@ namespace gsgl
 
         const color color::BLACK(0, 0, 0, 1);
         const color color::WHITE(1, 1, 1, 1);
+        const color color::HOT_PINK(0xff69b4ff);
 
 
         void color::bind() const
         {
             glColor4fv(val);                                                                                        CHECK_GL_ERRORS();
         } // color::bind()
+
+
+        void color::unbind() const
+        {
+            glColor4fv(HOT_PINK.val);
+        } // color::unbind()
 
 
         color color::parse(const string & s)

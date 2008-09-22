@@ -56,20 +56,20 @@ namespace periapsis
 
 
 
-    sim_view_box::sim_view_box(gsgl::framework::widget *parent, 
+    sim_view_box::sim_view_box(platform::display & screen, gsgl::framework::widget *parent, 
                                int x, int y, int w, int h, 
                                const color & fg, const color & bg)
-        : widget(parent, x, y, w, h, fg, bg), title_box(0), scenery_box(0)
+        : widget(screen, parent, x, y, w, h, fg, bg), title_box(0), scenery_box(0)
     {
         int title_height = 4 + main_window::FONT_SIZE * 3 / 2;
 
-        title_box = new textbox(this, 
+        title_box = new textbox(screen, this, 
                                 0, h - title_height, 
                                 w, title_height,
                                 fg, bg, main_window::FONT_FACE, main_window::FONT_SIZE * 4 / 3);
         title_box->get_text() = L"Viewpoint";
 
-        scenery_box = new treebox(this,
+        scenery_box = new treebox(screen, this,
                                   0, 0,
                                   w, h - (title_height + 4),
                                   fg, bg, main_window::FONT_FACE, main_window::FONT_SIZE);
@@ -101,13 +101,13 @@ namespace periapsis
 
         if (dynamic_cast<space::solar_system *>(n))
         {
-            new_node = new treebox_node(box, parent_node, main_window::FOREGROUND, main_window::BACKGROUND, n->get_name(), n);
+            new_node = new treebox_node(get_screen(), box, parent_node, main_window::FOREGROUND, main_window::BACKGROUND, n->get_name(), n);
             new_node->get_expanded() = true;
             parent_node = new_node;
         }
         else if (dynamic_cast<space::gas_body *>(n) || dynamic_cast<space::large_rocky_body *>(n))
         {
-            new_node = new treebox_node(box, parent_node, main_window::FOREGROUND, main_window::BACKGROUND, n->get_name(), n);
+            new_node = new treebox_node(get_screen(), box, parent_node, main_window::FOREGROUND, main_window::BACKGROUND, n->get_name(), n);
         }
 
         //

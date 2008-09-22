@@ -49,7 +49,7 @@ namespace periapsis
         gsgl::framework::treebox *vehicle_box;
 
     public:
-        sim_vehicle_box(gsgl::framework::widget *parent,
+        sim_vehicle_box(gsgl::platform::display & screen, gsgl::framework::widget *parent,
                         int x, int y, int w, int h,
                         const gsgl::platform::color & fg, const gsgl::platform::color & bg);
         virtual ~sim_vehicle_box();

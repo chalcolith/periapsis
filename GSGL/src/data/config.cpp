@@ -604,6 +604,8 @@ namespace gsgl
                     }
                     else if (ch == L'!')
                     {
+                        get_char(s, line);
+
                         // handle comment
                         ch = get_char(s, line);
                         CHECK_EOF;
@@ -624,7 +626,7 @@ namespace gsgl
 
                             if (ch == L'-')
                                 ++dash_count;
-                            else
+                            else if (ch != L'>')
                                 dash_count = 0;
                         }
                         while (!(ch == L'>' && dash_count >= 2));

@@ -115,12 +115,12 @@ namespace gsgl
             string & get_name();
             string & get_parent_name();
             
-            gsgl::real_t    & get_scale();
+            inline gsgl::real_t    & get_scale()       { return scale; }
 
-            math::vector    & get_translation();
-            math::transform & get_orientation();
+            inline math::vector    & get_translation() { return translation; }
+            inline math::transform & get_orientation() { return orientation; }
 
-            math::transform & get_modelview();
+            inline math::transform & get_modelview()   { return modelview; }
             
             /// @}
 
@@ -232,6 +232,11 @@ namespace gsgl
 
         private:
             static void build_draw_list(node *cur, node *prev, simulation_context *sim_context, drawing_context *draw_context, const math::transform & modelview, pre_draw_rec &);
+
+            static void draw_scene_lighting(simulation_context *sim_context, drawing_context *draw_context, pre_draw_rec & rec);
+            static void draw_distant_nodes(simulation_context *sim_context, drawing_context *draw_context, pre_draw_rec & rec);
+            static void get_local_info(simulation_context *sim_context, drawing_context *draw_context, data::simple_array<node *> &, float & near, float & far);
+            static void draw_local_objects(simulation_context *sim_context, drawing_context *draw_context, data::simple_array<node *> &);
         }; // class node
         
     } // namespace scenegraph
