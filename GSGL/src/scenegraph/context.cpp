@@ -32,9 +32,15 @@
 //
 
 #include "scenegraph/context.hpp"
+#include "scenegraph/node.hpp"
+
+#include "platform/display.hpp"
+
 
 namespace gsgl
 {
+
+    using namespace platform;
 
     namespace scenegraph
     {
@@ -95,6 +101,23 @@ namespace gsgl
         {
             return new drawing_context(*this);
         } // drawing_context::copy()
+
+
+        gsgl::flags_t drawing_context::display_flags(node *n) const
+        {
+            gsgl::flags_t flags = display::ENABLE_ALL;
+
+            if (render_flags & RENDER_WIREFRAME)
+                flags &= ~display::ENABLE_FILLED_POLYS;
+
+            if (render_flags & RENDER_NO_TEXTURES)
+                flags &= ~display::ENABLE_TEXTURES;
+            
+            if ((render_flags & RENDER_NO_LIGHTING) || (n && (n->get_draw_flags() & node::NODE_DRAW_UNLIT)))
+                flags &= ~display::ENABLE_LIGHTING;
+
+            return flags;
+        } // drawing_context::display_flags()
 
     } // namespace scenegraph
     

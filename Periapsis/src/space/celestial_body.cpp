@@ -128,10 +128,8 @@ namespace periapsis
 
         void celestial_body::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
-            display::scoped_state state(*draw_context->screen);
-
-            if (draw_context->render_flags & drawing_context::RENDER_WIREFRAME)
-                state.disable(display::ENABLE_FILLED_POLYS);
+            // drawing state
+            display::scoped_state state(*draw_context->screen, draw_context->display_flags(this));
 
             // set up projection
             vector ep = utils::pos_in_eye_space(this);
@@ -164,9 +162,7 @@ namespace periapsis
                     // the simple sphere may be rotated...
                     rotating_body *rb = get_rotating_frame();
                     display::scoped_modelview mv(*draw_context->screen, rb ? &rb->get_modelview() : 0);
-
-                    display::scoped_lighting lighting(*draw_context->screen, !(draw_context->render_flags & drawing_context::RENDER_NO_LIGHTING) && !(get_draw_flags() & NODE_DRAW_UNLIT));
-                    display::scoped_material mat(*draw_context->screen, (draw_context->render_flags & drawing_context::RENDER_NO_TEXTURES) ? 0 : simple_material);
+                    display::scoped_material mat(*draw_context->screen, simple_material);
 
                     draw_context->screen->clear(display::CLEAR_DEPTH);
                     sph->draw(sim_context, draw_context);
@@ -195,7 +191,7 @@ namespace periapsis
 
                 if (label_font)
                 {
-                    display::scoped_state state(*c->screen);
+                    display::scoped_state state(*c->screen, display::ENABLE_ORTHO_2D);
                     display::scoped_text  text(*c->screen);
 
                     text.draw_3d(vector::ZERO, label_font, get_name(), 4, -8);

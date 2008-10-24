@@ -116,6 +116,9 @@ namespace gsgl
 
             /// Subclasses may need to make copies.
             virtual drawing_context *copy();
+
+            //
+            gsgl::flags_t display_flags(node *n = 0) const; ///< Returns flags suitable for passing to display::scoped_state.
         }; // class drawing_context
 
         

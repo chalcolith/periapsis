@@ -344,7 +344,7 @@ namespace gsgl
             }
             else
             {
-                gsgl::log(string::format(L"texture: creating font   '%ls'", full_name.w_string()));
+                gsgl::log(string::format(L"texture: creating texture '%ls'", full_name.w_string()));
                 impl = new texture_impl(full_path, format, static_cast<GLenum>(texture_unit), !(flags & TEXTURE_LOAD_UNCOMPRESSED));
                 textures[category][full_name] = impl; // assign this after in case the creator throws
             }

@@ -91,7 +91,7 @@ namespace periapsis
 
             if (litho)
             {
-                display::scoped_state state(*draw_context->screen);
+                display::scoped_state state(*draw_context->screen, draw_context->display_flags(this));
 
                 vector pos_in_view = get_modelview() * vector::ZERO;
 
@@ -116,10 +116,8 @@ namespace periapsis
                 else
                 {
                     draw_context->screen->clear(display::CLEAR_DEPTH);
-                    display::scoped_lighting lighting(*draw_context->screen, !(draw_context->render_flags & drawing_context::RENDER_NO_LIGHTING) && !(get_draw_flags() & NODE_DRAW_UNLIT));
                     display::scoped_modelview mv(*draw_context->screen, &litho->get_modelview());
 
-                    state.enable(display::ENABLE_DEPTH);
                     litho->draw(sim_context, draw_context);
                 }
             }

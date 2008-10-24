@@ -141,10 +141,11 @@ namespace gsgl
                 ENABLE_FILLED_POLYS   = 1 << 4,
                 ENABLE_BF_CULL        = 1 << 5,
                 ENABLE_TEXTURES       = 1 << 6,
+                ENABLE_LIGHTING       = 1 << 7,
                 
                 ENABLE_ALL            = 0xffffffff,
 
-                ENABLE_ORTHO_2D       = ENABLE_ALL ^ (ENABLE_DEPTH)
+                ENABLE_ORTHO_2D       = ENABLE_ALL ^ (ENABLE_DEPTH | ENABLE_LIGHTING)
             };
 
             /// An RAII class for setting a particular OpenGL attribute state.
@@ -156,8 +157,8 @@ namespace gsgl
                 scoped_state(display & parent, const gsgl::flags_t & flags = ENABLE_ALL);
                 ~scoped_state();
 
+            private:
                 void enable(const gsgl::flags_t & flags);
-                void disable(const gsgl::flags_t & flags);
             }; // class scoped_state
 
 
@@ -209,16 +210,6 @@ namespace gsgl
                 scoped_ortho(display & parent);
                 ~scoped_ortho();
             }; // class scoped_ortho
-
-
-            /// An RAII class that enables and controls lighting.
-            class PLATFORM_API scoped_lighting
-            {
-                display & parent;
-            public:
-                scoped_lighting(display & parent, bool enable = true);
-                ~scoped_lighting();
-            }; // class scoped_lighting
 
             /// \}
 
@@ -302,7 +293,7 @@ namespace gsgl
 
                 ~scoped_buffer();
 
-                void draw(int count, int start = 0, bool wireframe = false);
+                void draw(int count, int start = 0);
 
             private:
                 void init();

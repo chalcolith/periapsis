@@ -259,7 +259,7 @@ namespace periapsis
 
         void stellar_db::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
-            display::scoped_state state(*draw_context->screen, display::ENABLE_ALL ^ (display::ENABLE_DEPTH));
+            display::scoped_state state(*draw_context->screen, draw_context->display_flags(this) ^ (display::ENABLE_DEPTH));
 
             float star_scale = get_scale();
             float far_plane = farthest_distance * 1.1f * star_scale;

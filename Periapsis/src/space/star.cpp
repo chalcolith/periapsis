@@ -58,8 +58,6 @@ namespace periapsis
         star::star(const config_record & obj_config)
             : gas_body(obj_config), corona_material(0), star_light(0)
         {
-            get_draw_flags() |= NODE_DRAW_UNLIT;
-
             // create light
             star_light = new light(this);
             star_light->get_ambient() = color::BLACK;
@@ -105,9 +103,9 @@ namespace periapsis
             gas_body::draw(sim_context, draw_context);
 
             // draw corona
-            if (false && corona_material)
+            if (corona_material)
             {
-                display::scoped_state state(*draw_context->screen, display::ENABLE_ALL ^ (display::ENABLE_DEPTH));
+                display::scoped_state state(*draw_context->screen, draw_context->display_flags(this) ^ (display::ENABLE_DEPTH));
 
                 vector ep = utils::pos_in_eye_space(this);
                 gsgl::real_t dist = ep.mag();

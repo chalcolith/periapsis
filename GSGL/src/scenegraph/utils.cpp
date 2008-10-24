@@ -96,6 +96,8 @@ namespace gsgl
                 gluPerspective(draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), near_plane, far_plane);  CHECK_GL_ERRORS();
 
                 //
+                glDisable(GL_DEPTH_TEST);                                                                           CHECK_GL_ERRORS();
+
                 glEnable(GL_BLEND);                                                                                 CHECK_GL_ERRORS();
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);                                                  CHECK_GL_ERRORS();
 
@@ -250,14 +252,14 @@ namespace gsgl
 
             void sphere::draw(const simulation_context *sim_context, const drawing_context *draw_context)
             {
-#if 0
+#if 1
                 display::scoped_buffer vb(*draw_context->screen, display::PRIMITIVE_TRIANGLE_STRIP, vertices, indices, true);
 
                 int index_stride = (num_steps*2+1)*2;
 
                 for (int i = 0; i < num_steps; ++i)
                 {
-                    vb.draw(index_stride, i*index_stride, (draw_context->render_flags & drawing_context::RENDER_WIREFRAME) != 0);
+                    vb.draw(index_stride, i*index_stride);
                 }
 
 #else

@@ -358,8 +358,6 @@ namespace periapsis
             {
                 update(sim_context, false);
             }
-
-            display::scoped_state state(*draw_context->screen);
             
             for (int i = 0; i < 6; ++i)
                 if (root_nodes[i])

@@ -458,7 +458,7 @@ namespace gsgl
                 glShadeModel(GL_SMOOTH);                                                                            CHECK_GL_ERRORS();
             }
 
-            //
+            
             if ((draw_flags & DRAW_COLOR_MAP) && impl->color_map.ptr())
                 impl->color_map->bind();
 

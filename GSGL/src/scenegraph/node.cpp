@@ -128,6 +128,8 @@ namespace gsgl
               modelview(transform::IDENTITY),
               draw_flags(0), draw_results(0)
         {
+            get_draw_flags() |= NODE_DRAW_UNLIT;
+
             if (parent)
                 parent->add_child(this);
         } // node::node()
@@ -380,7 +382,7 @@ namespace gsgl
         {
             display & fb = *draw_context->screen;
 
-            display::scoped_state state(fb);
+            display::scoped_state state(fb, draw_context->display_flags());
             display::scoped_viewport view(fb);
 
             draw_scene_lighting(sim_context, draw_context, rec);
@@ -394,16 +396,11 @@ namespace gsgl
                 get_local_info(sim_context, draw_context, rec.solids, nearest_extent, farthest_extent);
                 get_local_info(sim_context, draw_context, rec.translucents, nearest_extent, farthest_extent);
 
-                state.enable(display::ENABLE_DEPTH);
-                state.enable(display::ENABLE_BLEND);
-
                 display::scoped_perspective proj(fb, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), nearest_extent, farthest_extent);
 
                 draw_local_objects(sim_context, draw_context, rec.solids);
                 draw_local_objects(sim_context, draw_context, rec.translucents);
             }
-
-            return;
         } // node::draw_scene()
 
 

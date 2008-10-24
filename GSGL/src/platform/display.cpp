@@ -428,12 +428,6 @@ namespace gsgl
         } // display::scoped_state::enable()
 
 
-        void display::scoped_state::disable(const gsgl::flags_t & flags)
-        {
-            enable(~flags);
-        } // display::scoped_state::disable()
-
-
         //////////////////////////////////////////
 
         display::scoped_modelview::scoped_modelview(display & parent, const transform *mv)
@@ -541,26 +535,6 @@ namespace gsgl
 
         //////////////////////////////////////////
 
-        display::scoped_lighting::scoped_lighting(display & parent, bool enable)
-            : parent(parent)
-        {
-            if (enable)
-            {
-                parent.bind();
-                glEnable(GL_LIGHTING);                                                                          CHECK_GL_ERRORS();
-            }
-        } // display::scoped_lighting::scoped_lighting()
-
-
-        display::scoped_lighting::~scoped_lighting()
-        {
-            parent.bind();
-            glDisable(GL_LIGHTING);
-        } // display::scoped_lighting::~scoped_lighting()
-
-
-        //////////////////////////////////////////
-
         display::scoped_buffer::scoped_buffer(display & parent, const primitive_type & pt, vertex_buffer & vb)
             : parent(parent), vertices(&vb), normals(0), texcoords(0), indices(0), gl_type(get_gl_type(pt)), interleaved(false)
         {
@@ -641,17 +615,8 @@ namespace gsgl
         } // display::scoped_buffer::init()
 
 
-        void display::scoped_buffer::draw(int count, int start, bool wireframe)
+        void display::scoped_buffer::draw(int count, int start)
         {
-            if (wireframe)
-            {
-                glPolygonMode(GL_FRONT, GL_LINE);                                                                           CHECK_GL_ERRORS();
-            }
-            else
-            {
-                glPolygonMode(GL_FRONT, GL_LINE);                                                                           CHECK_GL_ERRORS();
-            }
-
             if (indices)
             {
                 glDrawElements(gl_type, count, GL_UNSIGNED_INT, vbuffer::VBO_OFFSET<vbuffer::index_t>(start));              CHECK_GL_ERRORS();

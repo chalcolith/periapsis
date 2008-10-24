@@ -94,8 +94,7 @@ namespace gsgl
         {
             display & fb = *draw_context->screen;
 
-            display::scoped_state state(fb);
-            display::scoped_lighting lighting(fb);
+            display::scoped_state state(fb, draw_context->display_flags());
             display::scoped_material cur_mat(fb, mat.ptr());
 
             if (point_vertices.size())
@@ -113,7 +112,7 @@ namespace gsgl
             if (triangle_vertices.size())
             {
                 display::scoped_buffer tris(fb, display::PRIMITIVE_TRIANGLES, triangle_vertices, triangle_normals, triangle_texcoords);
-                tris.draw(triangle_vertices.size()/3, 0, (draw_context->render_flags & drawing_context::RENDER_WIREFRAME) != 0);
+                tris.draw(triangle_vertices.size()/3, 0);
             }
         } // submesh::draw()
 
