@@ -111,6 +111,7 @@ namespace periapsis
             virtual void draw(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
         }; // class lithosphere_qt_node
 
+#define USE_SHADER
 
         const gsgl::platform::material *lithosphere_qt_node::last_material = 0;
 
@@ -143,19 +144,16 @@ namespace periapsis
             {
                 if (is_a_leaf())
                 {
-
                     lithosphere_quadtree *lqt = dynamic_cast<lithosphere_quadtree *>(parent_quadtree);
                     assert(lqt->shader.ptr());
 
                     if (current_material && (current_material != last_material))
                     {
-                        if (last_material)
-                            last_material->unbind();
-
                         current_material->bind();
                         last_material = current_material;
                     }
 
+#ifdef USE_SHADER
                     lqt->uniform_texture_bounds->set(texture_bounds);
 
                     lithosphere *ls = dynamic_cast<lithosphere *>(lqt->get_parent_sg_node());
@@ -164,15 +162,16 @@ namespace periapsis
                     const celestial_body *cb = ls->get_parent_body();
                     if (current_material && current_material->get_height_map())
                     {
-                        lqt->uniform_use_heightmap->set(true);
-                        lqt->uniform_height_map->set(current_material->get_height_map()->get_texture_unit());
-                        lqt->uniform_heightmap_bounds->set(heightmap_bounds);
-                        lqt->uniform_heightmap_max->set(cb->get_simple_height_max());
+                        //lqt->uniform_use_heightmap->set(true);
+                        //lqt->uniform_height_map->set(current_material->get_height_map()->get_texture_unit());
+                        //lqt->uniform_heightmap_bounds->set(heightmap_bounds);
+                        //lqt->uniform_heightmap_max->set(cb->get_simple_height_max());
                     }
                     else
                     {
-                        lqt->uniform_use_heightmap->set(false);
+                        //lqt->uniform_use_heightmap->set(false);
                     }
+#endif
                 }
 
                 sph_qt_node::draw(sim_context, draw_context);
@@ -260,14 +259,13 @@ namespace periapsis
 
         void lithosphere_quadtree::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
+#ifdef USE_SHADER
             display::scoped_shader shdr(*draw_context->screen, shader.ptr());
             uniform_num_lights->set(draw_context->num_lights);
+#endif
             lithosphere_qt_node::last_material = 0; // force binding the first material
 
             spherical_quadtree::draw(sim_context, draw_context);
-
-            if (lithosphere_qt_node::last_material)
-                lithosphere_qt_node::last_material->unbind();
         } // lithosphere_quadtree::draw()
 
 

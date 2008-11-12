@@ -62,7 +62,7 @@ void get_vertex_pos(in vec2 hm_coords, inout vec4 vertex_pos)
 {
     if (UseHeightmap)
     {
-        float height = texture2D(Heightmap, hm_coords).x;
+        float height = 0.0;//texture2D(Heightmap, hm_coords).x;
         vec4 normal = normalize(vec4(gl_Normal, 1.0));
         vertex_pos = vertex_pos + normal * (height * HeightmapMax * 100.0);
     }

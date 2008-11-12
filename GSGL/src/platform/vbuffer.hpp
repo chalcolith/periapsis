@@ -74,6 +74,8 @@ namespace gsgl
 
             size_t prev_size;
 
+            static int last_bound_buffer;
+
         public:
             vbuffer_base(const int & target, const int & mode);
             virtual ~vbuffer_base();

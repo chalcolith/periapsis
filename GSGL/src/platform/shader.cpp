@@ -102,7 +102,7 @@ namespace gsgl
             if (opengl_loc == -1)
             {
                 if (parent_program.opengl_id == 0)
-                    throw runtime_exception(L"Cannot set uniform value '%hs' when the shader is not bound.", name.c_string());
+                    throw runtime_exception(L"Cannot set uniform value '%hs' when the shader is not loaded.", name.c_string());
 
                 opengl_loc = glGetUniformLocation(parent_program.opengl_id, name.c_string());                       CHECK_GL_ERRORS();
                 if (opengl_loc == -1)

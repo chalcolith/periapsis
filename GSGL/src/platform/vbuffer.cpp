@@ -44,6 +44,9 @@ namespace gsgl
     namespace platform
     {
 
+        int vbuffer_base::last_bound_buffer = 0;
+
+
         vbuffer_base::vbuffer_base(const int & target, const int & gl_mode)
             : target(target), gl_mode(gl_mode), opengl_id(0), 
               prev_size(0), lowest_dirty_index(INT_MAX), highest_dirty_index(-1)
@@ -67,6 +70,8 @@ namespace gsgl
 
         void vbuffer_base::unload()
         {
+            unbind();
+
             if (opengl_id)
             {
                 glDeleteBuffers(1, (GLuint *) &opengl_id);                                                          CHECK_GL_ERRORS();
@@ -80,6 +85,9 @@ namespace gsgl
         {
             if (!opengl_id)
                 load();
+
+            if (last_bound_buffer == opengl_id)
+                return;
 
             glBindBuffer(target, opengl_id);                                                                        CHECK_GL_ERRORS();
 
@@ -117,6 +125,7 @@ namespace gsgl
         void vbuffer_base::unbind()
         {
             glBindBuffer(target, 0);
+            last_bound_buffer = 0;
         } // vbuffer_base::unbind()
 
 

@@ -87,15 +87,20 @@ namespace periapsis
                 num_indices_in_quadrants[i] = 0;
 
             // get space in a buffer pool
-            assert(parent_quadtree->buffers);
-            buffer_pool_rec = parent_quadtree->buffers->allocate_object();
+            // moved to split and merge
+            //assert(parent_quadtree->buffers);
+            //buffer_pool_rec = parent_quadtree->buffers->allocate_object();
         } // sph_qt_node()
 
 
         sph_qt_node::~sph_qt_node()
         {
             // free the space in the buffer pool
-            parent_quadtree->buffers->free_object(buffer_pool_rec);
+            if (buffer_pool_rec.parent)
+            {
+                parent_quadtree->buffers->free_object(buffer_pool_rec);
+                buffer_pool_rec = buffer_pool::object_record();
+            }
 
             // delete children
             for (int i = 0; i < 4; ++i)
@@ -127,11 +132,8 @@ namespace periapsis
             {
                 update_fan_indices();
 
+                assert(buffer_pool_rec.parent);
                 display::scoped_buffer buf(*draw_context->screen, display::PRIMITIVE_TRIANGLE_FAN, buffer_pool_rec.parent->vertices, buffer_pool_rec.parent->indices, true, buffer_pool_rec.pos_in_vertices);
-
-                //buffer_pool_rec.parent->vertices.bind();
-                //glInterleavedArrays(GL_T2F_N3F_V3F, 0, vbuffer::VBO_OFFSET<float>(buffer_pool_rec.pos_in_vertices));
-                //buffer_pool_rec.parent->indices.bind();
 
                 int prev_elements_drawn = 0;
                 for (int i = 0; i < 4; ++i)
@@ -139,8 +141,6 @@ namespace periapsis
                     if (num_indices_in_quadrants[i])
                     {
                         buf.draw(num_indices_in_quadrants[i], buffer_pool_rec.pos_in_indices + prev_elements_drawn);
-                        //glDrawElements(GL_TRIANGLE_FAN, num_indices_in_quadrants[i], GL_UNSIGNED_INT, vbuffer::VBO_OFFSET<unsigned int>( buffer_pool_rec.pos_in_indices + prev_elements_drawn ));
-
                         prev_elements_drawn += num_indices_in_quadrants[i];
                     }
                 }
@@ -271,6 +271,9 @@ namespace periapsis
                 }
 
                 // copy vertex information from global memory to vbuffer
+                if (!buffer_pool_rec.parent)
+                    buffer_pool_rec = parent_quadtree->buffers->allocate_object();
+
                 vbuffer::index_t vertex_pos = buffer_pool_rec.pos_in_vertices;
                 vbuffer::index_t index_pos = buffer_pool_rec.pos_in_indices;
                 int triangle_index_pos = 0;
@@ -370,7 +373,7 @@ namespace periapsis
         //////////////////////////////////////////
 
         static config_variable<gsgl::real_t> ANGLE_CUTOFF(L"space/spherical_quadtree/angle_cutoff", -0.5f); ///< Cosine cutoff of the quad's center normal.
-        static config_variable<gsgl::real_t> PIXEL_CUTOFF(L"space/spherical_quadtree/pixel_cutoff", 128);    ///< The pixel radius cutoff of a quad.
+        static config_variable<gsgl::real_t> PIXEL_CUTOFF(L"space/spherical_quadtree/pixel_cutoff", 32);    ///< The pixel radius cutoff of a quad.
 
 
         static string get_indent(int indent)
@@ -709,6 +712,13 @@ namespace periapsis
 
         void spherical_quadtree::split_node_aux(sph_qt_node *qtn, int force_level)
         {
+            // free the space in the buffer pool
+            if (qtn->buffer_pool_rec.parent)
+            {
+                qtn->parent_quadtree->buffers->free_object(qtn->buffer_pool_rec);
+                qtn->buffer_pool_rec = buffer_pool::object_record();
+            }
+
             // mark neighbors as dirty
             for (int i = 0; i < 4; ++i)
                 if (qtn->adjacent_nodes[i])
@@ -1151,7 +1161,7 @@ namespace periapsis
             }
 
             // path
-#ifdef DEBUG
+#ifdef DEBUG_SPLITS_AND_MERGES
             for (int i = 0; i < 4; ++i)
             {
                 if (qtn->children[i])
@@ -1234,7 +1244,7 @@ namespace periapsis
 
         static const bool allow_merge = true;
         static const bool allow_split = true;
-        static const int NUM_TO_PROCESS = 32;
+        static const int NUM_TO_PROCESS = 16;
 
         void spherical_quadtree::update(const simulation_context *c, const bool not_visible)
         {

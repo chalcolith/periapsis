@@ -356,8 +356,6 @@ namespace gsgl
         {
             glPopClientAttrib();
             glPopAttrib();
-
-            parent.unbind();
         } // display::scoped_state::~scoped_state()
 
 
@@ -595,10 +593,10 @@ namespace gsgl
 
         display::scoped_buffer::~scoped_buffer()
         {
-            if (vertices) vertices->unbind();
-            if (normals) normals->unbind();
-            if (texcoords) texcoords->unbind();
-            if (indices) indices->unbind();
+            //if (vertices) vertices->unbind();
+            //if (normals) normals->unbind();
+            //if (texcoords) texcoords->unbind();
+            //if (indices) indices->unbind();
         } // display::scoped_buffer::~scoped_buffer()
 
 

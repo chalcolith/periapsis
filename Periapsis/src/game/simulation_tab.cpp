@@ -45,6 +45,8 @@
 #include "scenegraph/node.hpp"
 #include "scenegraph/simulation.hpp"
 #include "space/space_context.hpp"
+#include "space/planet_system.hpp"
+#include "space/star.hpp"
 
 #include "framework/textbox.hpp"
 #include "framework/button.hpp"
@@ -197,6 +199,10 @@ namespace periapsis
 
         // check for simulation
         sim_is_ready = (time_box->get_jdn() != 0) && (view_box->get_scenery_box()->get_selected_node() != 0);
+
+        node *n = sim_is_ready ? reinterpret_cast<node *>(view_box->get_scenery_box()->get_selected_node()->get_user_data()) : 0;
+        if (!dynamic_cast<space::celestial_body *>(n))
+            sim_is_ready = false;
 
         if (sim_is_ready)
         {

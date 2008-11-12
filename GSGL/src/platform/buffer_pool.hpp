@@ -68,6 +68,8 @@ namespace gsgl
                 vbuffer::index_t pos_in_indices;
                 bucket *parent;
 
+                object_record() : pos_in_vertices(-1), pos_in_indices(-1), parent(0) {}
+
                 bool operator== (const object_record & or) const
                 {
                     return pos_in_vertices == or.pos_in_vertices && pos_in_indices == or.pos_in_indices && parent == or.parent;
