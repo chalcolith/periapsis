@@ -189,25 +189,33 @@ namespace gsgl
             assert(sim_context);
             assert(draw_context);
 
-            if (global_simulation)
-                unload_and_quit_simulation();
-
-            gsgl::log(string(L"application: loading simulation ") + fname);
-
-            state = APP_SIM_LOADING;
-            config_record sim_config(fname);
-
-            global_sim_context = sim_context;
-            global_draw_context = draw_context;
-            global_simulation = new simulation(sim_config, global_console, global_sim_context, global_draw_context, global_scenery);
-            global_simulation->init();
-
-            if (widgets.size())
+            try
             {
-                widgets.top()->set_flags(widget::WIDGET_INVISIBLE, true);
-            }
+                if (global_simulation)
+                    unload_and_quit_simulation();
 
-            state = APP_SIM_RUNNING;
+                gsgl::log(string(L"application: loading simulation ") + fname);
+
+                state = APP_SIM_LOADING;
+                config_record sim_config(fname);
+
+                global_sim_context = sim_context;
+                global_draw_context = draw_context;
+                global_simulation = new simulation(sim_config, global_console, global_sim_context, global_draw_context, global_scenery);
+                global_simulation->init();
+
+                if (widgets.size())
+                {
+                    widgets.top()->set_flags(widget::WIDGET_INVISIBLE, true);
+                }
+
+                state = APP_SIM_RUNNING;
+            }
+            catch (gsgl::exception &)
+            {
+                quit_application();
+                throw;
+            }
         } // application::load_and_run_simulation()
 
 
@@ -303,24 +311,33 @@ namespace gsgl
 
             while (state != APP_QUITTING)
             {
-                // clear screen
-                display::scoped_viewport view(*global_console);
-                global_console->clear(display::CLEAR_COLOR | display::CLEAR_DEPTH);
-
-                // call draw function or default sim draw function...
-                if (!this->draw())
+                // draw
+                try
                 {
-                    if (state == APP_SIM_RUNNING && global_simulation)
-                    {
-                        global_simulation->pre_draw();
-                        global_simulation->draw();
-                    }
-                    else if (splash_screen)
-                    {
-                        BUDGET_SCOPE(L"application: splash screen");
+                    // clear screen
+                    display::scoped_viewport view(*global_console);
+                    global_console->clear(display::CLEAR_COLOR | display::CLEAR_DEPTH);
 
-                        draw_splash_screen();
+                    // call draw function or default sim draw function...
+                    if (!this->draw())
+                    {
+                        if (state == APP_SIM_RUNNING && global_simulation)
+                        {
+                            global_simulation->pre_draw();
+                            global_simulation->draw();
+                        }
+                        else if (splash_screen)
+                        {
+                            BUDGET_SCOPE(L"application: splash screen");
+
+                            draw_splash_screen();
+                        }
                     }
+                }
+                catch (gsgl::exception &)
+                {
+                    quit_application();
+                    throw;
                 }
 
                 // draw global UI elements
@@ -346,13 +363,13 @@ namespace gsgl
                 }
 
                 // draw budget
-                end_tick = SDL_GetTicks();
-
                 if (should_draw_budget)
+                {
+                    end_tick = SDL_GetTicks();
                     draw_budget(end_tick - start_tick);
-
-                global_budget->reset();
-                start_tick = SDL_GetTicks();
+                    global_budget->reset();
+                    start_tick = SDL_GetTicks();
+                }
 
                 // swap buffers
                 {
@@ -361,12 +378,20 @@ namespace gsgl
                 }
 
                 // update sim
-                if (state != APP_QUITTING && global_simulation)
+                try
                 {
-                    if (global_simulation->is_running())
-                        global_simulation->update();
-                    else
-                        unload_and_quit_simulation();
+                    if (state != APP_QUITTING && global_simulation)
+                    {
+                        if (global_simulation->is_running())
+                            global_simulation->update();
+                        else
+                            unload_and_quit_simulation();
+                    }
+                }
+                catch (gsgl::exception &)
+                {
+                    quit_application();
+                    throw;
                 }
 
                 // get events
@@ -391,16 +416,19 @@ namespace gsgl
                             {
                                 if (global_simulation)
                                     global_draw_context->render_flags ^= scenegraph::drawing_context::RENDER_WIREFRAME;
+                                break;
                             }
                             else if (e.key.keysym.sym == SDLK_t && (e.key.keysym.mod & (KMOD_CTRL | KMOD_ALT)))
                             {
                                 if (global_simulation)
                                     global_draw_context->render_flags ^= scenegraph::drawing_context::RENDER_NO_TEXTURES;
+                                break;
                             }
                             else if (e.key.keysym.sym == SDLK_l && (e.key.keysym.mod & (KMOD_CTRL | KMOD_ALT)))
                             {
                                 if (global_simulation)
                                     global_draw_context->render_flags ^= scenegraph::drawing_context::RENDER_NO_LIGHTING;
+                                break;
                             }
 
                             // fall through
@@ -420,8 +448,16 @@ namespace gsgl
                 }
 
                 // update app
-                if (state != APP_QUITTING)
-                    this->update();
+                try
+                {
+                    if (state != APP_QUITTING)
+                        this->update();
+                }
+                catch (gsgl::exception &)
+                {
+                    quit_application();
+                    throw;
+                }
             }
 
             // clean up
@@ -704,28 +740,45 @@ namespace gsgl
 
             status_string = string::format(L"Loading %ls...", type_name.w_string());
 
-            if (b->has_object(type_name))
+            try
             {
-                result = dynamic_cast<node *>(b->create_object(type_name, obj_config));
-
-                if (!result)
-                    throw runtime_exception(L"Unable to create object of type %ls referenced in %ls.", obj_config.get_name(), obj_config.get_file().get_full_path().w_string());
-
-                // get children
-                for (list<config_record>::const_iterator child = obj_config.get_children().iter(); child.is_valid(); ++child)
+                if (b->has_object(type_name))
                 {
-                    if (child->get_name() != L"property")
+                    try
                     {
+                        result = dynamic_cast<node *>(b->create_object(type_name, obj_config));
 
-                        node *child_node = load_objects(*child, status_string);
-                        if (child_node)
-                            result->add_child(child_node);
+                        if (!result)
+                            throw runtime_exception(L"Unable to create object of type %ls referenced in %ls.", obj_config.get_name(), obj_config.get_file().get_full_path().w_string());
+
+                        // get children
+                        for (list<config_record>::const_iterator child = obj_config.get_children().iter(); child.is_valid(); ++child)
+                        {
+                            if (child->get_name() != L"property")
+                            {
+                                node *child_node = load_objects(*child, status_string);
+                                if (child_node)
+                                    result->add_child(child_node);
+                            }
+                        }
+                    }
+                    catch (runtime_exception & rte)
+                    {
+                        log(rte.get_message());
+                        status_string = string(rte.get_message());
+                        result = 0;
                     }
                 }
+                else
+                {
+                    throw runtime_exception(L"Unknown object type %ls in %ls.", obj_config.get_name().w_string(), obj_config.get_file().get_full_path().w_string());
+                }
             }
-            else
+            catch (runtime_exception & rte)
             {
-                throw runtime_exception(L"Unknown object type %ls in %ls.", obj_config.get_name().w_string(), obj_config.get_file().get_full_path().w_string());
+                log(rte.get_message());
+                status_string = string(rte.get_message());
+                result = 0;
             }
 
             return result;

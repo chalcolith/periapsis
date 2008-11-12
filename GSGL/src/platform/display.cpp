@@ -153,12 +153,16 @@ namespace gsgl
 
         void display::define_ambient_light(const color & ambient)
         {
+            bind();
+
             glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient.ptr());                                CHECK_GL_ERRORS();
         } // display::define_ambient_light()
         
 
         int display::get_max_lights()
         {
+            bind();
+
             int max_lights;
             glGetIntegerv(GL_MAX_LIGHTS, &max_lights);                                                              CHECK_GL_ERRORS();
             return max_lights;
@@ -423,7 +427,33 @@ namespace gsgl
             }
             else
             {
-                glDisable(GL_TEXTURE_2D);
+                glDisable(GL_TEXTURE_2D);                                                                               CHECK_GL_ERRORS();
+            }
+
+            if (flags & ENABLE_LIGHTING)
+            {
+                glEnable(GL_LIGHTING);                                                                                  CHECK_GL_ERRORS();
+                glLightModelf(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);                                                    CHECK_GL_ERRORS();
+                glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);                                                       CHECK_GL_ERRORS();
+            }
+            else
+            {
+                glDisable(GL_LIGHTING);                                                                                 CHECK_GL_ERRORS();
+            }
+
+            if (flags & ENABLE_BUFFERS)
+            {
+                glEnableClientState(GL_VERTEX_ARRAY);                                                                   CHECK_GL_ERRORS();
+                glEnableClientState(GL_NORMAL_ARRAY);                                                                   CHECK_GL_ERRORS();
+                glEnableClientState(GL_TEXTURE_COORD_ARRAY);                                                            CHECK_GL_ERRORS();
+                glEnableClientState(GL_INDEX_ARRAY);                                                                        CHECK_GL_ERRORS();
+            }
+            else
+            {
+                glDisableClientState(GL_VERTEX_ARRAY);                                                                   CHECK_GL_ERRORS();
+                glDisableClientState(GL_NORMAL_ARRAY);                                                                   CHECK_GL_ERRORS();
+                glDisableClientState(GL_TEXTURE_COORD_ARRAY);                                                            CHECK_GL_ERRORS();
+                glDisableClientState(GL_INDEX_ARRAY);                                                                        CHECK_GL_ERRORS();
             }
         } // display::scoped_state::enable()
 
@@ -536,28 +566,28 @@ namespace gsgl
         //////////////////////////////////////////
 
         display::scoped_buffer::scoped_buffer(display & parent, const primitive_type & pt, vertex_buffer & vb)
-            : parent(parent), vertices(&vb), normals(0), texcoords(0), indices(0), gl_type(get_gl_type(pt)), interleaved(false)
+            : parent(parent), vertices(&vb), normals(0), texcoords(0), indices(0), gl_type(get_gl_type(pt)), interleaved(false), interleaved_start(0)
         {
             init();
         } // display::scoped_buffer::scoped_buffer()
 
 
-        display::scoped_buffer::scoped_buffer(display & parent, const primitive_type & pt, vertex_buffer & vb, index_buffer & ib, bool interleaved)
-            : parent(parent), vertices(&vb), normals(0), texcoords(0), indices(&ib), gl_type(get_gl_type(pt)), interleaved(interleaved)
+        display::scoped_buffer::scoped_buffer(display & parent, const primitive_type & pt, vertex_buffer & vb, index_buffer & ib, bool interleaved, int interleaved_start)
+            : parent(parent), vertices(&vb), normals(0), texcoords(0), indices(&ib), gl_type(get_gl_type(pt)), interleaved(interleaved), interleaved_start(interleaved_start)
         {
             init();
         } // display::scoped_buffer::scoped_buffer()
 
 
         display::scoped_buffer::scoped_buffer(display & parent, const primitive_type & pt, vertex_buffer & vb, vertex_buffer & nb, vertex_buffer & tc)
-            : parent(parent), vertices(&vb), normals(&nb), texcoords(&tc), indices(0), gl_type(get_gl_type(pt)), interleaved(interleaved)
+            : parent(parent), vertices(&vb), normals(&nb), texcoords(&tc), indices(0), gl_type(get_gl_type(pt)), interleaved(false)
         {
             init();
         } // display::scoped_buffer::scoped_buffer()
 
 
         display::scoped_buffer::scoped_buffer(display & parent, const primitive_type & pt, vertex_buffer & vb, vertex_buffer & nb, vertex_buffer & tc, index_buffer & ib)
-            : parent(parent), vertices(&vb), normals(&nb), texcoords(&tc), indices(&ib), gl_type(get_gl_type(pt)), interleaved(interleaved)
+            : parent(parent), vertices(&vb), normals(&nb), texcoords(&tc), indices(&ib), gl_type(get_gl_type(pt)), interleaved(false)
         {
             init();
         } // display::scoped_buffer::scoped_buffer()
@@ -576,32 +606,25 @@ namespace gsgl
         {
             if (vertices && interleaved)
             {
-                glEnableClientState(GL_VERTEX_ARRAY);                                                                   CHECK_GL_ERRORS();
-                glEnableClientState(GL_NORMAL_ARRAY);                                                                   CHECK_GL_ERRORS();
-                glEnableClientState(GL_TEXTURE_COORD_ARRAY);                                                            CHECK_GL_ERRORS();
-
                 vertices->bind();                                                                                       CHECK_GL_ERRORS();
-                glInterleavedArrays(GL_T2F_N3F_V3F, 0, 0);                                                              CHECK_GL_ERRORS();
+                glInterleavedArrays(GL_T2F_N3F_V3F, 0, vbuffer::VBO_OFFSET<vbuffer::index_t>(interleaved_start));       CHECK_GL_ERRORS();
             }
             else
             {
                 if (vertices)
                 {
-                    glEnableClientState(GL_VERTEX_ARRAY);                                                                   CHECK_GL_ERRORS();
                     vertices->bind();                                                                                       CHECK_GL_ERRORS();
                     glVertexPointer(3, GL_FLOAT, 0, 0);                                                                     CHECK_GL_ERRORS();
                 }
 
                 if (normals)
                 {
-                    glEnableClientState(GL_NORMAL_ARRAY);                                                                   CHECK_GL_ERRORS();
                     normals->bind();                                                                                        CHECK_GL_ERRORS();
                     glNormalPointer(GL_FLOAT, 0, 0);                                                                        CHECK_GL_ERRORS();
                 }
 
                 if (texcoords)
                 {
-                    glEnableClientState(GL_TEXTURE_COORD_ARRAY);                                                            CHECK_GL_ERRORS();
                     texcoords->bind();                                                                                      CHECK_GL_ERRORS();
                     glTexCoordPointer(2, GL_FLOAT, 0, 0);                                                                   CHECK_GL_ERRORS();
                 }
@@ -609,7 +632,6 @@ namespace gsgl
 
             if (indices)
             {
-                glEnableClientState(GL_INDEX_ARRAY);                                                                        CHECK_GL_ERRORS();
                 indices->bind();                                                                                            CHECK_GL_ERRORS();
             }
         } // display::scoped_buffer::init()

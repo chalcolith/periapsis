@@ -97,6 +97,7 @@ namespace gsgl
 
                 //
                 glDisable(GL_DEPTH_TEST);                                                                           CHECK_GL_ERRORS();
+                glDisable(GL_LIGHTING);                                                                             CHECK_GL_ERRORS();
 
                 glEnable(GL_BLEND);                                                                                 CHECK_GL_ERRORS();
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);                                                  CHECK_GL_ERRORS();

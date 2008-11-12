@@ -97,6 +97,7 @@ namespace periapsis
 
             virtual void draw(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
 
+            bool should_draw(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *) const;
             bool is_a_leaf() const; ///< Returns true if the node is a splittable leaf.
             bool is_a_quad() const; ///< Returns true if the node is a mergeable quad.
 

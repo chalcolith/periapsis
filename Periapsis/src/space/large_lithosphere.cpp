@@ -78,6 +78,9 @@ namespace periapsis
             virtual void cleanup();
 
             virtual sph_qt_node *create_node(sph_qt_node *parent);
+
+        private:
+            static gsgl::data::shared_pointer<gsgl::platform::shader_program> *shader_instance;
         }; // class lithosphere_quadtree
 
 
@@ -105,7 +108,7 @@ namespace periapsis
             lithosphere_qt_node(lithosphere_quadtree *parent_quadtree, sph_qt_node *parent);
             virtual ~lithosphere_qt_node();
 
-            virtual void draw(gsgl::scenegraph::simulation_context *, gsgl::scenegraph::drawing_context *);
+            virtual void draw(const gsgl::scenegraph::simulation_context *, const gsgl::scenegraph::drawing_context *);
         }; // class lithosphere_qt_node
 
 
@@ -134,58 +137,73 @@ namespace periapsis
         } // lithosphere_qt_node::~lithosphere_qt_node()
 
 
-        void lithosphere_qt_node::draw(simulation_context *sim_context, drawing_context *draw_context)
+        void lithosphere_qt_node::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
-            lithosphere_quadtree *lqt = dynamic_cast<lithosphere_quadtree *>(parent_quadtree);
-            assert(lqt->shader.ptr());
-
-            if (current_material && current_material != last_material)
+            if (should_draw(sim_context, draw_context))
             {
-                current_material->bind();
-                last_material = current_material;
+                if (is_a_leaf())
+                {
+
+                    lithosphere_quadtree *lqt = dynamic_cast<lithosphere_quadtree *>(parent_quadtree);
+                    assert(lqt->shader.ptr());
+
+                    if (current_material && (current_material != last_material))
+                    {
+                        if (last_material)
+                            last_material->unbind();
+
+                        current_material->bind();
+                        last_material = current_material;
+                    }
+
+                    lqt->uniform_texture_bounds->set(texture_bounds);
+
+                    lithosphere *ls = dynamic_cast<lithosphere *>(lqt->get_parent_sg_node());
+                    assert(ls);
+
+                    const celestial_body *cb = ls->get_parent_body();
+                    if (current_material && current_material->get_height_map())
+                    {
+                        lqt->uniform_use_heightmap->set(true);
+                        lqt->uniform_height_map->set(current_material->get_height_map()->get_texture_unit());
+                        lqt->uniform_heightmap_bounds->set(heightmap_bounds);
+                        lqt->uniform_heightmap_max->set(cb->get_simple_height_max());
+                    }
+                    else
+                    {
+                        lqt->uniform_use_heightmap->set(false);
+                    }
+                }
+
+                sph_qt_node::draw(sim_context, draw_context);
             }
-
-            lqt->uniform_texture_bounds->set(texture_bounds);
-
-            lithosphere *ls = dynamic_cast<lithosphere *>(lqt->get_parent_sg_node());
-            assert(ls);
-
-            const celestial_body *cb = ls->get_parent_body();
-            if (current_material && current_material->get_height_map())
-            {
-                lqt->uniform_use_heightmap->set(true);
-                lqt->uniform_height_map->set(current_material->get_height_map()->get_texture_unit());
-                lqt->uniform_heightmap_bounds->set(heightmap_bounds);
-                lqt->uniform_heightmap_max->set(cb->get_simple_height_max());
-            }
-            else
-            {
-                lqt->uniform_use_heightmap->set(false);
-            }
-
-            sph_qt_node::draw(sim_context, draw_context);
         } // lithosphere_qt_node::draw()
 
 
         //////////////////////////////////////////////////////////////
 
-        static shared_pointer<shader_program> *first_shader_instance = 0;
+        shared_pointer<shader_program> *lithosphere_quadtree::shader_instance = 0;
 
 
         lithosphere_quadtree::lithosphere_quadtree(periapsis::space::large_lithosphere *parent_sg_node, const gsgl::real_t & polar_radius, const gsgl::real_t & equatorial_radius)
-            : spherical_quadtree(parent_sg_node, polar_radius, equatorial_radius), shader(first_shader_instance ? *first_shader_instance : 0)
+            : spherical_quadtree(parent_sg_node, polar_radius, equatorial_radius), shader(shader_instance ? *shader_instance : 0)
         {
-            if (!first_shader_instance)
+            if (!shader_instance)
             {
-                shader = new shader_program();
+                shader_instance = new shared_pointer<shader_program>(new shader_program());
+                shader = *shader_instance;
                 shader->add_vertex_shader(gsgl::framework::application::SYS_DATA_PATH + L"Shaders" + io::directory::SEPARATOR + L"lithosphere_vertex_shader.glsl");
-                first_shader_instance = &shader;
             }
         } // lithosphere_quadtree::lithosphere_quadtree()
 
 
         lithosphere_quadtree::~lithosphere_quadtree()
         {
+            if (shader.get_ref_count() == 2)
+            {
+                delete shader_instance;
+                shader_instance = 0;
+            }
         } // lithosphere_quadtree::~lithosphere_quadtree()
 
 
@@ -242,11 +260,14 @@ namespace periapsis
 
         void lithosphere_quadtree::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
-            shader->bind();
+            display::scoped_shader shdr(*draw_context->screen, shader.ptr());
             uniform_num_lights->set(draw_context->num_lights);
             lithosphere_qt_node::last_material = 0; // force binding the first material
+
             spherical_quadtree::draw(sim_context, draw_context);
-            shader->unbind();
+
+            if (lithosphere_qt_node::last_material)
+                lithosphere_qt_node::last_material->unbind();
         } // lithosphere_quadtree::draw()
 
 

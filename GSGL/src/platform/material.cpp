@@ -219,6 +219,9 @@ namespace gsgl
               shininess(128), 
               render_flat(false)
         {
+            if (conf.get_name() != L"material")
+                throw runtime_exception(L"%ls: %d: material node must be named 'material'.", conf.get_file().get_full_path(), conf.get_line_number());
+
             string color_map_name = conf[L"color_map"];
             if (!color_map_name.is_empty())
             {
@@ -230,9 +233,9 @@ namespace gsgl
                 if (!color_map_mode.is_empty())
                 {
                     if (color_map_mode == L"replace")
-                        texture_flags |= texture::TEXTURE_ENV_REPLACE;
+                        set_flags(texture_flags, texture::TEXTURE_ENV_REPLACE);
                     else if (color_map_mode == L"modulate")
-                        texture_flags |= texture::TEXTURE_ENV_MODULATE;
+                        set_flags(texture_flags, texture::TEXTURE_ENV_MODULATE);
                 }
 
                 color_map = new texture(L"material", fname, texture_flags, texture::TEXTURE_COLORMAP, 0);
@@ -264,20 +267,7 @@ namespace gsgl
                 non_file_materials[category][mat_key] = impl;
             }
 
-            // set up flags from what's in the material
-            if (impl->specular != color::BLACK)
-                draw_flags |= DRAW_SPECULAR;
-            if (impl->emissive != color::BLACK)
-                draw_flags |= DRAW_EMISSIVE;
-
-            if (impl->color_map.ptr())
-                draw_flags |= DRAW_COLOR_MAP;
-            if (impl->normal_map.ptr())
-                draw_flags |= DRAW_NORMAL_MAP;
-            if (impl->height_map.ptr())
-                draw_flags |= DRAW_HEIGHT_MAP;
-            if (impl->shader.ptr())
-                draw_flags |= DRAW_USE_SHADER;
+            set_material_flags();
         } // material::create_material()
 
 
@@ -308,20 +298,7 @@ namespace gsgl
                 throw runtime_exception(L"There is no material '%ls' in %ls!", mat_name.w_string(), full_path.w_string());
             }
 
-            // set up flags from what's in the material
-            if (impl->specular != color::BLACK)
-                draw_flags |= DRAW_SPECULAR;
-            if (impl->emissive != color::BLACK)
-                draw_flags |= DRAW_EMISSIVE;
-
-            if (impl->color_map.ptr())
-                draw_flags |= DRAW_COLOR_MAP;
-            if (impl->normal_map.ptr())
-                draw_flags |= DRAW_NORMAL_MAP;
-            if (impl->height_map.ptr())
-                draw_flags |= DRAW_HEIGHT_MAP;
-            if (impl->shader.ptr())
-                draw_flags |= DRAW_USE_SHADER;
+            set_material_flags();
         } // material::create_material()
 
 
@@ -549,6 +526,26 @@ namespace gsgl
                 }
             }
         } // material::clear_cache()
+
+
+        void material::set_material_flags()
+        {
+
+            // set up flags from what's in the material
+            if (impl->specular != color::BLACK)
+                set_flags(draw_flags, DRAW_SPECULAR);
+            if (impl->emissive != color::BLACK)
+                set_flags(draw_flags, DRAW_EMISSIVE);
+
+            if (impl->color_map.ptr())
+                set_flags(draw_flags, DRAW_COLOR_MAP);
+            if (impl->normal_map.ptr())
+                set_flags(draw_flags, DRAW_NORMAL_MAP);
+            if (impl->height_map.ptr())
+                set_flags(draw_flags, DRAW_HEIGHT_MAP);
+            if (impl->shader.ptr())
+                set_flags(draw_flags, DRAW_USE_SHADER);
+        } // material::set_material_flags()
 
 
     } // namespace platform

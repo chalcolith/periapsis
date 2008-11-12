@@ -134,6 +134,9 @@ namespace gsgl
             /// Clears the cache for a particular category.  Throws an exception if any of the materials still have references to them.
             /// \note Pass the string "__ALL__" to clear all the caches at once.
             static void clear_cache(const gsgl::string & category);
+
+        private:
+            void set_material_flags();
         }; // class material
 
 

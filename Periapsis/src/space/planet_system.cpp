@@ -61,7 +61,7 @@ namespace periapsis
         planet_system::planet_system(const config_record & conf)
             : orbital_frame(conf), cs(0)
         {
-            get_draw_flags() |= node::NODE_NO_FRUSTUM_CHECK;
+            set_flags(get_draw_flags(), node::NODE_NO_FRUSTUM_CHECK);
             cs = new utils::coord_system(this, 10000*units::METERS_PER_AU, 15, PLANET_COORD_COLOR);
         } // planet_system::planet_system()
 

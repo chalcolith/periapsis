@@ -66,9 +66,9 @@ namespace periapsis
             {
                 if (child->get_name() == L"property")
                 {
-                    if ((*child)[L"name"] == L"simple_material")
+                    if ((*child)[L"name"] == L"simple_material" && child->contains_child(L"material"))
                     {
-                        simple_material = new material(L"space", *child);
+                        simple_material = new material(L"space", child->get_child(L"material"));
 
                         if (!(*child)[L"color_offset"].is_empty())
                             simple_color_offset = vector::parse((*child)[L"color_offset"]);
@@ -128,9 +128,6 @@ namespace periapsis
 
         void celestial_body::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
-            // drawing state
-            display::scoped_state state(*draw_context->screen, draw_context->display_flags(this));
-
             // set up projection
             vector ep = utils::pos_in_eye_space(this);
 
@@ -150,7 +147,9 @@ namespace periapsis
 
             if (screen_width < MIN_PIXEL_WIDTH)
             {
-                get_draw_results() |= node::NODE_DREW_POINT;
+                display::scoped_state state(*draw_context->screen, draw_context->display_flags(this, drawing_context::RENDER_NO_LIGHTING));
+
+                set_flags(get_draw_results(), node::NODE_DREW_POINT);
                 draw_context->screen->draw_point(vector::ZERO, MIN_PIXEL_WIDTH);
             }
             else
@@ -159,6 +158,8 @@ namespace periapsis
 
                 if (sph)
                 {
+                    display::scoped_state state(*draw_context->screen, draw_context->display_flags(this));
+
                     // the simple sphere may be rotated...
                     rotating_body *rb = get_rotating_frame();
                     display::scoped_modelview mv(*draw_context->screen, rb ? &rb->get_modelview() : 0);
@@ -170,7 +171,7 @@ namespace periapsis
             }
 
             // draw name
-            draw_name(draw_context, 1, far_plane);
+            draw_name(draw_context);
         } // celestial_body::draw()
 
 
@@ -183,7 +184,7 @@ namespace periapsis
         } // celestial_body::cleanup()
 
 
-        void celestial_body::draw_name(const drawing_context *c, gsgl::real_t near_plane, gsgl::real_t far_plane)
+        void celestial_body::draw_name(const drawing_context *c)
         {
             if ((c->render_flags & drawing_context::RENDER_LABELS) && !get_name().is_empty())
             {

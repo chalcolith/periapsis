@@ -103,18 +103,23 @@ namespace gsgl
         } // drawing_context::copy()
 
 
-        gsgl::flags_t drawing_context::display_flags(node *n) const
+        gsgl::flags_t drawing_context::display_flags(node *n, const flags_t & extra_flags) const
         {
             gsgl::flags_t flags = display::ENABLE_ALL;
 
-            if (render_flags & RENDER_WIREFRAME)
+            flags_t flags_to_test = render_flags | extra_flags;
+
+            if (flag_is_set(flags_to_test, RENDER_WIREFRAME))
                 flags &= ~display::ENABLE_FILLED_POLYS;
 
-            if (render_flags & RENDER_NO_TEXTURES)
+            if (flag_is_set(flags_to_test, RENDER_NO_TEXTURES))
                 flags &= ~display::ENABLE_TEXTURES;
-            
-            if ((render_flags & RENDER_NO_LIGHTING) || (n && (n->get_draw_flags() & node::NODE_DRAW_UNLIT)))
+
+            if (flag_is_set(flags_to_test, RENDER_NO_LIGHTING) || (n && flag_is_set(n->get_draw_flags(), node::NODE_DRAW_UNLIT)))
                 flags &= ~display::ENABLE_LIGHTING;
+
+            if (flag_is_set(flags_to_test, RENDER_NO_DEPTH))
+                flags &= ~display::ENABLE_DEPTH;
 
             return flags;
         } // drawing_context::display_flags()

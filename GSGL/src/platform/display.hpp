@@ -142,10 +142,11 @@ namespace gsgl
                 ENABLE_BF_CULL        = 1 << 5,
                 ENABLE_TEXTURES       = 1 << 6,
                 ENABLE_LIGHTING       = 1 << 7,
+                ENABLE_BUFFERS        = 1 << 8,
                 
                 ENABLE_ALL            = 0xffffffff,
 
-                ENABLE_ORTHO_2D       = ENABLE_ALL ^ (ENABLE_DEPTH | ENABLE_LIGHTING)
+                ENABLE_ORTHO_2D       = ENABLE_ALL & ~(ENABLE_DEPTH | ENABLE_LIGHTING)
             };
 
             /// An RAII class for setting a particular OpenGL attribute state.
@@ -284,10 +285,11 @@ namespace gsgl
 
                 int gl_type;
                 bool interleaved;
+                int interleaved_start;
 
             public:
                 scoped_buffer(display & parent, const primitive_type & pt, vertex_buffer & vertices);
-                scoped_buffer(display & parent, const primitive_type & pt, vertex_buffer & vertices, index_buffer & indices, bool interleaved = false);
+                scoped_buffer(display & parent, const primitive_type & pt, vertex_buffer & vertices, index_buffer & indices, bool interleaved = false, int interleaved_start = 0);
                 scoped_buffer(display & parent, const primitive_type & pt, vertex_buffer & vertices, vertex_buffer & normals, vertex_buffer & texcoords);
                 scoped_buffer(display & parent, const primitive_type & pt, vertex_buffer & vertices, vertex_buffer & normals, vertex_buffer & texcoords, index_buffer & indices);
 

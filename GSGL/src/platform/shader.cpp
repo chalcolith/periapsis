@@ -64,28 +64,36 @@ namespace gsgl
         void shader_uniform_base::set(const int & i)
         {
             if (opengl_loc != -1 || bind())
-                glUniform1i(opengl_loc, i);
+            {
+                glUniform1i(opengl_loc, i);                                                                         CHECK_GL_ERRORS();
+            }
         } // shader_uniform_base::set()
 
 
         void shader_uniform_base::set(const float & f)
         {
             if (opengl_loc != -1 || bind())
-                glUniform1f(opengl_loc, f);
+            {
+                glUniform1f(opengl_loc, f);                                                                         CHECK_GL_ERRORS();
+            }
         } // shader_uniform_base::set()
 
 
         void shader_uniform_base::set(const float ff[4])
         {
             if (opengl_loc != -1 || bind())
-                glUniform4fv(opengl_loc, 1, ff);
+            {
+                glUniform4fv(opengl_loc, 1, ff);                                                                    CHECK_GL_ERRORS();
+            }
         } // shader_uniform_base::set()
 
 
         void shader_uniform_base::set(const bool & b)
         {
             if (opengl_loc != -1 || bind())
-                glUniform1i(opengl_loc, b);
+            {
+                glUniform1i(opengl_loc, b);                                                                         CHECK_GL_ERRORS();
+            }
         } // shader_uniform_base::set()
 
 
@@ -96,7 +104,7 @@ namespace gsgl
                 if (parent_program.opengl_id == 0)
                     throw runtime_exception(L"Cannot set uniform value '%hs' when the shader is not bound.", name.c_string());
 
-                opengl_loc = glGetUniformLocation(parent_program.opengl_id, name.c_string());
+                opengl_loc = glGetUniformLocation(parent_program.opengl_id, name.c_string());                       CHECK_GL_ERRORS();
                 if (opengl_loc == -1)
                     throw runtime_exception(L"Unable to set uniform value '%hs' in shader program!", name.c_string());
             }

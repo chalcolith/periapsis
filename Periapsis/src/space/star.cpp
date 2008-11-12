@@ -72,9 +72,9 @@ namespace periapsis
             {
                 if (child->get_name() == L"property")
                 {
-                    if ((*child)[L"name"] == L"corona_material")
+                    if ((*child)[L"name"] == L"corona_material" && child->contains_child(L"material"))
                     {
-                        corona_material = new material(L"space", *child);
+                        corona_material = new material(L"space", child->get_child(L"material"));
                     }
                 }
             }
@@ -105,8 +105,6 @@ namespace periapsis
             // draw corona
             if (corona_material)
             {
-                display::scoped_state state(*draw_context->screen, draw_context->display_flags(this) ^ (display::ENABLE_DEPTH));
-
                 vector ep = utils::pos_in_eye_space(this);
                 gsgl::real_t dist = ep.mag();
 
@@ -119,12 +117,17 @@ namespace periapsis
                     near_plane = 1.0f;
 
                 display::scoped_perspective proj(*draw_context->screen, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), near_plane, far_plane);
-                display::scoped_material    mat(*draw_context->screen, corona_material);
 
-                utils::draw_billboard(this, vector::ZERO, corona_radius);
+                // draw billboard
+                {
+                    display::scoped_state state(*draw_context->screen, draw_context->display_flags(this, drawing_context::RENDER_NO_DEPTH));
+                    display::scoped_material mat(*draw_context->screen, corona_material);
+
+                    utils::draw_billboard(this, vector::ZERO, corona_radius);
+                }
 
                 // draw twice, but there won't be many stars
-                draw_name(draw_context, 1, far_plane);
+                draw_name(draw_context);
             }
         } // star::draw()
 

@@ -47,7 +47,8 @@ namespace gsgl
     namespace data
     {
 
-
+        /// Inheriting from this class means that only one object of the derived class may be created.
+        /// \note This class does NOT handle cleaning up the instance; used RAII or a smart pointer to do that.
         template <typename T>
         class singleton
             : public gsgl::data_object

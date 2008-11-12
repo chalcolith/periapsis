@@ -104,7 +104,8 @@ namespace gsgl
                 RENDER_NO_LIGHTING   = 1 << 4,
                 RENDER_NO_TEXTURES   = 1 << 5,
                 RENDER_NO_NORMALMAP  = 1 << 6,
-                RENDER_NO_HEIGHTMAP  = 1 << 7
+                RENDER_NO_HEIGHTMAP  = 1 << 7,
+                RENDER_NO_DEPTH      = 1 << 8
             };
 
             gsgl::flags_t render_flags;
@@ -118,7 +119,7 @@ namespace gsgl
             virtual drawing_context *copy();
 
             //
-            gsgl::flags_t display_flags(node *n = 0) const; ///< Returns flags suitable for passing to display::scoped_state.
+            gsgl::flags_t display_flags(node *n = 0, const flags_t & extra_flags = 0) const; ///< Returns flags suitable for passing to display::scoped_state.
         }; // class drawing_context
 
         

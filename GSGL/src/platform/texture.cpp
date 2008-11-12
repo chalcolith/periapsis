@@ -216,6 +216,7 @@ namespace gsgl
                 throw io_exception(L"Texture file %ls not found.", fname.w_string());
 
             SDL_Surface *surface = IMG_Load(fname.c_string());
+
             if (!surface)
                 throw runtime_exception(L"Unable to load texture file %ls: %hs", fname.w_string(), IMG_GetError());
 

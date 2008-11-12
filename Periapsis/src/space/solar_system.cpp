@@ -57,7 +57,7 @@ namespace periapsis
         solar_system::solar_system(const config_record & conf)
             : node(conf), cs(0)
         {
-            get_draw_flags() |= node::NODE_NO_FRUSTUM_CHECK;
+            set_flags(get_draw_flags(), node::NODE_NO_FRUSTUM_CHECK);
 
             string oname = conf[L"transform"];
             if (!oname.is_empty())

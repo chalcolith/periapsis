@@ -163,6 +163,7 @@ namespace gsgl
             gsgl::log(string::format(L"font_impl: deleting %ls %d (%f, %f, %f)", face.w_string(), size, fg[color::COMPONENT_RED], fg[color::COMPONENT_GREEN], fg[color::COMPONENT_BLUE]));
 
             TTF_CloseFont(static_cast<TTF_Font *>(ttf_font_ptr));
+            ttf_font_ptr = reinterpret_cast<void *>(0xfeeefeee);
         } // font_impl::~font_impl()
 
 

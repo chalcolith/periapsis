@@ -63,6 +63,24 @@ namespace gsgl
     /// Used for storing flag bits.
     typedef unsigned int flags_t;
 
+    /// Set one or more flags.
+    inline void set_flags(flags_t & flags, const flags_t & flags_to_set)
+    {
+        flags |= flags_to_set;
+    }
+
+    /// Unset one or more flags.
+    inline void unset_flags(flags_t & flags, const flags_t & flags_to_unset)
+    {
+        flags &= ~flags_to_unset;
+    }
+
+    /// Check if a flag is set.
+    inline bool flag_is_set(const flags_t & flags, const flags_t & flags_to_test)
+    {
+        return (flags & flags_to_test) != 0;
+    }
+
     /// Base class for data data object types.
     class DATA_API data_object
     {

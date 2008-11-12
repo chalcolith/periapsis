@@ -701,13 +701,6 @@ namespace gsgl
             temp.save();
         } // global_config::save()
 
-
-        //
-
-        config_variable<gsgl::string> CONFIG_TEST_ZERO(L"test/zero", L"0");
-        config_variable<float> CONFIG_TEST_ONE(L"test/one", 3.14f);
-        config_variable<int> CONFIG_TEST_TWO(L"test/two", 2);
-
     } // namespace data
     
 } // namespace gsgl

@@ -71,7 +71,7 @@ namespace periapsis
             : node(conf), nearest_distance(FLT_MAX), farthest_distance(0), 
               vertices(vbuffer::STATIC), uniform_farthest_distance(0)
         {
-            get_draw_flags() |= node::NODE_NO_FRUSTUM_CHECK;
+            set_flags(get_draw_flags(), node::NODE_NO_FRUSTUM_CHECK);
 
             // load stellar database
             string db_fname = conf[L"data"];
@@ -253,24 +253,20 @@ namespace periapsis
         } // stellar_db::clean()
 
 
-
-        static float scale_factor = 1.0;
-
-
         void stellar_db::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
-            display::scoped_state state(*draw_context->screen, draw_context->display_flags(this) ^ (display::ENABLE_DEPTH));
-
             float star_scale = get_scale();
             float far_plane = farthest_distance * 1.1f * star_scale;
             float near_plane = nearest_distance * 0.9f * star_scale;
-            if (near_plane <= 1)
+            if (near_plane < 1)
                 near_plane = 1;
+
+            // projection (needed for the names as well)
+            display::scoped_perspective proj(*draw_context->screen, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), near_plane, far_plane);
 
             // draw stars
             {
-                // projection
-                display::scoped_perspective proj(*draw_context->screen, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), near_plane, far_plane);
+                display::scoped_state state(*draw_context->screen, draw_context->display_flags(this, drawing_context::RENDER_NO_DEPTH));
 
                 // set up shader
                 display::scoped_shader shdr(*draw_context->screen, &star_shader);
@@ -291,15 +287,20 @@ namespace periapsis
             // draw names
             if ((draw_context->render_flags & drawing_context::RENDER_LABELS))
             {
-                const font *label_font = dynamic_cast<const space_drawing_context *>(draw_context)->DEFAULT_LABEL_FONT.ptr();
+                const space_drawing_context *sdc = dynamic_cast<const space_drawing_context *>(draw_context);
+                const font *label_font = sdc ? sdc->DEFAULT_LABEL_FONT.ptr() : 0;
 
-                display::scoped_text labels(*draw_context->screen);
-
-                int i, len = star_names.size();
-                for (i = 0; i < len; ++i)
+                if (label_font)
                 {
-                    vector pos(star_name_vertices[i*3+0]*star_scale, star_name_vertices[i*3+1]*star_scale, star_name_vertices[i*3+2]*star_scale);
-                    labels.draw_3d(pos, label_font, *star_names[i], 4, -8);
+                    display::scoped_state state(*draw_context->screen, display::ENABLE_ORTHO_2D);
+                    display::scoped_text labels(*draw_context->screen);
+
+                    int i, len = star_names.size();
+                    for (i = 0; i < len; ++i)
+                    {
+                        vector pos(star_name_vertices[i*3+0]*star_scale, star_name_vertices[i*3+1]*star_scale, star_name_vertices[i*3+2]*star_scale);
+                        labels.draw_3d(pos, label_font, *star_names[i], 4, -8);
+                    }
                 }
             }
         } // stellar_db::draw()

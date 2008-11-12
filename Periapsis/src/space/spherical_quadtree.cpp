@@ -39,6 +39,8 @@
 #include "platform/texture.hpp"
 #include "platform/heightmap.hpp"
 
+//#include "platform/lowlevel.hpp"
+
 #include <cmath>
 
 
@@ -112,45 +114,45 @@ namespace periapsis
 
 
         //
+        bool sph_qt_node::should_draw(const simulation_context *sim_context, const drawing_context *draw_context) const
+        {
+            return utils::is_on_screen(parent_quadtree->parent_sg_node, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), get_vector(parent_quadtree->global_vertices, vertex_indices[12]), radius_in_world_space);
+        } // sph_qt_node::should_draw()
+
 
         void sph_qt_node::draw(const simulation_context *sim_context, const drawing_context *draw_context)
         {
-            // bounds check
-            if (utils::is_on_screen(parent_quadtree->parent_sg_node, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), get_vector(parent_quadtree->global_vertices, vertex_indices[12]), radius_in_world_space))
+            // are we a leaf?
+            if (is_a_leaf())
             {
-                // are we a leaf?
-                if (is_a_leaf())
+                update_fan_indices();
+
+                display::scoped_buffer buf(*draw_context->screen, display::PRIMITIVE_TRIANGLE_FAN, buffer_pool_rec.parent->vertices, buffer_pool_rec.parent->indices, true, buffer_pool_rec.pos_in_vertices);
+
+                //buffer_pool_rec.parent->vertices.bind();
+                //glInterleavedArrays(GL_T2F_N3F_V3F, 0, vbuffer::VBO_OFFSET<float>(buffer_pool_rec.pos_in_vertices));
+                //buffer_pool_rec.parent->indices.bind();
+
+                int prev_elements_drawn = 0;
+                for (int i = 0; i < 4; ++i)
                 {
-                    update_fan_indices();
-
-                    display::scoped_buffer buf(*draw_context->screen, display::PRIMITIVE_TRIANGLE_FAN, buffer_pool_rec.parent->vertices, buffer_pool_rec.parent->indices, true);
-
-                    //buffer_pool_rec.parent->vertices.bind();
-                    //glInterleavedArrays(GL_T2F_N3F_V3F, 0, vbuffer::VBO_OFFSET<float>(buffer_pool_rec.pos_in_vertices));
-
-                    //buffer_pool_rec.parent->indices.bind();
-
-                    int prev_elements_drawn = 0;
-                    for (int i = 0; i < 4; ++i)
+                    if (num_indices_in_quadrants[i])
                     {
-                        if (num_indices_in_quadrants[i])
-                        {
-                            buf.draw(num_indices_in_quadrants[i], buffer_pool_rec.pos_in_indices + prev_elements_drawn);
-                            //glDrawElements(GL_TRIANGLE_FAN, num_indices_in_quadrants[i], GL_UNSIGNED_INT, vbuffer::VBO_OFFSET<unsigned int>( buffer_pool_rec.pos_in_indices + prev_elements_drawn ));
+                        buf.draw(num_indices_in_quadrants[i], buffer_pool_rec.pos_in_indices + prev_elements_drawn);
+                        //glDrawElements(GL_TRIANGLE_FAN, num_indices_in_quadrants[i], GL_UNSIGNED_INT, vbuffer::VBO_OFFSET<unsigned int>( buffer_pool_rec.pos_in_indices + prev_elements_drawn ));
 
-                            prev_elements_drawn += num_indices_in_quadrants[i];
-                        }
+                        prev_elements_drawn += num_indices_in_quadrants[i];
                     }
-
                 }
-                else
+
+            }
+            else
+            {
+                // draw child nodes
+                for (int i = 0; i < 4; ++i)
                 {
-                    // draw child nodes
-                    for (int i = 0; i < 4; ++i)
-                    {
-                        if (children[i])
-                            children[i]->draw(sim_context, draw_context);
-                    }
+                    if (children[i])
+                        children[i]->draw(sim_context, draw_context);
                 }
             }
         } // sph_qt_node::draw()
@@ -1232,7 +1234,7 @@ namespace periapsis
 
         static const bool allow_merge = true;
         static const bool allow_split = true;
-        static const int NUM_TO_PROCESS = 128;
+        static const int NUM_TO_PROCESS = 32;
 
         void spherical_quadtree::update(const simulation_context *c, const bool not_visible)
         {

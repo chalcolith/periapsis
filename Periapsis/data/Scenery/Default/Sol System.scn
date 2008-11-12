@@ -3,23 +3,21 @@
 
 
 	<periapsis::space::solar_system name="Sol System"
-        	parent="Milky Way" 
+        parent="Milky Way" 
 		position="0 0 0" 
 		transform="ecliptic_wrt_galactic" 
 		scale="1AU">
 
 		<periapsis::space::star name="Sol" 
-			position="0 0 0" 
 			mass="1.988435e30kg" 
 			equatorial_radius="1.392e9m" 
 			polar_radius="1.392e9m"
-            	rotator="periapsis::space::rotator::sol::sol">
+            rotator="periapsis::space::rotator::sol::sol">
 
-			<property name="simple_material" color_map="Sol System/sol_color.jpg" color_map_mode="modulate"/>
-			<property name="corona_material" color_map="Sol System/sol_corona.png" color_map_mode="replace"/>
+			<property name="simple_material"><material color_map="Sol System/sol_color.png" color_map_mode="modulate"/></property>
+			<property name="corona_material"><material color_map="Sol System/sol_corona.png" color_map_mode="replace"/></property>
 		</periapsis::space::star>
 
-<!--
 		<periapsis::space::planet_system name="Mercury Barysystem" 
 			propagator="periapsis::space::keplerian_element_propagator"
 			keplerian_elements="0.38709843      0.20563661      7.00559432      252.25166724     77.45771895     48.33961819"
@@ -29,11 +27,11 @@
 				equatorial_radius="2439700.0m" 
 				polar_radius="2439700.0m" 
 				mass="3.302e23kg" 
-				rotator="periapsis::space::rotator::mercury::mercury" 
-				simple_map="Sol System/mercury_color.jpg" 
-				simple_map_x_offset="-0.5" />
+				rotator="periapsis::space::rotator::mercury::mercury">
+                
+                <property name="simple_material" color_offset="-0.5"><material color_map="Sol System/mercury_color.png" color_map_mode="modulate"/></property>
+            </periapsis::space::large_rocky_body>
 		</periapsis::space::planet_system>
-
 
 		<periapsis::space::planet_system name="Venus Barysystem"
 			propagator="periapsis::space::keplerian_element_propagator"
@@ -44,12 +42,12 @@
 				equatorial_radius="6051850.0m" 
 				polar_radius="6051850.0m" 
 				mass="4.8685e24kg"
-				rotator="periapsis::space::rotator::venus::venus" 
-				simple_map="Sol System/venus_color.jpg" 
-				simple_map_x_offset="-0.5" />
+				rotator="periapsis::space::rotator::venus::venus">
+                
+                <property name="simple_material" color_offset="-0.5"><material color_map="Sol System/venus_color.png" color_map_mode="modulate"/></property>
+            </periapsis::space::large_rocky_body>
 		</periapsis::space::planet_system>
 
-		
 		<periapsis::space::planet_system name="Earth Barysystem" 
 			propagator="periapsis::space::keplerian_element_propagator"
 			keplerian_elements="1.00000018      0.01673163     -0.00054346      100.46691572    102.93005885     -5.11260389"
@@ -59,33 +57,30 @@
 				mass="5.9742e24kg"
 				polar_radius="6356752.0m"
 				equatorial_radius="6378137.0m"
-				simple_map="Sol System/earth_color.png" 
-				simple_map_x_offset="-0.5" 
-				simple_height="Sol System/earth_bump.png"
-				simple_height_x_offset="-0.5"
-				simple_height_max="8848"
-
 				rotator="periapsis::space::rotator::earth::earth"
 				atmosphere_depth="100000.0m">
 
-				<periapsis::space::scenery_patch_set fname="Sol System/earth_default.scenery" />
+                <property name="simple_material" color_offset="-0.5" heightmap_offset="-0.5" heightmap_max="8848m">
+                    <material color_map="Sol System/earth_color.png" color_map_mode="modulate" height_map="Sol System/earth_bump.png"/>
+                </property>
 			</periapsis::space::planet_earth>
 
 			<periapsis::space::large_rocky_body name="Moon"
 				mass="7.3477e22kg"
 				polar_radius="1735.97km"
 				equatorial_radius="1738.14km"
-				simple_map="Sol System/moon_color.png"
-				simple_map_x_offset="-0.5"
-
 				rotator="periapsis::space::rotator::earth::moon"
-
 				propagator="periapsis::space::satellite_element_propagator"
-				satellite_elements="384400.0 	0.0554 	318.15 	135.27 	5.16 	125.08 	13.176358 	27.322 	5.997 	18.600"/>
-
+				satellite_elements="384400.0 	0.0554 	318.15 	135.27 	5.16 	125.08 	13.176358 	27.322 	5.997 	18.600">
+                
+                <property name="simple_material" color_offset="-0.5" heightmap_offset="-0.5" heightmap_max="181000m">
+                    <material color_map="Sol System/moon_color.png" color_map_mode="modulate" />
+                </property>
+                
+            </periapsis::space::large_rocky_body>
 		</periapsis::space::planet_system>
 
-
+<!--
 		<periapsis::space::planet_system name="Mars Barysystem"
 			propagator="periapsis::space::keplerian_element_propagator"
 			keplerian_elements="1.52371243      0.09336511      1.85181869       -4.56813164    -23.91744784     49.71320984"

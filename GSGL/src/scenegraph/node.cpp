@@ -128,7 +128,7 @@ namespace gsgl
               modelview(transform::IDENTITY),
               draw_flags(0), draw_results(0)
         {
-            get_draw_flags() |= NODE_DRAW_UNLIT;
+            set_flags(get_draw_flags(), NODE_DRAW_UNLIT);
 
             if (parent)
                 parent->add_child(this);
@@ -142,6 +142,8 @@ namespace gsgl
               modelview(transform::IDENTITY),
               draw_flags(0), draw_results(0)
         {
+            set_flags(get_draw_flags(), NODE_DRAW_UNLIT);
+
             name = conf[L"name"];
             parent_name = conf[L"parent"];
 
@@ -239,7 +241,7 @@ namespace gsgl
 
         gsgl::real_t node::default_view_distance() const
         {
-            return static_cast<gsgl::real_t>(32.0);
+            return static_cast<gsgl::real_t>(32);
         } // node::default_view_distance()
 
 
@@ -328,6 +330,7 @@ namespace gsgl
             
             // collect me
             cur->modelview = modelview;
+            cur->get_draw_results() = node::NODE_NO_DRAW_RESULTS;
 
             light *l = dynamic_cast<light *>(cur);
             if (l)
@@ -336,14 +339,21 @@ namespace gsgl
             }
             else
             {
-                gsgl::real_t pri = cur->draw_priority(sim_context, draw_context);
+                if (utils::is_on_screen(cur, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), vector::ZERO, cur->view_radius()))
+                {
+                    gsgl::real_t pri = cur->draw_priority(sim_context, draw_context);
 
-                if (pri == node::NODE_DRAW_SOLID)
-                    rec.solids.append(cur);
-                else if (pri == node::NODE_DRAW_TRANSLUCENT)
-                    rec.translucents.append(cur);
-                else if (pri > node::NODE_DRAW_TRANSLUCENT)
-                    rec.paint_queue.push(cur, pri);
+                    if (pri == node::NODE_DRAW_SOLID)
+                        rec.solids.append(cur);
+                    else if (pri == node::NODE_DRAW_TRANSLUCENT)
+                        rec.translucents.append(cur);
+                    else if (pri > node::NODE_DRAW_TRANSLUCENT)
+                        rec.paint_queue.push(cur, pri);
+                }
+                else
+                {
+                    set_flags(cur->get_draw_results(), node::NODE_OFF_SCREEN);
+                }
             }
 
             // collect children (& scale)
@@ -413,7 +423,7 @@ namespace gsgl
             fb.define_ambient_light(AMBIENT_LIGHT);
             
             draw_context->num_lights = 0;
-            if (!(draw_context->render_flags & drawing_context::RENDER_NO_LIGHTING))
+            if (!flag_is_set(draw_context->render_flags, drawing_context::RENDER_NO_LIGHTING))
             {
                 int i, len = rec.light_queue.size();
 
@@ -442,7 +452,9 @@ namespace gsgl
             for (i = 0; i < len; ++i)
             {
                 node *n = rec.paint_queue[i];
-                n->draw_results = NODE_NO_DRAW_RESULTS;
+
+                if (flag_is_set(n->draw_results, NODE_OFF_SCREEN))
+                    continue;
 
                 BUDGET_SCOPE(RENDER_CATEGORY + n->get_type_name());
                 display::scoped_modelview mv(fb, &n->get_modelview());
@@ -459,20 +471,12 @@ namespace gsgl
             for (i = 0; i < len; ++i)
             {
                 node *n = nodes[i];
-                n->draw_results = NODE_NO_DRAW_RESULTS;
-
-                // individual nodes may define their own projection frustums
-                if (!utils::is_on_screen(n, draw_context->cam->get_field_of_view(), draw_context->screen->get_aspect_ratio(), vector::ZERO, n->view_radius()))
-                {
-                    n->draw_results |= NODE_OFF_SCREEN;
-                    continue;
-                }
                 
                 float zdist = (n->get_modelview() * vector::ZERO).get_z();
                 if (zdist < 0.1f) zdist = 0.1f;
 
                 if (zdist > LOCAL_CULL_DISTANCE) {
-                    n->draw_results |= NODE_DISTANCE_CULLED;
+                    set_flags(n->draw_results, NODE_DISTANCE_CULLED);
                     continue;
                 }
 
@@ -491,7 +495,7 @@ namespace gsgl
             {
                 node *n = nodes[i];
 
-                if (n->draw_results & (NODE_OFF_SCREEN | NODE_DISTANCE_CULLED))
+                if (flag_is_set(n->draw_results, NODE_OFF_SCREEN | NODE_DISTANCE_CULLED))
                     continue;
 
                 BUDGET_SCOPE(RENDER_CATEGORY + n->get_type_name());

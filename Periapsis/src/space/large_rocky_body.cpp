@@ -56,6 +56,8 @@ namespace periapsis
         large_rocky_body::large_rocky_body(const config_record & obj_config)
             : celestial_body(obj_config)
         {
+            unset_flags(get_draw_flags(), NODE_DRAW_UNLIT);
+
             // create rotating lithosphere (the rotating body will delete its rotator)
             body_rotator *rotator = !obj_config[L"rotator"].is_empty() ? rotator = dynamic_cast<body_rotator *>(broker::global_instance()->create_object(obj_config[L"rotator"], obj_config)) : 0;
             get_rotating_frame() = get_lithosphere() = new large_lithosphere(get_name() + L" lithosphere [rotating frame]", this, rotator);
@@ -91,13 +93,13 @@ namespace periapsis
 
             if (litho)
             {
-                display::scoped_state state(*draw_context->screen, draw_context->display_flags(this));
-
                 vector pos_in_view = get_modelview() * vector::ZERO;
 
                 gsgl::real_t radius = gsgl::max_val(get_polar_radius(), get_equatorial_radius());
                 gsgl::real_t dist = pos_in_view.mag();
                 gsgl::real_t zdist = -pos_in_view.get_z();
+                assert(zdist > 0);
+
                 gsgl::real_t far_plane = zdist + (radius * 1.1f);
                 gsgl::real_t near_plane = zdist - (radius * 1.1f);
                 if (near_plane <= 0)
@@ -110,16 +112,23 @@ namespace periapsis
 
                 if (screen_width < MIN_PIXEL_WIDTH)
                 {
-                    get_draw_results() |= node::NODE_DREW_POINT;
+                    display::scoped_state state(*draw_context->screen, draw_context->display_flags(this, drawing_context::RENDER_NO_LIGHTING));
+
+                    set_flags(get_draw_results(), node::NODE_DREW_POINT);
                     draw_context->screen->draw_point(vector::ZERO, MIN_PIXEL_WIDTH);
                 }
                 else
                 {
+                    display::scoped_state state(*draw_context->screen, draw_context->display_flags(this));
+
                     draw_context->screen->clear(display::CLEAR_DEPTH);
                     display::scoped_modelview mv(*draw_context->screen, &litho->get_modelview());
 
                     litho->draw(sim_context, draw_context);
                 }
+
+                // draw name
+                draw_name(draw_context);
             }
             else
             {
