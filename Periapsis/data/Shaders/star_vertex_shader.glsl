@@ -48,5 +48,5 @@ void main(void)
 	gl_Position = ftransform();
     gl_FrontColor = gl_Color * (0.4 + pct * 0.6);
     gl_FrontColor.a = 1.0;
-    gl_PointSize = clamp(MAX_POINT_SIZE * pct, 1.0, MAX_POINT_SIZE);
+    //gl_PointSize = clamp(MAX_POINT_SIZE * pct, 1.0, MAX_POINT_SIZE);
 }

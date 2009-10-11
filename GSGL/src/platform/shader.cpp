@@ -346,17 +346,17 @@ namespace gsgl
                 int len, status;
                 smart_pointer<char, true> buf(new char[INFO_BUF_SIZE]);
 
-                glValidateProgram(opengl_id);                                                                       CHECK_GL_ERRORS();
+                glValidateProgram(opengl_id);                                                                       //CHECK_GL_ERRORS();
                 glGetProgramiv(opengl_id, GL_VALIDATE_STATUS, &status);
 
-                if (!status)
+                if (status == GL_FALSE)
                 {
                     glGetProgramInfoLog(opengl_id, INFO_BUF_SIZE, &len, buf);
                     throw runtime_exception(string(buf).w_string());
                 }
 
                 // link
-                glLinkProgram(opengl_id);                                                                           CHECK_GL_ERRORS();
+                glLinkProgram(opengl_id);                                                                           //CHECK_GL_ERRORS();
                 glGetProgramiv(opengl_id, GL_LINK_STATUS, &status);
 
                 if (!status)
