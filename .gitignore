@@ -15,3 +15,7 @@
 /.*.swp
 /.DS_store
 # Simulated Subversion default ignores end here
+# The contents of the svn:ignore property on the branch root.
+/glsl_quickref.pdf
+/GLSLangSpec.Full.1.20.8.pdf
+/random notes.rtf
