@@ -34,7 +34,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "base.hpp"
 #include "data.hpp"
 #include "indexable.hpp"
 #include "exception.hpp"

@@ -34,7 +34,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/data.hpp"
+#include "data.hpp"
 
 namespace gsgl
 {
@@ -53,12 +53,12 @@ namespace gsgl
             virtual int compare(const comparable &) const = 0;
         }; // class comparable
         
-        inline bool operator== (const comparable & a, const comparable & b) { return a.compare(b) == 0; }
-        inline bool operator!= (const comparable & a, const comparable & b) { return a.compare(b) != 0; }
-        inline bool operator<  (const comparable & a, const comparable & b) { return a.compare(b) <  0; }
-        inline bool operator<= (const comparable & a, const comparable & b) { return a.compare(b) <= 0; }
-        inline bool operator>  (const comparable & a, const comparable & b) { return a.compare(b) >  0; }
-        inline bool operator>= (const comparable & a, const comparable & b) { return a.compare(b) >= 0; }
+        BASE_API inline bool operator== (const comparable & a, const comparable & b) { return a.compare(b) == 0; }
+        BASE_API inline bool operator!= (const comparable & a, const comparable & b) { return a.compare(b) != 0; }
+        BASE_API inline bool operator<  (const comparable & a, const comparable & b) { return a.compare(b) <  0; }
+        BASE_API inline bool operator<= (const comparable & a, const comparable & b) { return a.compare(b) <= 0; }
+        BASE_API inline bool operator>  (const comparable & a, const comparable & b) { return a.compare(b) >  0; }
+        BASE_API inline bool operator>= (const comparable & a, const comparable & b) { return a.compare(b) >= 0; }
 
     } // namespace
     

@@ -31,13 +31,12 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/broker.hpp"
-#include "data/log.hpp"
-#include "data/exception.hpp"
-#include "data/string.hpp"
-#include "data/config.hpp"
+#include "stdafx.h"
 
-#include <typeinfo>
+#include "broker.hpp"
+#include "log.hpp"
+#include "exception.hpp"
+#include "config.hpp"
 
 #ifdef WIN32
 // disable warning about regster instance

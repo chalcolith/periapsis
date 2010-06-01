@@ -34,8 +34,8 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/data.hpp"
-#include "data/exception.hpp"
+#include "data.hpp"
+#include "exception.hpp"
 
 namespace gsgl
 {
@@ -94,6 +94,7 @@ namespace gsgl
         {
             throw internal_exception(__FILE__, __LINE__, L"Cannot assign a smart pointer.");
         } // smart_pointer<T,ARRAY_PTR>::smart_pointer()
+
 
         template <typename T, bool ARRAY_PTR>
         smart_pointer<T,ARRAY_PTR>::~smart_pointer()

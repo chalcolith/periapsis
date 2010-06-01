@@ -34,12 +34,13 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/data.hpp"
-#include "data/pointer.hpp"
-#include "data/string.hpp"
-#include "data/list.hpp"
-#include "data/dictionary.hpp"
-#include "data/file.hpp"
+#include "data.hpp"
+#include "pointer.hpp"
+#include "string.hpp"
+#include "list.hpp"
+#include "dictionary.hpp"
+#include "file.hpp"
+#include "directory.hpp"
 
 namespace gsgl
 {
