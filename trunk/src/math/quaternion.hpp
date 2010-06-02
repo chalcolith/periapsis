@@ -1,10 +1,10 @@
-#ifndef GSGL_IO_PRINTABLE_HPP
-#define GSGL_IO_PRINTABLE_HPP
+#ifndef GSGL_MATH_QUATERNION_H
+#define GSGL_MATH_QUATERNION_H
 
 //
-// $Id: printable.hpp 2 2008-03-01 20:58:50Z kulibali $
+// $Id: quaternion.hpp 17 2008-07-28 04:17:44Z kulibali $
 //
-// Copyright (c) 2008-2010, The Periapsis Project. All rights reserved. 
+// Copyright (c) 2008, The Periapsis Project. All rights reserved. 
 // 
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are 
@@ -34,25 +34,53 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data.hpp"
+#include "math.hpp"
+#include "vector.hpp"
 
 namespace gsgl
 {
 
-    namespace io
+    namespace math
     {
 
-        class text_stream;
+        class transform;
 
-        class BASE_API printable
+    
+        /// Quaternion class.
+        class MATH_API quaternion
+            : public math_object
         {
         public:
-            virtual void to_stream(text_stream &) const = 0;
-            virtual void from_stream(text_stream &) = 0;
-        }; // class printable
+            double w,x,y,z;
 
-    } // namespace io
+            quaternion(const double w = 0, const double x = 0, const double y = 0, const double z = 0);
+            quaternion(const vector & v, double a);
+            quaternion(const quaternion &);
 
+            explicit quaternion(const gsgl::string &);
+            explicit quaternion(const transform &);
+            
+            quaternion & operator= (const quaternion &);
+            quaternion & operator= (const transform &);
+            virtual ~quaternion();
+            
+            double norm() const;
+            quaternion conjugate() const;
+            quaternion inverse() const;
+            void normalize();
+            
+            quaternion operator+ (const quaternion &) const;
+            quaternion operator* (const quaternion &) const;
+            quaternion operator* (const double &) const;
+
+            double dot(const quaternion &) const;
+
+            static quaternion interpolate(const quaternion & start, const quaternion & end, const double & t);
+        }; // class quaternion
+        
+
+    } // namespace math
+    
 } // namespace gsgl
 
 #endif

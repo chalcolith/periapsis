@@ -1,7 +1,10 @@
+#ifndef GSGL_MATH_MATH_H
+#define GSGL_MATH_MATH_H
+
 //
-// $Id: data.cpp 2 2008-03-01 20:58:50Z kulibali $
+// $Id: math.hpp 2 2008-03-01 20:58:50Z kulibali $
 //
-// Copyright (c) 2008-2010, The Periapsis Project. All rights reserved. 
+// Copyright (c) 2008, The Periapsis Project. All rights reserved. 
 // 
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are 
@@ -31,6 +34,57 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "stdafx.h"
-#include "data.hpp"
+#ifdef WIN32
 
+#ifdef MATH_EXPORTS
+#define MATH_API __declspec(dllexport)
+#else
+#define MATH_API __declspec(dllimport)
+#endif
+#else
+#define MATH_API
+#endif
+
+#pragma warning (disable:4996)
+#pragma warning (disable:4251)
+
+namespace gsgl
+{
+
+    typedef float real_t;
+
+    namespace math
+    {
+    
+        extern MATH_API const double PI;
+        extern MATH_API const double PI_OVER_2;
+        extern MATH_API const double PI_TIMES_2;
+        
+        extern MATH_API const double DEG2RAD;
+        extern MATH_API const double RAD2DEG;
+
+
+        class MATH_API math_object
+        {
+        public:
+        }; // class math_object
+
+
+        // utility functions
+        
+        template <typename R>
+        R clamp(const R & val, const R & min, const R & max)
+        {
+            if (val < min)
+                return min;
+            if (val > max)
+                return max;
+            return val;
+        } // clamp()
+
+
+    } // namespace math
+    
+} // namespace gsgl
+
+#endif

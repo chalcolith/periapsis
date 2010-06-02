@@ -31,21 +31,17 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/string.hpp"
-
-#include "data/pointer.hpp"
-#include "data/array.hpp"
-#include "data/list.hpp"
-#include "data/stream.hpp"
-
-#include <cstdlib>
-#include <cstdarg>
-#include <cwchar>
+#include "stdafx.h"
+#include "string.hpp"
+#include "pointer.hpp"
+#include "array.hpp"
+#include "list.hpp"
+#include "stream.hpp"
 
 namespace gsgl
 {
 
-    class BASE_API string_impl
+    class string_impl
         : public data::shared_object
     {
         enum
@@ -74,11 +70,12 @@ namespace gsgl
 
         //
 
-        void set_modified() { modified_flags |= STRING_IMPL_MODIFIED; }
+        bool is_modified() const { return modified_flags != 0; }
+        void set_modified() { set_flags(modified_flags, STRING_IMPL_MODIFIED); }
         
-        const wchar_t       *get_w_string() const;
-        const char          *get_c_string() const;
-        const unsigned char *get_p_string() const;
+        inline const wchar_t *get_w_string() const { return w_data.ptr(); }
+        const char           *get_c_string() const;
+        const unsigned char  *get_p_string() const;
     }; // class string_impl
 
 
@@ -117,23 +114,17 @@ namespace gsgl
     } // string_impl::string_impl()
 
 
-    const wchar_t *string_impl::get_w_string() const
-    {
-        return w_data.ptr();
-    } // string_impl::get_w_string()
-
-
     /// \todo Implement UFT-8 output.
     const char *string_impl::get_c_string() const
     {
-        if (modified_flags & STRING_IMPL_OLD_CDATA)
+        if (flag_is_set(modified_flags, STRING_IMPL_OLD_CDATA))
         {
             c_data.clear();
             for (const wchar_t *ch = w_data.ptr(); *ch; ++ch)
                 c_data.append(static_cast<char>(*ch));
             c_data.append(0);
 
-            modified_flags &= ~STRING_IMPL_OLD_CDATA;
+            unset_flags(modified_flags, STRING_IMPL_OLD_CDATA);
         }
 
         return c_data.ptr();
@@ -167,37 +158,8 @@ namespace gsgl
 
 
     //////////////////////////////////////////////////////////////////
-#ifdef DEBUG
-
-    static const wchar_t *STATIC_NULL_STRING = L"<null string>";
-    static const wchar_t *STATIC_INVALID_STRING = L"<INVALID STRING>";
-
-#define ASSIGN_DEBUG_PTR() \
-    { \
-        switch (mode) \
-        { \
-        case STRING_NULL: \
-            wchar_ptr = STATIC_NULL_STRING; \
-            break; \
-        case STRING_CONST_REF: \
-            wchar_ptr = ref; \
-            break; \
-        case STRING_SHARED_IMPL: \
-            wchar_ptr = impl->get_w_string(); \
-            break; \
-        default: \
-            wchar_ptr = STATIC_INVALID_STRING; \
-            break; \
-        } \
-    }         
-
-#else
-#define ASSIGN_DEBUG_PTR() 
-#endif
-
 
     const string string::EMPTY_STRING = L"";
-
 
     string::string()
         : data_object(), 
@@ -209,7 +171,7 @@ namespace gsgl
           mode(STRING_NULL),
           ref(0)
     {
-        ASSIGN_DEBUG_PTR();
+        on_update();
     } // string::string()
 
 
@@ -224,8 +186,7 @@ namespace gsgl
           ref(0)
     {
         *this = s;
-
-        ASSIGN_DEBUG_PTR();
+        on_update();
     } // string::string()
 
 
@@ -239,9 +200,8 @@ namespace gsgl
           mode(str ? STRING_CONST_REF : STRING_NULL),
           ref(str)
     {
-        unshare();
-
-        ASSIGN_DEBUG_PTR();
+        unshare(); // copies the referenced string
+        on_update();
     } // string::string()
 
 
@@ -255,7 +215,7 @@ namespace gsgl
           mode(str ? STRING_CONST_REF : STRING_NULL),
           ref(str)
     {
-        ASSIGN_DEBUG_PTR();
+        on_update();
     } // string::string()
 
 
@@ -280,10 +240,9 @@ namespace gsgl
             mode = STRING_SHARED_IMPL;
             impl = new string_impl(buf.ptr());
             impl->attach();
-
         }
 
-        ASSIGN_DEBUG_PTR();
+        on_update();
     } // string::string()
 
 
@@ -295,8 +254,7 @@ namespace gsgl
         ref = str;
 
         unshare();
-
-        ASSIGN_DEBUG_PTR();
+        on_update();
 
         return *this;
     }; // string::operator= ()
@@ -309,7 +267,7 @@ namespace gsgl
         mode = str ? STRING_CONST_REF : STRING_NULL;
         ref = str;
 
-        ASSIGN_DEBUG_PTR();
+        on_update();
 
         return *this;
     } // string::operator= ()
@@ -335,10 +293,10 @@ namespace gsgl
             impl->attach();
             break;
         default:
-            throw internal_exception(__FILE__, __LINE__, L"can't happen in string::operator= ()");
+            throw internal_exception(__FILE__, __LINE__, L"unknown error in string::operator= ()");
         }
 
-        ASSIGN_DEBUG_PTR();
+        on_update();
 
         return *this;
     } // string::operator= ()
@@ -348,8 +306,7 @@ namespace gsgl
     {
         make_null();
         mode = STRING_INVALID;
-
-        ASSIGN_DEBUG_PTR();
+        on_update();
     } // string::~string()
 
 
@@ -390,7 +347,7 @@ namespace gsgl
             throw internal_exception(__FILE__, __LINE__, L"can't happen in string::clear()");
         }
 
-        ASSIGN_DEBUG_PTR();
+        on_update();
     } // string::clear()
 
 
@@ -402,7 +359,7 @@ namespace gsgl
         impl->set_modified();
         impl->w_data[impl->w_data.size()-1] = ch;
         impl->w_data.append(0);
-        ASSIGN_DEBUG_PTR();
+        on_update();
     } // string::append()
 
 
@@ -418,7 +375,7 @@ namespace gsgl
             impl->w_data[static_cast<gsgl::index_t>(la + lb)] = 0;        // force resize
             ::memcpy(impl->w_data.ptr() + la, str, sizeof(wchar_t) * lb); // copy into available space
         }
-        ASSIGN_DEBUG_PTR();
+        on_update();
     } // string::append()
 
 
@@ -435,6 +392,8 @@ namespace gsgl
         unshare();
         impl->set_modified();
         impl->w_data.insert(ch, i.position);
+
+        on_update();
     } // string::insert()
 
 
@@ -445,6 +404,8 @@ namespace gsgl
         unshare();
         impl->set_modified();
         impl->w_data.remove(i.position);
+
+        on_update();
     } // string::remove()
 
 
@@ -461,9 +422,7 @@ namespace gsgl
                 return ref[index];
             else
                 throw memory_exception(__FILE__, __LINE__, L"bounds error in string");
-        default:
-            assert(impl);
-
+        case STRING_SHARED_IMPL:
             try
             {
                 return impl->w_data.item(index);
@@ -472,6 +431,8 @@ namespace gsgl
             {
                 throw memory_exception(__FILE__, __LINE__, L"bounds error in string");
             }
+        default:
+            throw internal_exception(__FILE__, __LINE__, L"can't happen in string::item()");
         }
     } // string::item()
 
@@ -479,6 +440,7 @@ namespace gsgl
     wchar_t & string::item(const gsgl::index_t & index)
     {
         unshare();
+        impl->set_modified();
 
         if (index < size())
             return impl->w_data.item(index);
@@ -509,28 +471,6 @@ namespace gsgl
     } // string::compare()
 
 
-    // inlined
-    //int string::compare(const wchar_t *str) const
-    //{
-    //    const wchar_t *a = w_string();
-    //    const wchar_t *b = str;
-    //    
-    //    while (a && b && *a && *b)
-    //    {
-    //        if (*a != *b)
-    //            return (static_cast<int>(*a)) - (static_cast<int>(*b));
-    //        a++; b++;
-    //    }
-    //    
-    //    if (a && *a)
-    //        return 1;
-    //    else if (b && *b)
-    //        return -1;
-    //    else
-    //        return 0;
-    //} // string::compare()
-
-
     ////////////////////////////////////
 
 	void string::to_stream(io::text_stream & s) const
@@ -558,7 +498,7 @@ namespace gsgl
                 append(ch);
         }
 
-        ASSIGN_DEBUG_PTR();
+        on_update();
     } // string::from_stream()
 
 
@@ -578,11 +518,11 @@ namespace gsgl
         s >> sz;
 		data::smart_pointer<wchar_t, true> buf(new wchar_t[sz+1]);
         s.read(reinterpret_cast<unsigned char *>(buf.ptr()), sizeof(wchar_t) * sz);
-        buf[sz] = 0;
+        buf.ptr()[sz] = 0;
 
-        *this = buf;
+        *this = buf.ptr();
 
-        ASSIGN_DEBUG_PTR();
+        on_update();
     }; // string::from_stream()
 
 
@@ -704,7 +644,7 @@ namespace gsgl
         const gsgl::index_t sz = size();
 
         if (length >= sz)
-            return *this;
+            return string(*this);
 
         return substring(sz - length);
     } // string::right_substring()
@@ -773,10 +713,10 @@ namespace gsgl
         if (sz)
         {
 			data::smart_pointer<wchar_t, true> buf(new wchar_t[sz+1]);
-            ::memcpy(buf, w_string(), sizeof(wchar_t) * (sz+1));
+            ::memcpy(buf.ptr(), w_string(), sizeof(wchar_t) * (sz+1));
 
-            wchar_t *start = buf;
-            wchar_t *end = buf + (sz-1);
+            wchar_t *start = buf.ptr();
+            wchar_t *end = buf.ptr() + (sz-1);
 
             while (*start && ::iswspace(*start))
                 start++;
@@ -787,12 +727,12 @@ namespace gsgl
             *this = start;
         }
 
-        ASSIGN_DEBUG_PTR();
-
+        on_update();
         return *this;
     } // string::trim()
 
 
+    /// \todo Handle unicode case
     string & string::make_upper()
     {
         unshare();
@@ -803,12 +743,13 @@ namespace gsgl
                 *ch -= 32;
         }
 
-        ASSIGN_DEBUG_PTR();
+        on_update();
 
         return *this;
     } // string::make_upper()
 
 
+    /// \todo Handle unicode case.
     string & string::make_lower()
     {
         unshare();
@@ -819,7 +760,7 @@ namespace gsgl
                 *ch += 32;
         }
 
-        ASSIGN_DEBUG_PTR();
+        on_update();
 
         return *this;
     } // string::make_lower()
@@ -867,10 +808,10 @@ namespace gsgl
         if (sz)
         {
 			data::smart_pointer<wchar_t, true> buf(new wchar_t[sz+1]);
-            ::memcpy(buf, w_string(), sizeof(wchar_t) * (sz+1));
+            ::memcpy(buf.ptr(), w_string(), sizeof(wchar_t) * (sz+1));
 
             wchar_t *start, *cur;
-            start = cur = buf;
+            start = cur = buf.ptr();
 
             while (*cur)
             {
@@ -928,6 +869,58 @@ namespace gsgl
 
     ////////////////////////////////////
 
+
+#ifdef DEBUG
+
+    static const wchar_t *STATIC_NULL_STRING = L"<null string>";
+    static const wchar_t *STATIC_INVALID_STRING = L"<INVALID STRING>";
+
+#define ASSIGN_DEBUG_PTR() \
+    { \
+        switch (mode) \
+        { \
+        case STRING_NULL: \
+            wchar_ptr = STATIC_NULL_STRING; \
+            break; \
+        case STRING_CONST_REF: \
+            wchar_ptr = ref; \
+            break; \
+        case STRING_SHARED_IMPL: \
+            wchar_ptr = impl->get_w_string(); \
+            break; \
+        default: \
+            wchar_ptr = STATIC_INVALID_STRING; \
+            break; \
+        } \
+    }         
+
+#else
+#define ASSIGN_DEBUG_PTR() 
+#endif
+
+
+    void string::on_update() const
+    {
+        recalc_hash();
+        ASSIGN_DEBUG_PTR();
+    } // string::on_update()
+
+
+    bool string::is_modified() const
+    {
+        switch (mode)
+        {
+        case STRING_NULL:
+        case STRING_CONST_REF:
+            return false;
+        case STRING_SHARED_IMPL:
+            return impl->is_modified();
+        default:
+            throw internal_exception(__FILE__, __LINE__, L"can't happen in string::is_modified()");
+        }
+    } // string::is_modified()
+
+
     void string::make_null()
     {
         if (mode == STRING_SHARED_IMPL)
@@ -939,7 +932,7 @@ namespace gsgl
         mode = STRING_NULL;
         ref = 0;
 
-        ASSIGN_DEBUG_PTR();
+        on_update();
     } // string::make_null()
 
 
@@ -970,8 +963,7 @@ namespace gsgl
             throw internal_exception(__FILE__, __LINE__, L"can't happen in string::unshare()");
         }
 
-        assert(impl);
-        ASSIGN_DEBUG_PTR();
+        on_update();
     } // string::unshare()
 
 

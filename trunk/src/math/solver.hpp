@@ -1,10 +1,10 @@
-#ifndef GSGL_DATA_SINGLETON_H
-#define GSGL_DATA_SINGLETON_H
+#ifndef GSGL_MATH_SOLVER_H
+#define GSGL_MATH_SOLVER_H
 
 //
-// $Id: singleton.hpp 28 2008-11-12 01:41:40Z kulibali $
+// $Id: solver.hpp 2 2008-03-01 20:58:50Z kulibali $
 //
-// Copyright (c) 2008-2010, The Periapsis Project. All rights reserved. 
+// Copyright (c) 2008, The Periapsis Project. All rights reserved. 
 // 
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are 
@@ -34,54 +34,58 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data.hpp"
-#include "exception.hpp"
-
-#ifdef WIN32
-#pragma warning (disable: 4661)
-#endif
+#include "math.hpp"
 
 namespace gsgl
 {
 
-    namespace data
+    namespace math
     {
+        
 
-        /// Inheriting from this class means that only one object of the derived class may be created.
-        /// \note This class does NOT handle cleaning up the instance; used RAII or a smart pointer to do that.
-        template <typename T>
-        class singleton
-            : public data_object
+        /// Base class for numerical equation solvers, where the equation is x' = f(t, x).
+        /// State classes need to implement operator+(state) const, operator*(double) const, and derivative(double) const.
+        template <typename S>
+        class solver
         {
-        protected:
-            static T *instance;
-
         public:
-            singleton()
-                : data_object()
+            virtual S next(const S & x, const double & t, const double & dt) = 0;
+        }; // class solver
+
+
+        /// Euler's method solver.
+        template <typename S>
+        class euler_solver
+            : public solver<S>
+        {
+        public:
+            S next(const S & x, const double & t, const double & dt)
             {
-                if (instance)
-                    throw gsgl::internal_exception(__FILE__, __LINE__, L"Attempted to create more than one of a singleton class.");
-                instance = reinterpret_cast<T *>(this);
+                return x + x.derivative(t) * dt;
             }
+        }; // class euler_solver
 
-
-            virtual ~singleton()
+        
+        /// The venerable Runge-Kutta solver.
+        template <typename S> 
+        class runge_kutta_solver 
+            : public solver<S>
+        {
+        public:
+            S next(const S & x, const double & t, const double & dt)
             {
-                instance = 0;
-            }
+                S k1 = x.derivative(t);
+                S k2 = (x + k1*(dt*0.5)).derivative(t + dt*0.5);
+                S k3 = (x + k2*(dt*0.5)).derivative(t + dt*0.5);
+                S k4 = (x + k3*dt).derivative(t + dt);
+                
+                return x + (k1 + k2*2.0 + k3*2.0 + k4)*(dt/6.0);
+            } // next()
+        }; // class runge_kutta_solver
+        
 
-
-            static T *global_instance()
-            {
-                return T::instance;
-            }
-
-        }; // class singleton
-
-
-    } // namespace data
-
-} // namespace gsgl
+    } // namespace math
+    
+} // namespace math
 
 #endif

@@ -34,9 +34,9 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/data.hpp"
-#include "data/printable.hpp"
-#include "data/serializable.hpp"
+#include "data.hpp"
+#include "printable.hpp"
+#include "serializable.hpp"
 
 namespace gsgl
 {

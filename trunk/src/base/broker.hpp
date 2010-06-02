@@ -79,7 +79,6 @@ namespace gsgl
         /// This class serves to broker plugin object creation and config_recorduration.
         /// In order to make a class brokerable, simply use the BROKER_DECLARE_CREATOR() and BROKER_DEFINE_CREATOR() macros.
         /// These will create the global broker if necessary, and automatically register the class as creatable.
-        /// The broker will delete itself when its last creator goes out of scope.
 
         class BASE_API broker
             : public data::singleton<broker>

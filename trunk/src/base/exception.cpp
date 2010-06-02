@@ -31,14 +31,8 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/exception.hpp"
-
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
-#include <cwchar>
-#include <cstdarg>
-
+#include "stdafx.h"
+#include "exception.hpp"
 
 #ifdef WIN32
 #pragma warning (disable:4251)

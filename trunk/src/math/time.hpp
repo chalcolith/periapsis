@@ -1,7 +1,10 @@
+#ifndef GSGL_MATH_TIME_H
+#define GSGL_MATH_TIME_H
+
 //
-// $Id: data.cpp 2 2008-03-01 20:58:50Z kulibali $
+// $Id: time.hpp 2 2008-03-01 20:58:50Z kulibali $
 //
-// Copyright (c) 2008-2010, The Periapsis Project. All rights reserved. 
+// Copyright (c) 2008, The Periapsis Project. All rights reserved. 
 // 
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are 
@@ -31,6 +34,40 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "stdafx.h"
-#include "data.hpp"
+#include "math.hpp"
 
+namespace gsgl
+{
+
+    class string;
+
+    namespace math
+    {
+
+        class MATH_API julian_day
+            : public math_object
+        {
+            double jdn;
+        public:
+            julian_day();
+            explicit julian_day(const double & jdn);
+            explicit julian_day(const time_t & t);
+
+            const double & get_jdn() const { return jdn; }
+            double & get_jdn() { return jdn; }
+
+            time_t to_time_t() const;
+
+            string to_gregorian_string() const;
+            void from_gregorian_string(const string &);
+
+            static const double J1970;
+            static const double JDAY;
+            static julian_day now();
+        }; // class julian_day
+
+    } // namespace math
+
+} // namespace gsgl
+
+#endif

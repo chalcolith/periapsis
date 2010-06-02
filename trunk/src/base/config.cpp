@@ -31,11 +31,9 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/config.hpp"
-#include "data/directory.hpp"
-#include "data/fstream.hpp"
-
-#include <cwctype>
+#include "stdafx.h"
+#include "config.hpp"
+#include "fstream.hpp"
 
 namespace gsgl
 {

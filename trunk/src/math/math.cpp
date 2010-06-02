@@ -1,7 +1,7 @@
 //
-// $Id: data.cpp 2 2008-03-01 20:58:50Z kulibali $
+// $Id: math.cpp 2 2008-03-01 20:58:50Z kulibali $
 //
-// Copyright (c) 2008-2010, The Periapsis Project. All rights reserved. 
+// Copyright (c) 2008, The Periapsis Project. All rights reserved. 
 // 
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are 
@@ -32,5 +32,52 @@
 //
 
 #include "stdafx.h"
-#include "data.hpp"
+#include "math.hpp"
+
+namespace gsgl
+{
+
+    namespace math
+    {
+    
+        const double PI         = M_PI;
+        const double PI_TIMES_2 = M_PI * 2.0;
+        const double PI_OVER_2  = M_PI * 0.5;
+        
+        const double DEG2RAD = M_PI / 180.0;
+        const double RAD2DEG = 180.0 / M_PI;
+
+    } // namepsace math
+    
+} // namespace gsgl
+
+
+
+#ifdef WIN32
+
+#ifdef _MANAGED
+#pragma managed(push, off)
+#endif
+
+BOOL APIENTRY DllMain( HMODULE hModule,
+                       DWORD  ul_reason_for_call,
+                       LPVOID lpReserved
+					 )
+{
+	switch (ul_reason_for_call)
+	{
+	case DLL_PROCESS_ATTACH:
+	case DLL_THREAD_ATTACH:
+	case DLL_THREAD_DETACH:
+	case DLL_PROCESS_DETACH:
+		break;
+	}
+    return TRUE;
+}
+
+#ifdef _MANAGED
+#pragma managed(pop)
+#endif
+
+#endif
 

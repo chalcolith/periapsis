@@ -34,10 +34,10 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/data.hpp"
-#include "data/singleton.hpp"
-#include "data/string.hpp"
-#include "data/list.hpp"
+#include "data.hpp"
+#include "singleton.hpp"
+#include "string.hpp"
+#include "list.hpp"
 
 namespace gsgl
 {
@@ -66,7 +66,6 @@ namespace gsgl
         public:
 			logger();
 			virtual ~logger();
-
 
             enum
             {

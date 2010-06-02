@@ -34,17 +34,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-
-#ifdef WIN32
-#ifdef GSGL_DATA_EXPORTS
-#define BASE_API __declspec(dllexport)
-#else
-#define BASE_API __declspec(dllimport)
-#endif
-#else
-#define BASE_API 
-#endif
-
+#include "base.hpp"
 
 namespace gsgl
 {
@@ -132,7 +122,7 @@ namespace gsgl
 #endif
     
 #ifdef DEBUG
-#define assert(test) { if (!(test)) throw gsgl::assert_exception(__FILE__, __LINE__, #test); }
+#define assert(test) { if (!(test)) throw gsgl::assert_exception(__FILE__, __LINE__, "assertion failed: " #test); }
 #else
 #define assert(test)
 #endif

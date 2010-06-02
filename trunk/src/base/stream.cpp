@@ -31,13 +31,10 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/stream.hpp"
-#include "data/exception.hpp"
-#include "data/string.hpp"
-
-#include <cstdio>
-#include <cwchar>
-#include <cctype>
+#include "stdafx.h"
+#include "stream.hpp"
+#include "exception.hpp"
+#include "string.hpp"
 
 #ifdef WIN32
 #pragma warning (disable : 4996)

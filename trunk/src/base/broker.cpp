@@ -32,7 +32,6 @@
 //
 
 #include "stdafx.h"
-
 #include "broker.hpp"
 #include "log.hpp"
 #include "exception.hpp"

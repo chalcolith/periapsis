@@ -34,9 +34,9 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/data.hpp"
-#include "data/string.hpp"
-#include "data/stream.hpp"
+#include "data.hpp"
+#include "string.hpp"
+#include "stream.hpp"
 
 namespace gsgl
 {
@@ -59,7 +59,7 @@ namespace gsgl
 
         /// Base class for streams on a file.
         class BASE_API file_stream
-            : public data_object
+            : public data::data_object
         {
         protected:
             gsgl::string fname;

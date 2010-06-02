@@ -3,6 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C++ Express 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "base", "base\base.vcxproj", "{08FCF6D2-DCD4-4ABB-AF94-0E1641EF4233}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "math", "math\math.vcxproj", "{45586A4C-F4C7-4A7C-B9B9-954D9A8D7FBC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{08FCF6D2-DCD4-4ABB-AF94-0E1641EF4233} = {08FCF6D2-DCD4-4ABB-AF94-0E1641EF4233}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -13,6 +18,10 @@ Global
 		{08FCF6D2-DCD4-4ABB-AF94-0E1641EF4233}.Debug|Win32.Build.0 = Debug|Win32
 		{08FCF6D2-DCD4-4ABB-AF94-0E1641EF4233}.Release|Win32.ActiveCfg = Release|Win32
 		{08FCF6D2-DCD4-4ABB-AF94-0E1641EF4233}.Release|Win32.Build.0 = Release|Win32
+		{45586A4C-F4C7-4A7C-B9B9-954D9A8D7FBC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{45586A4C-F4C7-4A7C-B9B9-954D9A8D7FBC}.Debug|Win32.Build.0 = Debug|Win32
+		{45586A4C-F4C7-4A7C-B9B9-954D9A8D7FBC}.Release|Win32.ActiveCfg = Release|Win32
+		{45586A4C-F4C7-4A7C-B9B9-954D9A8D7FBC}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -68,9 +68,6 @@ namespace gsgl
             const T * operator-> () const { return data; }
             T *operator-> () { return data; }
 
-            operator const T * () const { return data; }
-            operator T * () { return data; }
-
             bool operator== (const smart_pointer & p) { return data == p.data; }
         }; // class smart_pointer
 

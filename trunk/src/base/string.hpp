@@ -34,11 +34,10 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "base.hpp"
 #include "data.hpp"
+#include "comparable.hpp"
 #include "iterable.hpp"
 #include "indexable.hpp"
-#include "comparable.hpp"
 #include "printable.hpp"
 #include "serializable.hpp"
 #include "exception.hpp"
@@ -56,7 +55,6 @@ namespace gsgl
 	class string_iterator;
     class string_impl;
 
-
     /// A Unicode string class.
     class BASE_API string
         : public data::data_object, 
@@ -68,6 +66,10 @@ namespace gsgl
     {
 		friend class string_iterator;
 
+#ifdef DEBUG
+        mutable const wchar_t *wchar_ptr;
+#endif
+
         enum string_mode
         {
             STRING_NULL        = 0,
@@ -78,17 +80,13 @@ namespace gsgl
 
         mutable string_mode mode;
 
-        //
-
         union
         {
             mutable string_impl *impl;
             const wchar_t *ref;
         };
 
-#ifdef DEBUG
-        mutable const wchar_t *wchar_ptr;
-#endif
+        mutable unsigned int hash_value;
 
     public:
         string();
@@ -133,7 +131,13 @@ namespace gsgl
 
         /// \name Comparable Implementation Etc.
         /// @{
-        inline int compare(const string & s) const { return compare(s.w_string()); }
+        inline int compare(const string & s) const 
+        {
+            if (!is_modified() && !s.is_modified() && (hash_value == s.hash_value))
+                return 0;
+            else
+                return compare(s.w_string()); 
+        }
         
         inline int compare(const wchar_t *str) const
         {
@@ -157,6 +161,13 @@ namespace gsgl
 
         virtual int compare(const data::comparable &) const;
         
+        inline bool operator== (const string & s) const { return compare(s) == 0; }
+        inline bool operator!= (const string & s) const { return compare(s) != 0; }
+        inline bool operator<  (const string & s) const { return compare(s) <  0; }
+        inline bool operator<= (const string & s) const { return compare(s) <= 0; }
+        inline bool operator>  (const string & s) const { return compare(s) >  0; }
+        inline bool operator>= (const string & s) const { return compare(s) >= 0; }        
+
         inline bool operator== (const wchar_t *s) const { return compare(s) == 0; }
         inline bool operator!= (const wchar_t *s) const { return compare(s) != 0; }
         inline bool operator<  (const wchar_t *s) const { return compare(s) <  0; }
@@ -236,8 +247,19 @@ namespace gsgl
         static const string EMPTY_STRING;
 
     private:
+        void on_update() const;
+        bool is_modified() const;
+
         void make_null();
         void unshare() const;
+
+        // djb2 hash algo
+        inline void recalc_hash() const
+        {
+            hash_value = 5381;
+            for (const wchar_t *ch = w_string(); *ch; ++ch)
+                hash_value = (hash_value * 33) ^ static_cast<unsigned int>(*ch);
+        }
     }; // class string
 
 
@@ -245,9 +267,10 @@ namespace gsgl
 	{
         friend class gsgl::string;
 		const gsgl::string & parent;
+
+    protected:
 		gsgl::index_t position;
 
-	protected:
 		string_iterator(const data::iterable<wchar_t, string_iterator> & parent_iterable)
 			: parent(dynamic_cast<const gsgl::string &>(parent_iterable)), position(0) {}
 

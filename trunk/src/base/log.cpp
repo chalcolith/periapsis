@@ -31,8 +31,9 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/log.hpp"
-#include "data/fstream.hpp"
+#include "stdafx.h"
+#include "log.hpp"
+#include "fstream.hpp"
 
 
 #ifdef WIN32

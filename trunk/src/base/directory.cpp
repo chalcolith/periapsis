@@ -31,21 +31,11 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/directory.hpp"
-#include "data/pointer.hpp"
-#include "data/list.hpp"
-#include "data/file.hpp"
-
-#include <cstdio>
-#include <cstring>
-#include <cerrno>
-
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <direct.h>
-#include <io.h>
-#endif
+#include "stdafx.h"
+#include "directory.hpp"
+#include "pointer.hpp"
+#include "list.hpp"
+#include "file.hpp"
 
 namespace gsgl
 {
@@ -62,23 +52,23 @@ namespace gsgl
         //
     
         directory::directory()
-            : data_object()
+            : data::data_object()
         {
             data::smart_pointer<char, true> buf(new char[MAX_PATH_SIZE]);
-            ::_getcwd(buf, MAX_PATH_SIZE);
+            ::_getcwd(buf.ptr(), MAX_PATH_SIZE);
 
-            name = string(buf);
+            name = string(buf.ptr());
             get_paths();
         } // directory::directory()
         
         directory::directory(const string & name)
-            : data_object(), name(name)
+            : data::data_object(), name(name)
         {
             get_paths();
         } // directory::directory()
         
         directory::directory(const directory & d)
-            : data_object(), name(d.name)
+            : data::data_object(), name(d.name)
         {
             get_paths();
         } // directory::directory()
@@ -118,10 +108,9 @@ namespace gsgl
 #ifdef WIN32
             data::smart_pointer<wchar_t, true> buf(new wchar_t[MAX_PATH_SIZE]);
             wchar_t *fname;
-            GetFullPathName(name.w_string(), MAX_PATH_SIZE, buf, &fname);
+            GetFullPathName(name.w_string(), MAX_PATH_SIZE, buf.ptr(), &fname);
 
-            full_path = string(buf);
-
+            full_path = string(buf.ptr());
             string end = full_path.right_substring(1);
 
             if (!(end == L"\\" || end == L"/"))

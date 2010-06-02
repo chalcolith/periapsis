@@ -1,7 +1,10 @@
+#ifndef GSGL_MATH_UNITS_H
+#define GSGL_MATH_UNITS_H
+
 //
-// $Id: data.cpp 2 2008-03-01 20:58:50Z kulibali $
+// $Id: units.hpp 2 2008-03-01 20:58:50Z kulibali $
 //
-// Copyright (c) 2008-2010, The Periapsis Project. All rights reserved. 
+// Copyright (c) 2008, The Periapsis Project. All rights reserved. 
 // 
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are 
@@ -31,6 +34,43 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "stdafx.h"
-#include "data.hpp"
+#include "math.hpp"
 
+namespace gsgl
+{
+
+    class string;
+
+    namespace math
+    {
+
+        namespace units
+        {
+
+            extern MATH_API const gsgl::real_t METERS_PER_MILLIMETER; 
+            extern MATH_API const gsgl::real_t METERS_PER_CENTIMETER; 
+            extern MATH_API const gsgl::real_t METERS_PER_METER;      
+            extern MATH_API const gsgl::real_t METERS_PER_KILOMETER;  
+            extern MATH_API const gsgl::real_t METERS_PER_AU;         
+            extern MATH_API const gsgl::real_t METERS_PER_PARSEC;     
+
+            extern MATH_API const gsgl::real_t KILOGRAMS_PER_MILLIGRAM; 
+            extern MATH_API const gsgl::real_t KILOGRAMS_PER_GRAM;      
+            extern MATH_API const gsgl::real_t KILOGRAMS_PER_KILOGRAM;  
+
+            extern MATH_API const gsgl::real_t SECONDS_PER_MILLISECOND;
+            extern MATH_API const gsgl::real_t SECONDS_PER_SECOND;     
+            extern MATH_API const gsgl::real_t SECONDS_PER_MINUTE;     
+            extern MATH_API const gsgl::real_t SECONDS_PER_HOUR;       
+            extern MATH_API const gsgl::real_t SECONDS_PER_DAY;        
+            extern MATH_API const gsgl::real_t SECONDS_PER_YEAR;       
+
+            extern MATH_API gsgl::real_t parse(const gsgl::string &);
+
+        } // namespace units
+
+    } // namespace units
+
+} // namespace gsgl
+
+#endif

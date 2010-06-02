@@ -31,22 +31,11 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/file.hpp"
-#include "data/exception.hpp"
-#include "data/pointer.hpp"
-#include "data/fstream.hpp"
-
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
-#include <cerrno>
-
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <direct.h>
-#include <io.h>
-#endif
+#include "stdafx.h"
+#include "file.hpp"
+#include "exception.hpp"
+#include "pointer.hpp"
+#include "fstream.hpp"
 
 namespace gsgl
 {
@@ -57,26 +46,26 @@ namespace gsgl
         const gsgl::index_t MAX_PATH_SIZE = 1024;
         
         file::file()
-            : data_object()
+            : data::data_object()
         {
         } // file::file()
 
         file::file(const string & fname)
-            : data_object(), name(fname)
+            : data::data_object(), name(fname)
         {
 #ifdef WIN32
             data::smart_pointer<wchar_t, true> buf(new wchar_t[MAX_PATH_SIZE]);
             wchar_t *base;
 
-            GetFullPathName(fname.w_string(), MAX_PATH_SIZE, buf, &base);
+            GetFullPathName(fname.w_string(), MAX_PATH_SIZE, buf.ptr(), &base);
             if (!base)
                 throw runtime_exception(L"no file in path %ls", fname.w_string());
 
             base_name = string(base);
-            full_path = string(buf);
+            full_path = string(buf.ptr());
 
             *base = 0;
-            dir_name = string(buf);
+            dir_name = string(buf.ptr());
             string last = dir_name.right_substring(1);
             if (!last.is_empty() && !(last == L"\\" || last == L"/") )
                 dir_name += directory::SEPARATOR;
@@ -88,7 +77,7 @@ namespace gsgl
         } // file::file()
         
         file::file(const file & f)
-            : data_object(), name(f.name), base_name(f.base_name), dir_name(f.dir_name), full_path(f.full_path), dir(f.dir)
+            : data::data_object(), name(f.name), base_name(f.base_name), dir_name(f.dir_name), full_path(f.full_path), dir(f.dir)
         {
         } // file::file()
         
@@ -193,9 +182,9 @@ namespace gsgl
                 throw io_exception(L"Unable to open %hs: %hs.", dest_path.c_string(), ::strerror(errno));
 
             size_t num_read;
-            while ((num_read = ::fread(buf, sizeof(char), BUF_LEN, fin)))
+            while ((num_read = ::fread(buf.ptr(), sizeof(char), BUF_LEN, fin)))
             {
-                size_t num_written = ::fwrite(buf, sizeof(char), num_read, fout);
+                size_t num_written = ::fwrite(buf.ptr(), sizeof(char), num_read, fout);
                 if (num_written != num_read)
                 {
                     fclose(fout);

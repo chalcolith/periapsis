@@ -34,10 +34,10 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/data.hpp"
-#include "data/string.hpp"
-#include "data/fstream.hpp"
-#include "data/directory.hpp"
+#include "data.hpp"
+#include "string.hpp"
+#include "fstream.hpp"
+#include "directory.hpp"
 
 namespace gsgl
 {
@@ -50,7 +50,7 @@ namespace gsgl
         /// Represents a file on disk.
         /// \todo Implement file information.
         class BASE_API file
-            : public data_object
+            : public data::data_object
         {
             string name;
             string base_name;

@@ -34,9 +34,9 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/data.hpp"
-#include "data/list.hpp"
-#include "data/string.hpp"
+#include "data.hpp"
+#include "list.hpp"
+#include "string.hpp"
 
 namespace gsgl
 {
@@ -53,7 +53,7 @@ namespace gsgl
     
         /// Represents a directory on disk.
         class BASE_API directory
-            : public data_object, public data::comparable
+            : public data::data_object, public data::comparable
         {
             gsgl::string name, full_path;
 

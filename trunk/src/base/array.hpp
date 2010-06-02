@@ -35,8 +35,11 @@
 //
 
 #include "data.hpp"
+#include "iterable.hpp"
 #include "indexable.hpp"
 #include "exception.hpp"
+
+#include <new>
 
 namespace gsgl
 {

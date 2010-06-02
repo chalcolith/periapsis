@@ -31,15 +31,11 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "data/fstream.hpp"
-#include "data/exception.hpp"
-#include "data/string.hpp"
-#include "data/pointer.hpp"
-
-#include <cstdio>
-#include <cstring>
-#include <cwchar>
-#include <cerrno>
+#include "stdafx.h"
+#include "fstream.hpp"
+#include "pointer.hpp"
+#include "exception.hpp"
+#include "string.hpp"
 
 #ifdef WIN32
 #pragma warning (disable : 4996)
@@ -54,13 +50,13 @@ namespace gsgl
         //
 
         file_stream::file_stream(void *fp, gsgl::flags_t mode)
-            : data_object(), fname(L"???"), fp(fp), mode(mode)
+            : data::data_object(), fname(L"???"), fp(fp), mode(mode)
         {
         } // file_stream::file_stream()
 
 
         file_stream::file_stream(const string & fname, gsgl::flags_t mode)
-            : data_object(), fname(fname), fp(0), mode(mode)
+            : data::data_object(), fname(fname), fp(0), mode(mode)
         {
             string mode_string;
 
@@ -197,9 +193,9 @@ namespace gsgl
             {
                 /// \todo Implement UTF-8 for file streams.
                 data::smart_pointer<char, true> cbuf(new char[num+1]);
-                int num_read = (gsgl::index_t) ::fread(cbuf, 1, num, static_cast<FILE *>(fp));
+                int num_read = (gsgl::index_t) ::fread(cbuf.ptr(), 1, num, static_cast<FILE *>(fp));
                 for (int i = 0; i < num_read; ++i)
-                    buf[i] = cbuf[i];
+                    buf[i] = cbuf.ptr()[i];
                 return num_read;
             }
             else
@@ -215,9 +211,9 @@ namespace gsgl
                 /// \todo Implement UTF-8 for file streams.
                 data::smart_pointer<char, true> cbuf (new char[num+1]);
                 for (int i = 0; i < num; ++i)
-                    cbuf[i] = (char) buf[i];
+                    cbuf.ptr()[i] = (char) buf[i];
 
-                return (gsgl::index_t) ::fwrite(cbuf, 1, num, static_cast<FILE *>(fp));
+                return (gsgl::index_t) ::fwrite(cbuf.ptr(), 1, num, static_cast<FILE *>(fp));
             }
             else
             {
