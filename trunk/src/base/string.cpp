@@ -186,7 +186,6 @@ namespace gsgl
           ref(0)
     {
         *this = s;
-        on_update();
     } // string::string()
 
 
@@ -306,7 +305,6 @@ namespace gsgl
     {
         make_null();
         mode = STRING_INVALID;
-        on_update();
     } // string::~string()
 
 
