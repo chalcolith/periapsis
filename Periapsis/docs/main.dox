@@ -1,0 +1,102 @@
+/*!
+
+\mainpage Source Code Documentation
+
+\par
+
+\htmlonly
+<table>
+<tr>
+<td width="80%">
+<p>This is the internal documentation for the Periapsis code base, including utilities, libraries and various application programs.</p>
+<p>The Sourceforge project page is <a href="http://sourceforge.net/projects/periapsis/">here</a></p>.
+</td>
+<td><a href="http://sourceforge.net/donate/index.php?group_id=219633"><img src="http://images.sourceforge.net/images/project-support.jpg" width="88" height="32" border="0" alt="Support This Project" /> </a></td>
+<td><a href="http://sourceforge.net"><img src="http://sflogo.sourceforge.net/sflogo.php?group_id=219633&amp;type=2" width="125" height="37" border="0" alt="SourceForge.net Logo" /></a></td>
+</tr>
+</table>
+\endhtmlonly
+
+\section what_is_periapsis What is Periapsis?
+
+The Periapsis program is a general-purpose spaceflight simulator.
+
+You'll notice that the code re-invents a lot of wheels; this is because it has been my personal learning project for several years, and I wanted to do everything myself.
+
+Currently it only builds on Windows, using Visual Studio 2005 (see \ref PlatformDevelopment).
+
+\htmlonly
+Please see the <a href="http://sourceforge.net/tracker/?group_id=219633">Tracker</a> for a list of tasks that you can help with.
+\endhtmlonly
+
+\section organization Organization
+
+The code consists of several loosely-coupled modules:
+
+- \ref gsgl stands for "Gordon's Stupid Graphics Library".  It contains basic data structures, mathematical functions, graphics primitives, and a scene graph designed for displaying scenes on the scale of the solar system:
+	- \ref gsgl::data contains basic data structures and IO functionality.
+	- \ref gsgl::math contains vectors, matrices, quaternions and more mathy goodness.
+	- \ref gsgl::platform contains functionality for doing low-level graphics things: textures, shaders, models, fonts, etc.
+	- \ref gsgl::scenegraph contains the scene graph functionality.
+	- \ref gsgl::physics contains a very basic rigid-body physics model.
+	- \ref gsgl::framework contains an application framework and basic UI stuff.
+- \ref periapsis contains code that is specific to the Periapsis spaceflight simulator.
+	- \ref periapsis::space contains code for displaying stars and planets and even a very basic spaceship model.
+	- \ref periapsis contains the startup code for the game itself.
+
+Start with \ref periapsis::periapsis_app to see how the game is set up.  Follow that to \ref gsgl::framework::application, which contains the framework of the application.  \ref gsgl::scenegraph::simulation contains the main simulation loop.
+
+If you want to see a simple spaceship model, uncomment the section of code in gsgl::scenegraph::simulation::simulation() that mentions the spaceship.
+
+\section license License
+
+Copyright (c) 2008, The Periapsis Project. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+- Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+- Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+- Neither the name of the The Periapsis Project nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+*/
+
+/*!
+\page PlatformDevelopment Platform Development
+
+\section start_windows Windows
+
+Periapsis/build/vs8/Devel.sln contains everything needed to build and develop the Periapsis program.
+
+Before you can begin development you need to load \c Devel.sln, right-click on the ThirdParty project, and choose "Build Project".  This will unzip and copy the third-party libraries needed for development.
+
+Before running the program, you should set your debugging command arguments to "-sys_data ..\..\..\data -user_data ..\..\..\data\user".  This will enable the program to find the default data directory, and create a user directory within it.  Otherwise the program will create a user data directory in your Windows user settings, which is probably not what you want for development.
+
+You should NOT add new files to Windows projects directly; create them first under the appropriate "src" directory, and then use "Add existing item" to add them to the project.
+
+ */
+
+/*!
+\page CodingConventions Coding Conventions
+
+The best way to become familiar with the coding conventions of the code is to examine the code itself, which is fairly consistent throughout.
+
+- Identifier names use STL-esque conventions: they are lower-case, using underscores to separate words.
+- Accessors (for both getting and setting values) use the form \c "T & get_X"; use \c const for read-only access.
+- Put the names of functions in a comment after their closing brace; this serves as visual punctuation.
+
+ */
+

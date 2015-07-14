@@ -1,0 +1,13 @@
+<scenery name="Milky Way Galaxy">
+  <description>The Milky Way galaxy is currently the only galaxy simulated in Periapsis.</description>
+
+  <periapsis::space::galaxy name="Milky Way" scale="1parsec">
+
+	<periapsis::space::stellar_db 
+		name="HYG Stellar Database" 
+		position="0 0 0" 
+		scale="1parsec" 
+		data="Milky Way/hyg.dat" />    
+
+  </periapsis::space::galaxy>
+</scenery>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="ThirdParty"
+	ProjectGUID="{B62AE820-BE4B-4B4B-ABC1-CA63618E41DE}"
+	RootNamespace="ThirdParty"
+	Keyword="MakeFileProj"
+	>
+	<Platforms>
+		<Platform
+			Name="Win32"
+		/>
+	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="call build_files.bat build &quot;$(SolutionDir)$(OutDir)&quot;"
+				ReBuildCommandLine="call build_files.bat clean &quot;$(SolutionDir)$(OutDir)&quot;&#x0D;&#x0A;call build_files.bat build &quot;$(SolutionDir)$(OutDir)&quot;&#x0D;&#x0A;"
+				CleanCommandLine="call build_files.bat clean &quot;$(SolutionDir)$(OutDir)&quot;"
+				Output=""
+				PreprocessorDefinitions="WIN32;_DEBUG"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="call build_files.bat build &quot;$(SolutionDir)$(OutDir)&quot;"
+				ReBuildCommandLine="call build_files.bat clean &quot;$(SolutionDir)$(OutDir)&quot;&#x0D;&#x0A;call build_files.bat build &quot;$(SolutionDir)$(OutDir)&quot;&#x0D;&#x0A;"
+				CleanCommandLine="call build_files.bat clean &quot;$(SolutionDir)$(OutDir)&quot;"
+				Output=""
+				PreprocessorDefinitions="WIN32;NDEBUG"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

@@ -1,0 +1,9 @@
+<periapsis::space::ship1 mass="1000.0">
+  <description>A simple vehicle for testing</description>
+
+  <model>
+    <model_part name="fuselage" file="craft_periapsis.obj" visual="g0" />
+  </model>
+  
+  <viewpoint name="Captain" position="-0.5 11.5 1.5" direction="0 1 0" />
+</periapsis::space::ship1>

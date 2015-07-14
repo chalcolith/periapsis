@@ -1,0 +1,169 @@
+<scenery name="Sol System">
+  <description>Our solar system.</description>
+
+
+	<periapsis::space::solar_system name="Sol System"
+        parent="Milky Way" 
+		position="0 0 0" 
+		transform="ecliptic_wrt_galactic" 
+		scale="1AU">
+
+		<periapsis::space::star name="Sol" 
+			mass="1.988435e30kg" 
+			equatorial_radius="1.392e9m" 
+			polar_radius="1.392e9m"
+            rotator="periapsis::space::rotator::sol::sol">
+
+			<property name="simple_material"><material color_map="Sol System/sol_color.png" color_map_mode="modulate"/></property>
+			<property name="corona_material"><material color_map="Sol System/sol_corona.png" color_map_mode="replace"/></property>
+		</periapsis::space::star>
+
+		<periapsis::space::planet_system name="Mercury Barysystem" 
+			propagator="periapsis::space::keplerian_element_propagator"
+			keplerian_elements="0.38709843      0.20563661      7.00559432      252.25166724     77.45771895     48.33961819"
+			keplerian_rates="0.00000000      0.00002123     -0.00590158   149472.67486623      0.15940013     -0.12214182">
+
+			<periapsis::space::large_rocky_body name="Mercury"
+				equatorial_radius="2439700.0m" 
+				polar_radius="2439700.0m" 
+				mass="3.302e23kg" 
+				rotator="periapsis::space::rotator::mercury::mercury">
+                
+                <property name="simple_material" color_offset="-0.5"><material color_map="Sol System/mercury_color.png" color_map_mode="modulate"/></property>
+            </periapsis::space::large_rocky_body>
+		</periapsis::space::planet_system>
+
+		<periapsis::space::planet_system name="Venus Barysystem"
+			propagator="periapsis::space::keplerian_element_propagator"
+			keplerian_elements="0.72332102      0.00676399      3.39777545      181.97970850    131.76755713     76.67261496"
+			keplerian_rates="-0.00000026     -0.00005107      0.00043494    58517.81560260      0.05679648     -0.27274174">
+
+			<periapsis::space::large_rocky_body name="Venus" 
+				equatorial_radius="6051850.0m" 
+				polar_radius="6051850.0m" 
+				mass="4.8685e24kg"
+				rotator="periapsis::space::rotator::venus::venus">
+                
+                <property name="simple_material" color_offset="-0.5"><material color_map="Sol System/venus_color.png" color_map_mode="modulate"/></property>
+            </periapsis::space::large_rocky_body>
+		</periapsis::space::planet_system>
+
+		<periapsis::space::planet_system name="Earth Barysystem" 
+			propagator="periapsis::space::keplerian_element_propagator"
+			keplerian_elements="1.00000018      0.01673163     -0.00054346      100.46691572    102.93005885     -5.11260389"
+			keplerian_rates="-0.00000003     -0.00003661     -0.01337178    35999.37306329      0.31795260     -0.24123856">
+
+			<periapsis::space::planet_earth name="Earth"
+				mass="5.9742e24kg"
+				polar_radius="6356752.0m"
+				equatorial_radius="6378137.0m"
+				rotator="periapsis::space::rotator::earth::earth"
+				atmosphere_depth="100000.0m">
+
+                <property name="simple_material" color_offset="-0.5" heightmap_offset="-0.5" heightmap_max="8848m">
+                    <material color_map="Sol System/earth_color.png" color_map_mode="modulate" height_map="Sol System/earth_bump.png"/>
+                </property>
+			</periapsis::space::planet_earth>
+
+			<periapsis::space::large_rocky_body name="Moon"
+				mass="7.3477e22kg"
+				polar_radius="1735.97km"
+				equatorial_radius="1738.14km"
+				rotator="periapsis::space::rotator::earth::moon"
+				propagator="periapsis::space::satellite_element_propagator"
+				satellite_elements="384400.0 	0.0554 	318.15 	135.27 	5.16 	125.08 	13.176358 	27.322 	5.997 	18.600">
+                
+                <property name="simple_material" color_offset="-0.5" heightmap_offset="-0.5" heightmap_max="181000m">
+                    <material color_map="Sol System/moon_color.png" color_map_mode="modulate" />
+                </property>
+                
+            </periapsis::space::large_rocky_body>
+		</periapsis::space::planet_system>
+
+<!--
+		<periapsis::space::planet_system name="Mars Barysystem"
+			propagator="periapsis::space::keplerian_element_propagator"
+			keplerian_elements="1.52371243      0.09336511      1.85181869       -4.56813164    -23.91744784     49.71320984"
+			keplerian_rates="0.00000097      0.00009149     -0.00724757    19140.29934243      0.45223625     -0.26852431">
+
+			<periapsis::space::large_rocky_body	name="Mars" 
+				mass="6.4185e23kg" 
+				equatorial_radius="3402450.0m" 
+				polar_radius="3377400.0m" 
+
+				rotator="periapsis::space::rotator::mars::mars" 
+
+				simple_map="Sol System/mars_color.jpg" 
+				simple_map_x_offset="-0.5" />
+		</periapsis::space::planet_system>
+
+
+		<periapsis::space::planet_system name="Jupiter Barysystem"
+			propagator="periapsis::space::keplerian_element_propagator"
+			keplerian_elements="5.20248019      0.04853590      1.29861416       34.33479152     14.27495244    100.29282654"
+			keplerian_rates="-0.00002864      0.00018026     -0.00322699     3034.90371757      0.18199196      0.13024619" 
+			keplerian_elements_aux="-0.00012452    0.06064060   -0.35635438   38.35125000">
+
+			<periapsis::space::gas_body
+				name="Jupiter"
+				equatorial_radius="71492000.0m"
+				polar_radius="66854500.0m"
+				mass="1.899e27kg"
+				rotator="periapsis::space::rotator::jupiter::jupiter" 
+				simple_map="Sol System/jupiter_color.jpg" 
+				simple_map_x_offset="-0.5" />
+		</periapsis::space::planet_system>
+
+
+		<periapsis::space::planet_system name="Saturn Barysystem"
+			propagator="periapsis::space::keplerian_element_propagator"
+			keplerian_elements="9.54149883      0.05550825      2.49424102       50.07571329     92.86136063    113.63998702"
+			keplerian_rates="-0.00003065     -0.00032044      0.00451969     1222.11494724      0.54179478     -0.25015002" 
+			keplerian_elements_aux="0.00025899   -0.13434469    0.87320147   38.35125000">
+
+			<periapsis::space::gas_body name="Saturn"
+				equatorial_radius="60268000.0m"
+				polar_radius="54364000.0m"
+				mass="5.6846e26kg"
+				rotator="periapsis::space::rotator::saturn::saturn" 
+				simple_map="Sol System/saturn_color.jpg" 
+				simple_map_x_offset="-0.5" />
+		</periapsis::space::planet_system>
+
+
+		<periapsis::space::planet_system name="Uranus Barysystem"
+			propagator="periapsis::space::keplerian_element_propagator"
+			keplerian_elements="19.18797948      0.04685740      0.77298127      314.20276625    172.43404441     73.96250215"
+			keplerian_rates="-0.00020455     -0.00001550     -0.00180155      428.49512595      0.09266985      0.05739699" 
+			keplerian_elements_aux="0.00058331   -0.97731848    0.17689245    7.67025000">
+
+			<periapsis::space::gas_body name="Uranus"
+				equatorial_radius="25559000.0m"
+				polar_radius="24973000.0m"
+				mass="8.6832e25kg"
+				rotator="periapsis::space::rotator::uranus::uranus" 
+				simple_map="Sol System/uranus_color.jpg" 
+				simple_map_x_offset="-0.5" />
+		</periapsis::space::planet_system>
+
+		<periapsis::space::planet_system name="Neptune Barysystem"
+			propagator="periapsis::space::keplerian_element_propagator"
+			keplerian_elements="30.06952752      0.00895439      1.77005520      304.22289287     46.68158724    131.78635853"
+			keplerian_rates="0.00006447      0.00000818      0.00022400      218.46515314      0.01009938     -0.00606302" 
+			keplerian_elements_aux="-0.00041348    0.68346318   -0.10162547    7.67025000">
+
+			<periapsis::space::gas_body name="Neptune"
+				equatorial_radius="24764000.0m"
+				polar_radius="24340500.0m"
+				mass="1.0243e26kg"
+				rotator="periapsis::space::rotator::neptune::neptune" 
+				simple_map="Sol System/neptune_color.jpg" 
+				simple_map_x_offset="-0.5" />
+		</periapsis::space::planet_system>
+
+-->
+
+	</periapsis::space::solar_system>
+  
+
+</scenery>
